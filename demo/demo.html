@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kombi Termostat — Arayüz Demosu</title>
+<style>
+  :root{
+    --s:3;
+    --bg:#080d17; --card:#111a2a; --line:#22304a; --txt:#e8eefb; --mut:#94a6c3;
+    --acc:#ff8a3d; --acc2:#ffb066; --ok:#2dd47c;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    min-height:100vh;color:var(--txt);
+    background:
+      radial-gradient(1100px 520px at 82% -12%,#1b2a4a 0%,transparent 58%),
+      radial-gradient(900px 480px at -12% 108%,#241a2e 0%,transparent 55%),
+      var(--bg);
+    font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+    padding:34px 20px 56px;
+  }
+  .wrap{max-width:1320px;margin:0 auto}
+  .kicker{
+    display:inline-block;font-size:11px;letter-spacing:2.4px;font-weight:700;color:#ffc59b;
+    border:1px solid rgba(255,138,61,.45);background:rgba(255,138,61,.08);
+    padding:5px 11px;border-radius:999px;margin-bottom:14px;
+  }
+  h1{font-size:clamp(24px,3.4vw,34px);line-height:1.15;margin:0 0 10px;letter-spacing:-.4px}
+  .lead{color:var(--mut);max-width:760px;margin:0 0 30px;font-size:15px}
+  code{font:12.5px ui-monospace,Consolas,"Courier New",monospace;background:#172235;border:1px solid #243252;border-radius:5px;padding:1px 5px;color:#cfe0ff}
+  .sec{margin:0 0 46px}
+  .secHead{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;flex-wrap:wrap;margin:0 0 16px;border-bottom:1px solid var(--line);padding-bottom:12px}
+  h2{font-size:17px;margin:0;letter-spacing:.2px}
+  .secHead p{margin:0;color:var(--mut);font-size:13px}
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 20px}
+  .chip{
+    font:inherit;font-size:13px;font-weight:600;color:var(--txt);background:#162134;
+    border:1px solid var(--line);border-radius:999px;padding:8px 14px;cursor:pointer;
+    transition:background .15s,border-color .15s,transform .08s;
+  }
+  .chip:hover{background:#1c2942}
+  .chip:active{transform:scale(.97)}
+  .chip[aria-pressed="true"]{
+    background:linear-gradient(90deg,#e9622c,#ff9e55);border-color:transparent;color:#1a0d04;
+  }
+  .chip.boost[aria-pressed="true"]{background:linear-gradient(90deg,#2f7d55,#2dd47c);color:#052012}
+  .chip.theme[aria-pressed="true"]{background:linear-gradient(90deg,#3f6fd8,#6fa2ff);color:#04122b}
+  .toolbar .sep{width:1px;height:24px;background:var(--line);margin:0 4px}
+  .toolbar .lbl{font-size:12px;letter-spacing:1.4px;font-weight:700;color:var(--mut);text-transform:uppercase}
+
+  .oledGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(calc(128px * var(--s) + 34px),1fr));gap:18px}
+  figure.dev{margin:0;text-align:center;background:linear-gradient(180deg,var(--card),#0c1322);border:1px solid var(--line);border-radius:16px;padding:10px;box-shadow:0 14px 34px rgba(0,0,0,.32)}
+  .bezel{
+    display:inline-block;padding:10px;border-radius:9px;
+    background:linear-gradient(160deg,#1e2839,#0b111c);
+    border:1px solid #2a3a55;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.06), 0 8px 18px rgba(0,0,0,.45);
+  }
+  figcaption{text-align:left;margin-top:12px;color:var(--mut);font-size:12px;display:flex;justify-content:space-between;gap:8px}
+  figcaption b{color:#cfe0ff;font-weight:600}
+
+  .oled{
+    position:relative;width:calc(128px * var(--s));height:calc(64px * var(--s));
+    background:#04070d;border-radius:3px;overflow:hidden;
+    box-shadow:inset 0 0 22px rgba(70,130,255,.16), 0 0 0 1px #1c2942;
+  }
+  .scr{position:absolute;left:0;top:0;width:128px;height:64px;background:#04070d;transform:scale(var(--s));transform-origin:top left}
+  .scr .r{
+    position:absolute;display:flex;height:8px;
+    font:7.5px/8px ui-monospace,Consolas,"Courier New",monospace;
+    color:#d3e6ff;text-shadow:0 0 3px rgba(120,180,255,.55);white-space:nowrap;
+  }
+  .scr .r span{display:block;width:6px;text-align:center}
+  .scr .r.s2{height:16px;font:16px/16px ui-monospace,Consolas,"Courier New",monospace}
+  .scr .r.s2 span{width:12px}
+  .scr .r.s3{height:24px;font:24px/24px ui-monospace,Consolas,"Courier New",monospace}
+  .scr .r.s3 span{width:18px}
+  .scr .r.dark{color:#04070d;text-shadow:none}
+  .scr .hl{position:absolute;left:0;width:128px;height:1px;background:#d3e6ff;opacity:.85}
+  .scr .inv{position:absolute;background:#e6f1ff;border-radius:1px}
+  .scr .box{position:absolute;left:0;width:128px;border:1px solid #d3e6ff;border-radius:1px}
+  .scr .dots{position:absolute;left:0;width:128px;height:1px;background:repeating-linear-gradient(90deg,#d3e6ff 0 1px,transparent 1px 3px);opacity:.85}
+  /* invertDisplay(): panelde beyaz<->siyah tam ters doner (renk filtresi degil) */
+  .scr.neg{background:#eef4ff}
+  .scr.neg .r{color:#06090f;text-shadow:none}
+  .scr.neg .hl,.scr.neg .dots{background:#06090f;opacity:1}
+  .scr.neg .inv{background:#06090f}
+  .scr.neg .box{border-color:#06090f}
+  .scr.neg .r.dark{color:#eef4ff;text-shadow:none}
+  .scr.dim{opacity:.45}
+  .scr::after{
+    content:"";position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(rgba(160,205,255,.12) .5px,transparent .7px) 0 0/1px 1px;
+    mix-blend-mode:screen;
+  }
+
+  .notes{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;margin-top:18px}
+  .note{background:#0e1727;border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:12.5px;color:var(--mut)}
+  .note b{color:#dbe7fb;display:block;margin-bottom:3px;font-size:12px;letter-spacing:.3px}
+
+  .phoneWrap{display:flex;justify-content:center;margin:6px 0 14px}
+  .phone{
+    width:400px;max-width:100%;padding:8px;border-radius:46px;
+    background:linear-gradient(160deg,#1b2537,#0a0f19);
+    border:1px solid #2c3c58;
+    box-shadow:0 34px 70px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.06);
+  }
+  .phone iframe{
+    display:block;width:100%;height:740px;border:0;border-radius:38px;
+    background:#0b1220;
+  }
+  @media(max-width:480px){ .phone iframe{height:620px} }
+  .openRow{display:flex;justify-content:center;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--mut)}
+  .openRow a{color:#ffc59b;text-decoration:none;border-bottom:1px dashed rgba(255,138,61,.5);padding-bottom:1px}
+  .openRow a:hover{color:#ffd9bd}
+  .fsBox{position:fixed;inset:0;z-index:60;display:none;background:#0b1220}
+  .fsBox.on{display:block}
+  .fsBox iframe{width:100%;height:100%;border:0;display:block;background:#0b1220}
+  .fsClose{
+    position:fixed;top:10px;right:10px;z-index:61;width:40px;height:40px;border-radius:50%;
+    border:1px solid var(--line);background:rgba(20,30,51,.9);color:#e8eefb;font-size:22px;
+    line-height:1;cursor:pointer;display:none
+  }
+  .fsBox.on + .fsClose{display:block}
+
+  footer{margin-top:46px;border-top:1px solid var(--line);padding-top:16px;color:var(--mut);font-size:12px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <span class="kicker">TASARIM DEMOSU</span>
+    <h1>Kombi Termostat — Oda Ünitesi Arayüzü</h1>
+    <p class="lead">
+      OLED ekranın beş sayfası, on OLED teması ve cihazın gömülü web arayüzü. Hepsi tarayıcıda çalışır;
+      donanım, Wi-Fi veya sunucu gerekmez. Ekran yerleşimleri <code>oda_termostati.ino</code> ve
+      <code>src/OledTheme</code> içindeki çizim koduyla, web arayüzü ise <code>web_ui.h</code> ile
+      aynı kuralları kullanır.
+    </p>
+  </header>
+
+  <section class="sec">
+    <div class="secHead">
+      <h2>0.96" OLED — 128 × 64 piksel</h2>
+      <p>Encoder ile sayfa değişir: 1 ana ekran · 2 ağ bilgisi · 3 bilgi · 4 uyku modu · 5 tema</p>
+    </div>
+
+    <div class="toolbar" id="scenes">
+      <button class="chip" data-scene="heat" aria-pressed="true">Isıtıyor</button>
+      <button class="chip" data-scene="idle" aria-pressed="false">Bekliyor</button>
+      <button class="chip" data-scene="off" aria-pressed="false">Kapalı</button>
+      <button class="chip" data-scene="sensor" aria-pressed="false">Sensör hatası</button>
+      <button class="chip" data-scene="nolink" aria-pressed="false">Kombi bağlı değil</button>
+      <span class="sep"></span>
+      <button class="chip boost" id="boostBtn" aria-pressed="false">Boost 45 dk</button>
+    </div>
+
+    <div class="toolbar" id="themes">
+      <span class="lbl">Tema</span>
+      <button class="chip theme" data-theme="klasik" aria-pressed="true">Klasik</button>
+      <button class="chip theme" data-theme="minimal" aria-pressed="false">Minimal</button>
+      <button class="chip theme" data-theme="ters" aria-pressed="false">Ters</button>
+      <button class="chip theme" data-theme="kutu" aria-pressed="false">Kutu</button>
+      <button class="chip theme" data-theme="genis" aria-pressed="false">Geniş</button>
+      <button class="chip theme" data-theme="gece" aria-pressed="false">Gece</button>
+      <button class="chip theme" data-theme="retro" aria-pressed="false">Retro</button>
+      <button class="chip theme" data-theme="durum" aria-pressed="false">Durum</button>
+      <button class="chip theme" data-theme="kompakt" aria-pressed="false">Kompakt</button>
+      <button class="chip theme" data-theme="dev" aria-pressed="false">Dev Rakam</button>
+    </div>
+
+    <div class="oledGrid">
+      <figure class="dev">
+        <div class="bezel"><div class="oled" data-page="1"></div></div>
+        <figcaption><b>Sayfa 1/5 — Ana ekran</b><span>sıcaklık · hedef · durum</span></figcaption>
+      </figure>
+      <figure class="dev">
+        <div class="bezel"><div class="oled" data-page="2"></div></div>
+        <figcaption><b>Sayfa 2/5 — Ağ bilgisi</b><span>AP · IP · röle</span></figcaption>
+      </figure>
+      <figure class="dev">
+        <div class="bezel"><div class="oled" data-page="3"></div></div>
+        <figcaption><b>Sayfa 3/5 — Bilgi</b><span>ayarlar · süre · sürüm</span></figcaption>
+      </figure>
+      <figure class="dev">
+        <div class="bezel"><div class="oled" data-page="4"></div></div>
+        <figcaption><b>Sayfa 4/5 — Uyku modu</b><span>saat aralığı · uyku hedefi · NTP</span></figcaption>
+      </figure>
+      <figure class="dev">
+        <div class="bezel"><div class="oled" data-page="5"></div></div>
+        <figcaption><b>Sayfa 5/5 — Tema</b><span>tema listesi · LittleFS</span></figcaption>
+      </figure>
+    </div>
+
+    <div class="notes">
+      <div class="note"><b>Tema sistemi</b>10 tema <code>/themes/&lt;id&gt;.txt</code> dosyasında durur; ilk açılışta yoksa gömülü varsayılanlardan üretilir. Seçim <code>/config.txt</code> içindeki <code>theme=</code> satırında saklanır.</div>
+      <div class="note"><b>Sayfa 5</b>Sayfa 5'te encoder döndürmek temayı değiştirir: üst şerit, sıcaklık boyutu, ayırıcı, durum stili ve alt bilgi alanları anında güncellenir.</div>
+      <div class="note"><b>Isıtıyor</b>Isı talebi varken durum satırı temanın stilinde (bar · çerçeve · ters şerit) vurgulanır.</div>
+      <div class="note"><b>Encoder</b>Kısa basış sayfa değiştirir; uzun basış modu açar/kapatır.</div>
+      <div class="note"><b>Boost</b>Aktifken alt satırda <code>BST 45dk</code> görünür ve hedef +1.5 °C kabul edilir.</div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="secHead">
+      <h2>Web arayüzü — mobil görünüm</h2>
+      <p>Gerçek gömülü sayfa, demo verisiyle canlı çalışıyor</p>
+    </div>
+
+    <div class="phoneWrap">
+      <div class="phone"><iframe id="uiFrame" title="Kombi Termostat web arayüzü"></iframe></div>
+    </div>
+
+    <div class="openRow">
+      <a id="fullUi" href="#" onclick="return openFullUi(event)">Tam ekran aç</a>
+      <span>·</span>
+      <span>Kaydırın; hedef sıcaklığı değiştirin, uyku modunu, röle davranışını, MQTT/Telegram ve sıcaklık geçmişi bölümlerini deneyin.</span>
+    </div>
+  </section>
+
+  <div class="fsBox" id="fsBox"><iframe id="fsFrame" title="Kombi Termostat web arayüzü (tam ekran)"></iframe></div>
+  <button class="fsClose" id="fsClose" onclick="closeFullUi()" aria-label="Tam ekranı kapat">×</button>
+
+  <footer>
+    <span>Kombi Termostat · NodeMCU v3 (ESP8266) · firmware 1.0.0</span>
+    <span>AP: TERMOSTAT-AP · http://192.168.4.1</span>
+  </footer>
+</div>
+
+<script>
+const UI_HTML = "\u003c!DOCTYPE html\u003e\n\u003chtml lang=\"tr\"\u003e\n\u003chead\u003e\n\u003cmeta charset=\"utf-8\"\u003e\n\u003cmeta name=\"viewport\" content=\"width=device-width,initial-scale=1,viewport-fit=cover\"\u003e\n\u003cmeta name=\"theme-color\" content=\"#0b1220\"\u003e\n\u003ctitle\u003eKombi Termostat\u003c/title\u003e\n\u003cstyle\u003e\n:root{\n  --bg:#0b1220; --bg2:#0e1729; --card:#141e33; --card2:#18243d;\n  --line:#243252; --txt:#e8eefb; --mut:#94a6c3;\n  --acc:#ff8a3d; --acc2:#ffb066; --ok:#2dd47c; --warn:#f4b740; --bad:#f25555;\n  --blue:#49b8ff;\n}\n*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}\nhtml,body{margin:0;padding:0}\nbody{\n  min-height:100vh;\n  overflow-x:hidden;\n  background:radial-gradient(1200px 600px at 80% -10%,#1b2a4a 0%,transparent 60%),\n             radial-gradient(900px 500px at -10% 110%,#221a2c 0%,transparent 55%),\n             var(--bg);\n  color:var(--txt);\n  font:15px/1.45 system-ui,-apple-system,\"Segoe UI\",Roboto,Arial,sans-serif;\n  padding:14px 12px 34px;\n}\n.wrap{max-width:760px;margin:0 auto}\nheader{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:4px 2px 14px}\n.brand{display:flex;align-items:center;gap:10px;min-width:0}\n.logo{\n  width:42px;height:42px;flex:0 0 42px;border-radius:14px;display:grid;place-items:center;\n  font-size:22px;background:linear-gradient(145deg,#ff9a4d,#e8562a);\n  box-shadow:0 6px 20px rgba(255,120,50,.35);\n}\nh1{font-size:18px;margin:0;letter-spacing:.2px}\n.brand p{margin:1px 0 0;font-size:12px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}\n.pill{\n  display:flex;align-items:center;gap:7px;padding:7px 11px;border-radius:999px;\n  background:var(--card);border:1px solid var(--line);font-size:12px;white-space:nowrap;color:var(--mut)\n}\n.pill .dot{width:8px;height:8px;border-radius:50%;background:var(--mut);box-shadow:0 0 0 3px rgba(148,166,195,.12)}\n.pill.ok{border-color:rgba(45,212,124,.35);color:#bdf7d8}\n.pill.ok .dot{background:var(--ok);box-shadow:0 0 0 3px rgba(45,212,124,.16),0 0 12px rgba(45,212,124,.7)}\n.pill.warn{border-color:rgba(244,183,64,.35);color:#ffe6b0}\n.pill.warn .dot{background:var(--warn);box-shadow:0 0 0 3px rgba(244,183,64,.16)}\n.pill.bad{border-color:rgba(242,85,85,.4);color:#ffc9c9}\n.pill.bad .dot{background:var(--bad);box-shadow:0 0 0 3px rgba(242,85,85,.16)}\n\n.card{\n  background:linear-gradient(180deg,var(--card),var(--bg2));\n  border:1px solid var(--line);border-radius:18px;padding:16px;\n  box-shadow:0 10px 30px rgba(0,0,0,.18);margin:0 0 12px;\n}\n.label{font-size:12px;letter-spacing:.5px;text-transform:uppercase;color:var(--mut);font-weight:600}\n.hint{font-size:12px;color:var(--mut);margin-top:6px}\n.meta{font-size:13px;color:var(--mut);display:flex;gap:8px;flex-wrap:wrap}\n.sep{opacity:.5}\n\n.hero{display:grid;grid-template-columns:1fr;gap:18px}\n.room{text-align:center}\n.room .meta{justify-content:center}\n@media(min-width:620px){.hero{grid-template-columns:1.05fr .95fr;align-items:center}}\n.big{font-size:62px;line-height:1;font-weight:750;letter-spacing:-2px;margin:6px 0 6px}\n.big .deg{font-size:24px;font-weight:600;color:var(--mut);margin-left:4px;letter-spacing:0}\n.big.cold{color:var(--blue)}\n.big.hot{color:var(--acc2)}\n.target{border-top:1px solid var(--line);padding-top:14px}\n@media(min-width:620px){.target{border-top:0;border-left:1px solid var(--line);padding:0 0 0 18px}}\n.targetRow{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px}\n.sp{font-size:32px;font-weight:750;letter-spacing:-.5px}\n.sp .unit2{font-size:16px;color:var(--mut);margin-left:2px;font-weight:600}\n.circle{\n  width:48px;height:48px;border-radius:50%;border:1px solid var(--line);\n  background:var(--card2);color:var(--txt);font-size:24px;line-height:1;cursor:pointer;\n  transition:transform .08s ease,background .2s;\n}\n.circle:active{transform:scale(.93);background:#223254}\ninput[type=range]{\n  -webkit-appearance:none;appearance:none;width:100%;height:8px;border-radius:99px;\n  margin:18px 0 4px;outline:none;cursor:pointer;\n  background:linear-gradient(to right,var(--acc) var(--p,50%),#26324a var(--p,50%));\n}\ninput[type=range]::-webkit-slider-thumb{\n  -webkit-appearance:none;width:26px;height:26px;border-radius:50%;\n  background:linear-gradient(145deg,#ffc07a,var(--acc));border:3px solid #0d1526;\n  box-shadow:0 3px 12px rgba(255,138,61,.5);\n}\ninput[type=range]::-moz-range-thumb{\n  width:22px;height:22px;border-radius:50%;background:var(--acc);border:3px solid #0d1526;\n}\n\n.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}\n.stat{padding:12px 12px;margin:0;text-align:center}\n.stat b{display:block;font-size:15px;margin-top:5px;font-weight:650}\n.stat b.ok{color:var(--ok)} .stat b.hot{color:var(--acc2)} .stat b.bad{color:var(--bad)}\n\n.row{display:flex;align-items:center;justify-content:space-between;gap:14px}\n.toggle{\n  width:58px;height:32px;flex:0 0 58px;border-radius:99px;border:1px solid var(--line);\n  background:#22304d;position:relative;cursor:pointer;transition:background .2s;padding:0;\n}\n.toggle span{\n  position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;\n  background:#93a4bd;transition:.2s;\n}\n.toggle.on{background:linear-gradient(90deg,#e9622c,#ff9e55);border-color:transparent}\n.toggle.on span{left:29px;background:#fff}\n\n.btns{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}\nbutton{\n  font:inherit;color:var(--txt);background:var(--card2);border:1px solid var(--line);\n  border-radius:12px;padding:11px 8px;cursor:pointer;transition:filter .15s,transform .08s;\n}\nbutton:active{transform:scale(.97)}\nbutton:hover{filter:brightness(1.12)}\nbutton.primary{width:100%;margin-top:14px;background:linear-gradient(90deg,#e9622c,#ff9e55);border:0;font-weight:700;color:#1a0d04}\nbutton.danger{width:100%;margin-top:14px;background:#3a1d24;border-color:#6b2b36;color:#ffb3b3}\nbutton.ghost{background:transparent}\n\ndetails summary{\n  list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;\n  font-weight:650;font-size:15px;\n}\ndetails summary::-webkit-details-marker{display:none}\n.chev{color:var(--mut);transition:transform .2s}\ndetails[open] .chev{transform:rotate(180deg)}\n.form{display:grid;grid-template-columns:1fr;gap:10px;margin-top:14px}\n@media(min-width:520px){.form.two{grid-template-columns:1fr 1fr}}\n.form label{font-size:12px;color:var(--mut);display:flex;flex-direction:column;gap:5px;font-weight:600}\n.form input{\n  font:inherit;color:var(--txt);background:#0d1628;border:1px solid var(--line);\n  border-radius:11px;padding:11px 12px;outline:none;\n}\n.form input:focus{border-color:var(--acc)}\n.kv{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px dashed rgba(36,50,82,.75);font-size:13px}\n.kv:last-of-type{border-bottom:0}\n.kv span{color:var(--mut)}\n.kv b{font-weight:600;text-align:right;word-break:break-all}\n.foot{text-align:center;color:var(--mut);font-size:11px;margin:18px 0 0}\n\n.toast{\n  position:fixed;left:50%;bottom:22px;transform:translate(-50%,20px);\n  background:#1b2740;border:1px solid var(--line);border-radius:12px;\n  padding:11px 16px;font-size:13px;box-shadow:0 12px 32px rgba(0,0,0,.45);\n  opacity:0;pointer-events:none;transition:.22s;z-index:9;max-width:88vw;text-align:center\n}\n.toast.show{opacity:1;transform:translate(-50%,0)}\n.toast.bad{border-color:#6b2b36;color:#ffc9c9}\n\n.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}\n.chip{padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:var(--card2);font-size:13px;cursor:pointer;color:var(--txt)}\n.chip.on{background:linear-gradient(90deg,#e9622c,#ff9e55);border-color:transparent;color:#1a0d04;font-weight:700}\ncanvas{width:100%;height:200px;display:block;border-radius:12px;background:#0d1628;border:1px solid var(--line);margin-top:12px}\n.legend{display:flex;gap:14px;font-size:12px;color:var(--mut);margin-top:8px;flex-wrap:wrap}\n.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}\n.mini{display:flex;gap:8px;margin-top:10px}\n.mini button{flex:1;font-size:13px;padding:9px 6px}\n.rowline{display:flex;align-items:center;justify-content:space-between;gap:14px}\n.linkbtn{display:inline-block;margin-top:12px;color:var(--acc2);font-size:13px;text-decoration:none;font-weight:600}\n.form input[type=time]{color-scheme:dark}\n.netrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px}\n.netrow .hint{margin:0;flex:1 1 160px}\n.netrow button{flex:0 0 auto;width:auto}\n.netlist{display:none;flex-direction:column;gap:6px;margin-top:10px}\n.netlist.on{display:flex}\n.net{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--card2);color:var(--txt);font:inherit;font-size:13px;cursor:pointer;text-align:left}\n.net b{font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}\n.net span{color:var(--mut);font-size:12px;white-space:nowrap}\n.net.sel{border-color:var(--acc);background:rgba(255,138,61,.14)}\n\u003c/style\u003e\n\u003c/head\u003e\n\u003cbody\u003e\n\u003cdiv class=\"wrap\"\u003e\n  \u003cheader\u003e\n    \u003cdiv class=\"brand\"\u003e\n      \u003cdiv class=\"logo\"\u003e\u0026#9832;\u003c/div\u003e\n      \u003cdiv\u003e\n        \u003ch1\u003eKombi Termostat\u003c/h1\u003e\n        \u003cp id=\"net\"\u003eOda ünitesi\u003c/p\u003e\n      \u003c/div\u003e\n    \u003c/div\u003e\n    \u003cdiv class=\"pill\" id=\"pill\"\u003e\u003cspan class=\"dot\"\u003e\u003c/span\u003e\u003cspan id=\"pillTxt\"\u003eBağlanıyor\u003c/span\u003e\u003c/div\u003e\n  \u003c/header\u003e\n\n  \u003csection class=\"card hero\"\u003e\n    \u003cdiv class=\"room\"\u003e\n      \u003cdiv class=\"label\"\u003eOda Sıcaklığı\u003c/div\u003e\n      \u003cdiv class=\"big\" id=\"bigWrap\"\u003e\u003cspan id=\"temp\"\u003e--\u003c/span\u003e\u003cspan class=\"deg\"\u003e°C\u003c/span\u003e\u003c/div\u003e\n      \u003cdiv class=\"meta\"\u003e\n        \u003cspan id=\"hum\"\u003eNem —\u003c/span\u003e\n        \u003cspan class=\"sep\"\u003e•\u003c/span\u003e\n        \u003cspan id=\"flow\"\u003eKombi suyu —\u003c/span\u003e\n      \u003c/div\u003e\n    \u003c/div\u003e\n    \u003cdiv class=\"target\"\u003e\n      \u003cdiv class=\"label\"\u003eHedef Sıcaklık\u003c/div\u003e\n      \u003cdiv class=\"targetRow\"\u003e\n        \u003cbutton class=\"circle\" onclick=\"step(-0.5)\" aria-label=\"Azalt\"\u003e−\u003c/button\u003e\n        \u003cdiv class=\"sp\"\u003e\u003cspan id=\"spVal\"\u003e21.0\u003c/span\u003e\u003cspan class=\"unit2\"\u003e°C\u003c/span\u003e\u003c/div\u003e\n        \u003cbutton class=\"circle\" onclick=\"step(0.5)\" aria-label=\"Arttır\"\u003e+\u003c/button\u003e\n      \u003c/div\u003e\n      \u003cinput id=\"range\" type=\"range\" min=\"5\" max=\"30\" step=\"0.5\" value=\"21\" aria-label=\"Hedef sıcaklık\"\u003e\n      \u003cdiv class=\"hint\" id=\"effHint\"\u003e\u003c/div\u003e\n    \u003c/div\u003e\n  \u003c/section\u003e\n\n  \u003csection class=\"stats\"\u003e\n    \u003cdiv class=\"card stat\"\u003e\u003cspan class=\"label\"\u003eDurum\u003c/span\u003e\u003cb id=\"state\"\u003e—\u003c/b\u003e\u003c/div\u003e\n    \u003cdiv class=\"card stat\"\u003e\u003cspan class=\"label\"\u003eKombi\u003c/span\u003e\u003cb id=\"relay\"\u003e—\u003c/b\u003e\u003c/div\u003e\n    \u003cdiv class=\"card stat\"\u003e\u003cspan class=\"label\"\u003eBoost\u003c/span\u003e\u003cb id=\"boost\"\u003eKapalı\u003c/b\u003e\u003c/div\u003e\n  \u003c/section\u003e\n\n  \u003csection class=\"card row\"\u003e\n    \u003cdiv\u003e\n      \u003cdiv class=\"label\"\u003eÇalışma Modu\u003c/div\u003e\n      \u003cdiv class=\"hint\" id=\"modeHint\"\u003eAçık: hedef sıcaklığa göre ısıtır.\u003c/div\u003e\n    \u003c/div\u003e\n    \u003cbutton class=\"toggle\" id=\"modeBtn\" onclick=\"toggleMode()\" aria-label=\"Mod değiştir\"\u003e\u003cspan\u003e\u003c/span\u003e\u003c/button\u003e\n  \u003c/section\u003e\n\n  \u003csection class=\"card\"\u003e\n    \u003cdiv class=\"label\"\u003eHızlı Isıtma (Boost)\u003c/div\u003e\n    \u003cdiv class=\"btns\"\u003e\n      \u003cbutton onclick=\"boost(5)\"\u003e5 dk\u003c/button\u003e\n      \u003cbutton onclick=\"boost(15)\"\u003e15 dk\u003c/button\u003e\n      \u003cbutton onclick=\"boost(30)\"\u003e30 dk\u003c/button\u003e\n      \u003cbutton class=\"ghost\" onclick=\"boost(0)\"\u003eİptal\u003c/button\u003e\n    \u003c/div\u003e\n    \u003cdiv class=\"hint\" id=\"boostHint\"\u003eBoost, hedefi geçici olarak +1.5 °C yükseltir.\u003c/div\u003e\n  \u003c/section\u003e\n\n  \u003csection class=\"card\"\u003e\n    \u003cdiv class=\"rowline\"\u003e\n      \u003cdiv\u003e\n        \u003cdiv class=\"label\"\u003eUyku Modu\u003c/div\u003e\n        \u003cdiv class=\"hint\" id=\"sleepHint\"\u003eBelirlenen saat aralığında daha düşük hedef uygulanır.\u003c/div\u003e\n      \u003c/div\u003e\n      \u003cbutton class=\"toggle\" id=\"sleepBtn\" onclick=\"toggleSleep()\" aria-label=\"Uyku modu\"\u003e\u003cspan\u003e\u003c/span\u003e\u003c/button\u003e\n    \u003c/div\u003e\n    \u003cdiv class=\"form two\" style=\"margin-top:12px\"\u003e\n      \u003clabel\u003eBaşlangıç\n        \u003cinput id=\"sleepStart\" type=\"time\"\u003e\n      \u003c/label\u003e\n      \u003clabel\u003eBitiş\n        \u003cinput id=\"sleepEnd\" type=\"time\"\u003e\n      \u003c/label\u003e\n      \u003clabel\u003eUyku Hedefi (°C)\n        \u003cinput id=\"sleepSp\" type=\"number\" step=\"0.5\" min=\"5\" max=\"30\"\u003e\n      \u003c/label\u003e\n    \u003c/div\u003e\n    \u003cbutton class=\"primary\" onclick=\"saveSleep()\"\u003eUyku Ayarlarını Kaydet\u003c/button\u003e\n  \u003c/section\u003e\n\n  \u003csection class=\"card rowline\"\u003e\n    \u003cdiv\u003e\n      \u003cdiv class=\"label\"\u003eRöle Davranışı\u003c/div\u003e\n      \u003cdiv class=\"hint\" id=\"fsHint\"\u003eOda ünitesine 5 dakika boyunca ulaşılamazsa röle kapanır.\u003c/div\u003e\n    \u003c/div\u003e\n    \u003cbutton class=\"toggle\" id=\"fsBtn\" onclick=\"toggleFailSafe()\" aria-label=\"Röle fail-safe\"\u003e\u003cspan\u003e\u003c/span\u003e\u003c/button\u003e\n  \u003c/section\u003e\n\n  \u003csection class=\"card\"\u003e\n    \u003cdiv class=\"label\"\u003eSıcaklık Geçmişi\u003c/div\u003e\n    \u003cdiv class=\"chips\"\u003e\n      \u003cbutton class=\"chip on\" id=\"h24\" onclick=\"setRange(24)\"\u003e24 saat\u003c/button\u003e\n      \u003cbutton class=\"chip\" id=\"h168\" onclick=\"setRange(168)\"\u003e7 gün\u003c/button\u003e\n      \u003cbutton class=\"chip\" id=\"h720\" onclick=\"setRange(720)\"\u003e30 gün\u003c/button\u003e\n    \u003c/div\u003e\n    \u003ccanvas id=\"chart\" height=\"200\"\u003e\u003c/canvas\u003e\n    \u003cdiv class=\"legend\"\u003e\n      \u003cspan\u003e\u003ci style=\"background:#ff9e55\"\u003e\u003c/i\u003eOda\u003c/span\u003e\n      \u003cspan\u003e\u003ci style=\"background:#49b8ff\"\u003e\u003c/i\u003eHedef\u003c/span\u003e\n      \u003cspan id=\"histInfo\"\u003e\u003c/span\u003e\n    \u003c/div\u003e\n    \u003cdiv class=\"mini\"\u003e\n      \u003cbutton onclick=\"sampleNow()\"\u003eŞimdi Kaydet\u003c/button\u003e\n      \u003cbutton onclick=\"loadHistory(true)\"\u003eYenile\u003c/button\u003e\n      \u003cbutton onclick=\"clearHistory()\"\u003eTemizle\u003c/button\u003e\n    \u003c/div\u003e\n    \u003ca class=\"linkbtn\" href=\"/fs\" target=\"_blank\" rel=\"noopener\"\u003eLittleFS Dosya Yöneticisi →\u003c/a\u003e\n    \u003cdiv class=\"hint\"\u003eSaatlik kayıtlar LittleFS\u0027de \u003cb\u003e/history.csv\u003c/b\u003e dosyasında tutulur (en fazla ~30 gün).\u003c/div\u003e\n  \u003c/section\u003e\n\n  \u003cdetails class=\"card\"\u003e\n    \u003csummary\u003eMQTT \u0026amp; Telegram \u003cspan class=\"chev\"\u003e⌄\u003c/span\u003e\u003c/summary\u003e\n    \u003cdiv class=\"hint\"\u003eMQTT ile durum yayınlanır ve komut alınır. Telegram botu ile uzaktan kontrol edilebilir.\n      Şifre/token alanlarını boş bırakırsanız mevcut değer korunur.\u003c/div\u003e\n    \u003cdiv class=\"form two\"\u003e\n      \u003clabel\u003eMQTT Sunucu\n        \u003cinput id=\"mqtthost\" type=\"text\" placeholder=\"192.168.1.10\" autocomplete=\"off\"\u003e\n      \u003c/label\u003e\n      \u003clabel\u003eMQTT Port\n        \u003cinput id=\"mqttport\" type=\"number\" min=\"1\" max=\"65535\" placeholder=\"1883\"\u003e\n      \u003c/label\u003e\n      \u003clabel\u003eMQTT Kullanıcı\n        \u003cinput id=\"mqttuser\" type=\"text\" autocomplete=\"off\"\u003e\n      \u003c/label\u003e\n      \u003clabel\u003eMQTT Şifre\n        \u003cinput id=\"mqttpass\" type=\"password\" placeholder=\"Değişmeyecekse boş\" autocomplete=\"new-password\"\u003e\n      \u003c/label\u003e\n      \u003clabel\u003eKonu Öneki\n        \u003cinput id=\"mqttprefix\" type=\"text\" placeholder=\"kombi\" autocomplete=\"off\"\u003e\n      \u003c/label\u003e\n      \u003clabel\u003eTelegram Bot Token\n        \u003cinput id=\"tgtoken\" type=\"password\" placeholder=\"Değişmeyecekse boş\" autocomplete=\"new-password\"\u003e\n      \u003c/label\u003e\n      \u003clabel\u003eTelegram Chat ID\n        \u003cinput id=\"tgchat\" type=\"text\" autocomplete=\"off\"\u003e\n      \u003c/label\u003e\n    \u003c/div\u003e\n    \u003cbutton class=\"primary\" onclick=\"saveNet()\"\u003eBağlantı Ayarlarını Kaydet\u003c/button\u003e\n    \u003cbutton class=\"ghost\" style=\"width:100%;margin-top:8px\" onclick=\"clearNet()\"\u003eMQTT/Telegram Ayarlarını Sil\u003c/button\u003e\n    \u003cdiv class=\"kv\" style=\"margin-top:12px\"\u003e\u003cspan\u003eMQTT durumu\u003c/span\u003e\u003cb id=\"mqttState\"\u003e—\u003c/b\u003e\u003c/div\u003e\n    \u003cdiv class=\"kv\"\u003e\u003cspan\u003eTelegram durumu\u003c/span\u003e\u003cb id=\"tgState\"\u003e—\u003c/b\u003e\u003c/div\u003e\n  \u003c/details\u003e\n\n  \u003cdetails class=\"card\"\u003e\n    \u003csummary\u003eAyarlar \u003cspan class=\"chev\"\u003e⌄\u003c/span\u003e\u003c/summary\u003e\n    \u003cdiv class=\"form two\"\u003e\n      \u003clabel\u003eHisterezis (°C)\n        \u003cinput id=\"hyst\" type=\"number\" step=\"0.1\" min=\"0.1\" max=\"3\"\u003e\n      \u003c/label\u003e\n      \u003clabel\u003eKalibrasyon (°C)\n        \u003cinput id=\"cal\" type=\"number\" step=\"0.1\" min=\"-5\" max=\"5\"\u003e\n      \u003c/label\u003e\n      \u003clabel\u003eDon Koruması (°C)\n        \u003cinput id=\"frost\" type=\"number\" step=\"0.5\" min=\"2\" max=\"10\"\u003e\n      \u003c/label\u003e\n    \u003c/div\u003e\n    \u003cbutton class=\"primary\" onclick=\"saveSettings()\"\u003eAyarları Kaydet\u003c/button\u003e\n    \u003cdiv class=\"hint\"\u003eHisterezis: hedefin altında/üstünde açma-kapama aralığı. Kalibrasyon: sensör düzeltmesi.\u003c/div\u003e\n  \u003c/details\u003e\n\n  \u003cdetails class=\"card\"\u003e\n    \u003csummary\u003eWi-Fi Ayarları \u003cspan class=\"chev\"\u003e⌄\u003c/span\u003e\u003c/summary\u003e\n    \u003cdiv class=\"hint\"\u003eKombi röle ünitesi bu cihazın AP\u0027sine bağlanır; AP her zaman açıktır.\n      Ev ağına da bağlanmak için bilgileri girin. SSID\u0027yi boş bırakırsanız yalnızca AP modunda çalışır.\u003c/div\u003e\n    \u003cdiv class=\"netrow\"\u003e\n      \u003cbutton class=\"ghost\" id=\"scanBtn\" onclick=\"scanWifi()\"\u003eAğları Tara\u003c/button\u003e\n      \u003cspan class=\"hint\" id=\"scanHint\"\u003eÇevredeki ağları tarayıp listeden seçebilirsiniz.\u003c/span\u003e\n    \u003c/div\u003e\n    \u003cdiv class=\"netlist\" id=\"netList\"\u003e\u003c/div\u003e\n    \u003cdiv class=\"form two\"\u003e\n      \u003clabel\u003eEv Ağı SSID\n        \u003cinput id=\"wifiSsid\" type=\"text\" maxlength=\"32\" autocapitalize=\"none\" autocomplete=\"off\"\u003e\n      \u003c/label\u003e\n      \u003clabel\u003eŞifre\n        \u003cinput id=\"wifiPass\" type=\"password\" maxlength=\"64\" autocomplete=\"new-password\" placeholder=\"Değişmeyecekse boş bırakın\"\u003e\n      \u003c/label\u003e\n    \u003c/div\u003e\n    \u003cbutton class=\"primary\" onclick=\"saveWifi()\"\u003eKaydet ve Yeniden Başlat\u003c/button\u003e\n  \u003c/details\u003e\n\n  \u003csection class=\"card\"\u003e\n    \u003cdiv class=\"label\"\u003eSistem\u003c/div\u003e\n    \u003cdiv class=\"kv\"\u003e\u003cspan\u003eIP adresi\u003c/span\u003e\u003cb id=\"ip\"\u003e—\u003c/b\u003e\u003c/div\u003e\n    \u003cdiv class=\"kv\"\u003e\u003cspan\u003eAP adresi\u003c/span\u003e\u003cb id=\"apip\"\u003e—\u003c/b\u003e\u003c/div\u003e\n    \u003cdiv class=\"kv\"\u003e\u003cspan\u003eEv ağı\u003c/span\u003e\u003cb id=\"ssidView\"\u003e—\u003c/b\u003e\u003c/div\u003e\n    \u003cdiv class=\"kv\"\u003e\u003cspan\u003eSinyal\u003c/span\u003e\u003cb id=\"rssi\"\u003e—\u003c/b\u003e\u003c/div\u003e\n    \u003cdiv class=\"kv\"\u003e\u003cspan\u003eKombi bağlantısı\u003c/span\u003e\u003cb id=\"client\"\u003e—\u003c/b\u003e\u003c/div\u003e\n    \u003cdiv class=\"kv\"\u003e\u003cspan\u003eÇalışma süresi\u003c/span\u003e\u003cb id=\"uptime\"\u003e—\u003c/b\u003e\u003c/div\u003e\n    \u003cdiv class=\"kv\"\u003e\u003cspan\u003eBoş bellek\u003c/span\u003e\u003cb id=\"heap\"\u003e—\u003c/b\u003e\u003c/div\u003e\n    \u003cdiv class=\"kv\"\u003e\u003cspan\u003eSürüm\u003c/span\u003e\u003cb id=\"fw\"\u003e—\u003c/b\u003e\u003c/div\u003e\n    \u003cdiv class=\"kv\"\u003e\u003cspan\u003eSaat (NTP)\u003c/span\u003e\u003cb id=\"timeState\"\u003e—\u003c/b\u003e\u003c/div\u003e\n    \u003cdiv class=\"kv\"\u003e\u003cspan\u003eGeçmiş kayıt\u003c/span\u003e\u003cb id=\"histCount\"\u003e—\u003c/b\u003e\u003c/div\u003e\n    \u003cdiv class=\"kv\"\u003e\u003cspan\u003eLittleFS\u003c/span\u003e\u003cb id=\"fsUse\"\u003e—\u003c/b\u003e\u003c/div\u003e\n    \u003cbutton class=\"danger\" onclick=\"reboot()\"\u003eYeniden Başlat\u003c/button\u003e\n  \u003c/section\u003e\n\n  \u003cp class=\"foot\"\u003eKombi Termostat • NodeMCU v3 • AP: 192.168.4.1\u003c/p\u003e\n\u003c/div\u003e\n\u003cdiv class=\"toast\" id=\"toast\"\u003e\u003c/div\u003e\n\n\u003cscript\u003e\n/* === DEMO KATMANI: gercek donanim yerine sahte API === */\n(function () {\n  var MOCK = {\n    link: true, sensorOk: true, mode: true, sta: true,\n    temp: 21.4, sp: 22.0, eff: 22.0, hum: 55, flow: 42.5,\n    demand: true, relay: true, boost: 0,\n    ip: \u0027192.168.1.57\u0027, apip: \u0027192.168.4.1\u0027, ssid: \u0027EvWifi\u0027,\n    rssi: -58, client: \u0027192.168.4.2\u0027, uptime: 8040, heap: 38200,\n    fw: \u00271.0.0\u0027, hyst: 0.3, cal: 0, frost: 5.0,\n    sleepEn: 1, sleep: 1, sleepStart: \u002723:00\u0027, sleepEnd: \u002707:00\u0027, sleepSp: 18.0,\n    failsafe: 0, mqtt: 1, mqttCfg: \u0027192.168.1.10\u0027, mqttPort: 1883, mqttPrefix: \u0027kombi\u0027,\n    tg: 1, tgOk: 12, tgErr: \u0027\u0027, tgChat: \u0027123456789\u0027,\n    timeOk: 1, now: Math.floor(Date.now() / 1000), hist: 0,\n    fsUsed: 4096, fsTotal: 1048576\n  };\n\n  function mins(hhmm) {\n    var p = String(hhmm || \u00270:0\u0027).split(\u0027:\u0027);\n    return (Number(p[0]) || 0) * 60 + (Number(p[1]) || 0);\n  }\n  function sleepNow() {\n    if (!MOCK.sleepEn) return false;\n    var a = mins(MOCK.sleepStart), b = mins(MOCK.sleepEnd);\n    var d = new Date(), n = d.getHours() * 60 + d.getMinutes();\n    if (a === b) return false;\n    return a \u003c b ? (n \u003e= a \u0026\u0026 n \u003c b) : (n \u003e= a || n \u003c b);\n  }\n\n  var HIST = [];\n  (function seed() {\n    var now = Math.floor(Date.now() / 1000);\n    for (var k = 719; k \u003e= 0; k--) {\n      var ts = now - k * 3600;\n      var hr = new Date(ts * 1000).getHours();\n      var slp = hr \u003e= 23 || hr \u003c 7;\n      var base = 21 + Math.sin(k / 12) * 2.1 + (k % 5) * 0.08;\n      HIST.push({\n        t: ts,\n        v: Math.round((base - (slp ? 1.6 : 0)) * 10) / 10,\n        h: 55,\n        s: slp ? 18 : 22,\n        d: slp ? 0 : 1,\n        u: slp ? 1 : 0\n      });\n    }\n    MOCK.hist = HIST.length;\n  })();\n\n  function tick() {\n    var act = sleepNow();\n    MOCK.sleep = MOCK.sleepEn ? (act ? 2 : 1) : 0;\n    var target = (act ? MOCK.sleepSp : MOCK.sp) + (MOCK.boost \u003e 0 ? 1.5 : 0);\n    MOCK.eff = Math.round(target * 10) / 10;\n    if (MOCK.boost \u003e 0) MOCK.boost = Math.max(0, MOCK.boost - 3);\n    MOCK.demand = !!(MOCK.mode \u0026\u0026 MOCK.sensorOk \u0026\u0026 MOCK.link \u0026\u0026 MOCK.temp \u003c target - MOCK.hyst / 2);\n    MOCK.relay = MOCK.demand;\n    MOCK.temp = Math.round((MOCK.temp + (MOCK.demand ? 0.12 : -0.04)) * 10) / 10;\n    MOCK.temp = Math.max(15, Math.min(27, MOCK.temp));\n    MOCK.uptime += 3;\n    MOCK.now = Math.floor(Date.now() / 1000);\n    MOCK.heap = 36800 + Math.round(Math.random() * 1200);\n  }\n  setInterval(tick, 3000);\n\n  function ok(obj) {\n    return Promise.resolve({\n      ok: true, status: 200,\n      json: function () { return Promise.resolve(obj); },\n      text: function () { return Promise.resolve(\u0027\u0027); }\n    });\n  }\n\n  window.fetch = function (url, opts) {\n    var u = String(url);\n    var i = u.indexOf(\u0027?\u0027);\n    var path = i \u003c 0 ? u : u.slice(0, i);\n    var q = new URLSearchParams(i \u003c 0 ? \u0027\u0027 : u.slice(i + 1));\n    var body = (opts \u0026\u0026 opts.body instanceof URLSearchParams) ? opts.body : new URLSearchParams();\n\n    if (path === \u0027/api/set\u0027) {\n      if (q.has(\u0027sp\u0027)) MOCK.sp = Number(q.get(\u0027sp\u0027));\n      if (q.has(\u0027hyst\u0027)) MOCK.hyst = Number(q.get(\u0027hyst\u0027));\n      if (q.has(\u0027cal\u0027)) MOCK.cal = Number(q.get(\u0027cal\u0027));\n      if (q.has(\u0027frost\u0027)) MOCK.frost = Number(q.get(\u0027frost\u0027));\n      if (q.has(\u0027mode\u0027)) MOCK.mode = Number(q.get(\u0027mode\u0027)) !== 0;\n      if (q.has(\u0027boost\u0027)) MOCK.boost = Number(q.get(\u0027boost\u0027)) * 60;\n      if (q.has(\u0027sleep\u0027)) MOCK.sleepEn = Number(q.get(\u0027sleep\u0027)) ? 1 : 0;\n      if (q.has(\u0027sleepstart\u0027)) MOCK.sleepStart = q.get(\u0027sleepstart\u0027);\n      if (q.has(\u0027sleepend\u0027)) MOCK.sleepEnd = q.get(\u0027sleepend\u0027);\n      if (q.has(\u0027sleepsp\u0027)) MOCK.sleepSp = Number(q.get(\u0027sleepsp\u0027));\n      if (q.has(\u0027failsafe\u0027)) MOCK.failsafe = Number(q.get(\u0027failsafe\u0027)) ? 1 : 0;\n      tick();\n      return ok(MOCK);\n    }\n    if (path === \u0027/api/net\u0027) {\n      if (body.has(\u0027mqtthost\u0027)) MOCK.mqttCfg = body.get(\u0027mqtthost\u0027);\n      if (body.has(\u0027mqttport\u0027)) MOCK.mqttPort = Number(body.get(\u0027mqttport\u0027)) || 1883;\n      if (body.has(\u0027mqttprefix\u0027)) MOCK.mqttPrefix = body.get(\u0027mqttprefix\u0027);\n      if (body.has(\u0027tgchat\u0027)) MOCK.tgChat = body.get(\u0027tgchat\u0027);\n      if (body.get(\u0027mqttclear\u0027) === \u00271\u0027 || body.get(\u0027tgclear\u0027) === \u00271\u0027) {\n        if (body.get(\u0027mqttclear\u0027) === \u00271\u0027) { MOCK.mqttCfg = \u0027\u0027; MOCK.mqtt = 0; }\n        if (body.get(\u0027tgclear\u0027) === \u00271\u0027) { MOCK.tg = 0; MOCK.tgChat = \u0027\u0027; }\n      } else {\n        MOCK.mqtt = MOCK.mqttCfg ? 1 : 0;\n        MOCK.tg = MOCK.tgChat ? 1 : 0;\n      }\n      return ok({ ok: true });\n    }\n    if (path === \u0027/api/history\u0027) {\n      var hours = Number(q.get(\u0027hours\u0027) || 24);\n      var now = Math.floor(Date.now() / 1000);\n      var cut = now - hours * 3600;\n      var stride = Math.max(1, Math.ceil(hours / 200));\n      var out = [];\n      for (var k = 0; k \u003c HIST.length; k++) {\n        if (HIST[k].t \u003c cut) continue;\n        if (k % stride !== 0) continue;\n        out.push(HIST[k]);\n      }\n      return ok({\n        timeOk: 1, now: now, hours: hours, count: HIST.length,\n        fsUsed: MOCK.fsUsed, fsTotal: MOCK.fsTotal, points: out\n      });\n    }\n    if (path === \u0027/api/history/sample\u0027) {\n      var t = Math.floor(Date.now() / 1000);\n      HIST.push({ t: t, v: MOCK.temp, h: MOCK.hum, s: MOCK.eff, d: MOCK.demand ? 1 : 0, u: MOCK.sleep === 2 ? 1 : 0 });\n      MOCK.hist = HIST.length;\n      return ok({ ok: 1, count: HIST.length });\n    }\n    if (path === \u0027/api/history/clear\u0027) {\n      HIST.length = 0;\n      MOCK.hist = 0;\n      return ok({ ok: true });\n    }\n    if (path === \u0027/api/scan\u0027) {\n      return ok({ ok: 1, nets: [\n        { s: \u0027EvWifi\u0027, r: -58, e: 1 },\n        { s: \u0027EvWifi-5G\u0027, r: -64, e: 1 },\n        { s: \u0027KOMSU_2.4G\u0027, r: -71, e: 1 },\n        { s: \u0027KOMBI-TEST\u0027, r: -77, e: 1 },\n        { s: \u0027MISAFIR\u0027, r: -83, e: 0 },\n        { s: \u0027TP-LINK_9F2C\u0027, r: -88, e: 1 }\n      ] });\n    }\n    if (path === \u0027/api/wifi\u0027 || path === \u0027/api/reboot\u0027) return ok({ ok: true });\n    return ok(MOCK);\n  };\n\n  window.__demoState = MOCK;\n})();\n\u003c/script\u003e\n\u003cscript\u003e\nconst $ = id =\u003e document.getElementById(id);\nlet S = null, timer = null, dragging = false, toastTimer = null, firstRender = true;\nlet histHours = 24, histData = null, lastHistCount = -1;\n\nfunction clamp(v,a,b){ return Math.max(a,Math.min(b,v)); }\nfunction fmt(v,d){ return (v===null||v===undefined||Number.isNaN(Number(v))) ? \u0027—\u0027 : Number(v).toFixed(d===undefined?1:d); }\n\nfunction setPill(kind, text){\n  const p = $(\u0027pill\u0027);\n  p.className = \u0027pill \u0027 + (kind || \u0027\u0027);\n  $(\u0027pillTxt\u0027).textContent = text;\n}\n\nfunction toast(msg, bad){\n  const t = $(\u0027toast\u0027);\n  t.textContent = msg;\n  t.className = \u0027toast show\u0027 + (bad ? \u0027 bad\u0027 : \u0027\u0027);\n  clearTimeout(toastTimer);\n  toastTimer = setTimeout(() =\u003e { t.className = \u0027toast\u0027; }, 2600);\n}\n\nasync function api(path, opts){\n  const r = await fetch(path, Object.assign({cache:\u0027no-store\u0027}, opts || {}));\n  if(!r.ok) throw new Error(\u0027HTTP \u0027 + r.status);\n  return r.json();\n}\n\nfunction paintRange(v){\n  const pct = ((v - 5) / 25) * 100;\n  $(\u0027range\u0027).style.setProperty(\u0027--p\u0027, pct.toFixed(1) + \u0027%\u0027);\n}\n\nfunction uptimeText(sec){\n  sec = Number(sec) || 0;\n  const d = Math.floor(sec/86400), h = Math.floor((sec%86400)/3600), m = Math.floor((sec%3600)/60);\n  if(d \u003e 0) return d + \u0027 gün \u0027 + h + \u0027 sa\u0027;\n  if(h \u003e 0) return h + \u0027 sa \u0027 + m + \u0027 dk\u0027;\n  return m + \u0027 dk\u0027;\n}\n\nfunction render(){\n  if(!S) return;\n  setPill(S.link ? \u0027ok\u0027 : \u0027warn\u0027, S.link ? \u0027Kombi bağlı\u0027 : \u0027Kombi bağlı değil\u0027);\n\n  const t = (S.sensorOk \u0026\u0026 S.temp !== null) ? Number(S.temp) : null;\n  $(\u0027temp\u0027).textContent = t === null ? \u0027--\u0027 : t.toFixed(1);\n  const big = $(\u0027bigWrap\u0027);\n  big.classList.toggle(\u0027cold\u0027, t !== null \u0026\u0026 t \u003c S.sp - 1);\n  big.classList.toggle(\u0027hot\u0027, t !== null \u0026\u0026 t \u003e S.sp + 1);\n\n  $(\u0027hum\u0027).textContent = \u0027Nem \u0027 + (S.hum === null ? \u0027—\u0027 : Math.round(S.hum) + \u0027%\u0027);\n  $(\u0027flow\u0027).textContent = \u0027Kombi suyu \u0027 + (S.flow \u003e -100 ? Number(S.flow).toFixed(1) + \u0027°C\u0027 : \u0027—\u0027);\n\n  if(!dragging){\n    $(\u0027spVal\u0027).textContent = Number(S.sp).toFixed(1);\n    $(\u0027range\u0027).value = S.sp;\n    paintRange(S.sp);\n  }\n\n  const state = $(\u0027state\u0027);\n  if(!S.sensorOk){ state.textContent = \u0027Sensör hatası\u0027; state.className = \u0027bad\u0027; }\n  else if(!S.link){ state.textContent = \u0027Bağlantı yok\u0027; state.className = \u0027bad\u0027; }\n  else if(!S.mode){ state.textContent = \u0027Kapalı\u0027; state.className = \u0027\u0027; }\n  else if(S.demand){ state.textContent = \u0027Isıtıyor\u0027; state.className = \u0027hot\u0027; }\n  else { state.textContent = \u0027Bekliyor\u0027; state.className = \u0027ok\u0027; }\n\n  const relay = $(\u0027relay\u0027);\n  relay.textContent = S.relay ? \u0027Aktif\u0027 : \u0027Kapalı\u0027;\n  relay.className = S.relay ? \u0027hot\u0027 : \u0027\u0027;\n\n  $(\u0027boost\u0027).textContent = S.boost \u003e 0 ? Math.ceil(S.boost/60) + \u0027 dk\u0027 : \u0027Kapalı\u0027;\n  $(\u0027boostHint\u0027).textContent = S.boost \u003e 0\n    ? \u0027Boost aktif: yaklaşık \u0027 + Math.ceil(S.boost/60) + \u0027 dk kaldı.\u0027\n    : \u0027Boost, hedefi geçici olarak +1.5 °C yükseltir.\u0027;\n\n  const btn = $(\u0027modeBtn\u0027);\n  btn.classList.toggle(\u0027on\u0027, !!S.mode);\n  $(\u0027modeHint\u0027).textContent = S.mode ? \u0027Açık: hedef sıcaklığa göre ısıtır.\u0027 : \u0027Kapalı: yalnızca don koruması devrede.\u0027;\n\n  $(\u0027ip\u0027).textContent = S.ip || \u0027—\u0027;\n  $(\u0027apip\u0027).textContent = S.apip || \u0027—\u0027;\n  $(\u0027ssidView\u0027).textContent = S.sta ? (S.ssid || \u0027—\u0027) : \u0027AP modu\u0027;\n  $(\u0027rssi\u0027).textContent = S.sta ? (S.rssi + \u0027 dBm\u0027) : \u0027—\u0027;\n  $(\u0027client\u0027).textContent = S.client ? S.client : \u0027Bağlı değil\u0027;\n  $(\u0027uptime\u0027).textContent = uptimeText(S.uptime);\n  $(\u0027heap\u0027).textContent = Math.round(S.heap/1024) + \u0027 KB\u0027;\n  $(\u0027fw\u0027).textContent = S.fw;\n  $(\u0027net\u0027).textContent = S.sta ? (\u0027Ev ağı • \u0027 + S.ip) : (\u0027AP • \u0027 + S.apip);\n\n  // ---- Uyku / role fail-safe / baglanti ----\n  const sleepOn = !!S.sleepEn;\n  $(\u0027sleepBtn\u0027).classList.toggle(\u0027on\u0027, sleepOn);\n  if(!sleepOn){\n    $(\u0027sleepHint\u0027).textContent = \u0027Belirlenen saat aralığında daha düşük hedef uygulanır.\u0027;\n  }else if(S.sleep === 2){\n    $(\u0027sleepHint\u0027).textContent = \u0027AKTİF • hedef \u0027 + fmt(S.sleepSp) + \u0027 °C • \u0027 + S.sleepStart + \u0027–\u0027 + S.sleepEnd;\n  }else{\n    $(\u0027sleepHint\u0027).textContent = \u0027Bekliyor • \u0027 + S.sleepStart + \u0027–\u0027 + S.sleepEnd + \u0027 • \u0027 + fmt(S.sleepSp) + \u0027 °C\u0027;\n  }\n  $(\u0027effHint\u0027).textContent = (S.sleep === 2)\n    ? \u0027Uygulanan hedef: \u0027 + fmt(S.eff) + \u0027 °C (uyku modu)\u0027\n    : \u0027Uygulanan hedef: \u0027 + fmt(S.eff) + \u0027 °C\u0027;\n\n  $(\u0027fsBtn\u0027).classList.toggle(\u0027on\u0027, !!S.failsafe);\n  $(\u0027fsHint\u0027).textContent = S.failsafe\n    ? \u0027Oda ünitesine 5 dk ulaşılamazsa röle son talebi korur (AÇIK kalabilir).\u0027\n    : \u0027Oda ünitesine 5 dk ulaşılamazsa röle kapanır (güvenli).\u0027;\n\n  $(\u0027mqttState\u0027).textContent = S.mqtt\n    ? \u0027Bağlı • konu: \u0027 + (S.mqttPrefix || \u0027kombi\u0027)\n    : (S.mqttCfg ? \u0027Bağlanıyor…\u0027 : \u0027Yapılandırılmadı\u0027);\n  $(\u0027tgState\u0027).textContent = S.tg\n    ? ((S.tgOk \u003e= 0 ? \u0027Çalışıyor\u0027 : \u0027Bekliyor\u0027) + (S.tgErr ? \u0027 • \u0027 + S.tgErr : \u0027\u0027))\n    : \u0027Yapılandırılmadı\u0027;\n\n  $(\u0027timeState\u0027).textContent = S.timeOk ? \u0027Senkron\u0027 : \u0027Bekleniyor\u0027;\n  $(\u0027histCount\u0027).textContent = S.hist + \u0027 kayıt\u0027;\n  $(\u0027fsUse\u0027).textContent = S.fsTotal\n    ? (Math.round(S.fsUsed / 1024) + \u0027 / \u0027 + Math.round(S.fsTotal / 1024) + \u0027 KB\u0027)\n    : \u0027—\u0027;\n\n  if(S.hist !== lastHistCount){\n    lastHistCount = S.hist;\n    loadHistory();\n  }\n\n  if(firstRender){\n    $(\u0027hyst\u0027).value = S.hyst;\n    $(\u0027cal\u0027).value = S.cal;\n    $(\u0027frost\u0027).value = S.frost;\n    $(\u0027wifiSsid\u0027).value = S.ssid || \u0027\u0027;\n    $(\u0027sleepStart\u0027).value = S.sleepStart || \u002723:00\u0027;\n    $(\u0027sleepEnd\u0027).value = S.sleepEnd || \u002707:00\u0027;\n    $(\u0027sleepSp\u0027).value = S.sleepSp;\n    $(\u0027mqtthost\u0027).value = S.mqttCfg || \u0027\u0027;\n    $(\u0027mqttport\u0027).value = S.mqttPort || 1883;\n    $(\u0027mqttprefix\u0027).value = S.mqttPrefix || \u0027kombi\u0027;\n    $(\u0027tgchat\u0027).value = S.tgChat || \u0027\u0027;\n    firstRender = false;\n  }\n}\n\nasync function poll(){\n  try{\n    S = await api(\u0027/api/status\u0027);\n    render();\n  }catch(e){\n    setPill(\u0027bad\u0027, \u0027Bağlantı yok\u0027);\n  }\n  clearTimeout(timer);\n  timer = setTimeout(poll, 2500);\n}\n\nasync function sendSet(params, okMsg){\n  try{\n    S = await api(\u0027/api/set?\u0027 + new URLSearchParams(params).toString());\n    firstRender = false;\n    render();\n    if(okMsg) toast(okMsg);\n  }catch(e){ toast(\u0027İşlem başarısız\u0027, true); }\n}\n\nfunction step(d){\n  if(!S) return;\n  const v = clamp(Math.round((Number(S.sp) + d) * 2) / 2, 5, 30);\n  $(\u0027spVal\u0027).textContent = v.toFixed(1);\n  $(\u0027range\u0027).value = v;\n  paintRange(v);\n  sendSet({sp:v});\n}\n\n$(\u0027range\u0027).addEventListener(\u0027input\u0027, e =\u003e {\n  dragging = true;\n  const v = Number(e.target.value);\n  $(\u0027spVal\u0027).textContent = v.toFixed(1);\n  paintRange(v);\n});\n$(\u0027range\u0027).addEventListener(\u0027change\u0027, e =\u003e {\n  dragging = false;\n  sendSet({sp:Number(e.target.value)});\n});\n\nfunction toggleMode(){ if(S) sendSet({mode: S.mode ? 0 : 1}); }\nfunction boost(m){ sendSet({boost:m}, m \u003e 0 ? (\u0027Boost \u0027 + m + \u0027 dk başlatıldı\u0027) : \u0027Boost iptal edildi\u0027); }\n\nfunction saveSettings(){\n  const hyst = Number($(\u0027hyst\u0027).value);\n  const cal = Number($(\u0027cal\u0027).value);\n  const frost = Number($(\u0027frost\u0027).value);\n  if(!isFinite(hyst) || !isFinite(cal) || !isFinite(frost)){ toast(\u0027Geçerli değer girin\u0027, true); return; }\n  sendSet({hyst:hyst, cal:cal, frost:frost}, \u0027Ayarlar kaydedildi\u0027);\n}\n\nlet scanning = false;\nasync function scanWifi(){\n  if(scanning) return;\n  scanning = true;\n  const btn = $(\u0027scanBtn\u0027), list = $(\u0027netList\u0027), hint = $(\u0027scanHint\u0027);\n  btn.disabled = true;\n  btn.textContent = \u0027Taranıyor…\u0027;\n  hint.textContent = \u0027Çevredeki ağlar aranıyor, birkaç saniye sürebilir.\u0027;\n  try{\n    const r = await api(\u0027/api/scan\u0027);\n    const nets = (r \u0026\u0026 r.nets) ? r.nets : [];\n    list.textContent = \u0027\u0027;\n    list.classList.add(\u0027on\u0027);\n    if(nets.length === 0){\n      hint.textContent = \u0027Ağ bulunamadı; SSID\\\u0027yi elle girebilirsiniz.\u0027;\n    }else{\n      hint.textContent = nets.length + \u0027 ağ bulundu. Seçmek için dokunun.\u0027;\n      nets.forEach(n =\u003e {\n        const b = document.createElement(\u0027button\u0027);\n        b.type = \u0027button\u0027;\n        b.className = \u0027net\u0027;\n        const nm = document.createElement(\u0027b\u0027);\n        nm.textContent = n.s;\n        const meta = document.createElement(\u0027span\u0027);\n        meta.textContent = (n.e ? \u0027🔒 \u0027 : \u0027\u0027) + n.r + \u0027 dBm\u0027;\n        b.appendChild(nm);\n        b.appendChild(meta);\n        b.onclick = () =\u003e {\n          $(\u0027wifiSsid\u0027).value = n.s;\n          Array.prototype.forEach.call(list.children, c =\u003e c.classList.remove(\u0027sel\u0027));\n          b.classList.add(\u0027sel\u0027);\n          if(n.e) $(\u0027wifiPass\u0027).focus();\n        };\n        list.appendChild(b);\n      });\n    }\n  }catch(e){\n    hint.textContent = \u0027Tarama başarısız oldu; SSID\\\u0027yi elle girebilirsiniz.\u0027;\n    toast(\u0027Ağ taraması başarısız\u0027, true);\n  }\n  btn.disabled = false;\n  btn.textContent = \u0027Ağları Tara\u0027;\n  scanning = false;\n}\n\nasync function saveWifi(){\n  const ssid = $(\u0027wifiSsid\u0027).value.trim();\n  const pass = $(\u0027wifiPass\u0027).value;\n  if(ssid.length === 0){\n    if(!confirm(\u0027Ev ağı bilgileri silinsin ve yalnızca AP modunda çalışılsın mı?\u0027)) return;\n  }\n  try{\n    await api(\u0027/api/wifi\u0027, {method:\u0027POST\u0027, body:new URLSearchParams({ssid:ssid, pass:pass})});\n    toast(\u0027Kaydedildi. Cihaz yeniden başlıyor…\u0027);\n    setPill(\u0027warn\u0027, \u0027Yeniden başlıyor\u0027);\n    setTimeout(() =\u003e { location.reload(); }, 9000);\n  }catch(e){ toast(\u0027Kaydedilemedi\u0027, true); }\n}\n\nasync function reboot(){\n  if(!confirm(\u0027Cihaz yeniden başlatılsın mı?\u0027)) return;\n  try{ await api(\u0027/api/reboot\u0027, {method:\u0027POST\u0027}); }catch(e){}\n  toast(\u0027Yeniden başlıyor…\u0027);\n  setTimeout(() =\u003e { location.reload(); }, 8000);\n}\n\nfunction toggleSleep(){\n  if(S) sendSet({sleep: S.sleepEn ? 0 : 1}, S.sleepEn ? \u0027Uyku modu kapatıldı\u0027 : \u0027Uyku modu açıldı\u0027);\n}\n\nfunction saveSleep(){\n  const a = $(\u0027sleepStart\u0027).value || \u002723:00\u0027;\n  const b = $(\u0027sleepEnd\u0027).value || \u002707:00\u0027;\n  const sp = Number($(\u0027sleepSp\u0027).value);\n  if(!isFinite(sp) || sp \u003c 5 || sp \u003e 30){ toast(\u0027Geçerli uyku hedefi girin\u0027, true); return; }\n  sendSet({sleep: (S \u0026\u0026 S.sleepEn) ? 1 : 0, sleepstart:a, sleepend:b, sleepsp:sp}, \u0027Uyku ayarları kaydedildi\u0027);\n}\n\nfunction toggleFailSafe(){\n  if(S) sendSet({failsafe: S.failsafe ? 0 : 1},\n    S.failsafe ? \u0027Bağlantı kopunca röle kapanacak\u0027 : \u0027Bağlantı kopunca röle son talebi koruyacak\u0027);\n}\n\nasync function saveNet(){\n  const body = new URLSearchParams({\n    mqtthost: $(\u0027mqtthost\u0027).value.trim(),\n    mqttport: String($(\u0027mqttport\u0027).value || 1883),\n    mqttuser: $(\u0027mqttuser\u0027).value.trim(),\n    mqttpass: $(\u0027mqttpass\u0027).value,\n    mqttprefix: $(\u0027mqttprefix\u0027).value.trim(),\n    tgtoken: $(\u0027tgtoken\u0027).value,\n    tgchat: $(\u0027tgchat\u0027).value.trim()\n  });\n  try{\n    await api(\u0027/api/net\u0027, {method:\u0027POST\u0027, body:body});\n    $(\u0027mqttpass\u0027).value = \u0027\u0027;\n    $(\u0027tgtoken\u0027).value = \u0027\u0027;\n    S = await api(\u0027/api/status\u0027);\n    render();\n    toast(\u0027Bağlantı ayarları kaydedildi\u0027);\n  }catch(e){ toast(\u0027Kaydedilemedi\u0027, true); }\n}\n\nasync function clearNet(){\n  if(!confirm(\u0027MQTT ve Telegram ayarları silinsin mi?\u0027)) return;\n  try{\n    await api(\u0027/api/net\u0027, {method:\u0027POST\u0027, body:new URLSearchParams({mqttclear:\u00271\u0027, tgclear:\u00271\u0027})});\n    S = await api(\u0027/api/status\u0027);\n    render();\n    toast(\u0027Bağlantı ayarları silindi\u0027);\n  }catch(e){ toast(\u0027Silinemedi\u0027, true); }\n}\n\n// ---------------- Sicaklik gecmisi grafigi ----------------\nfunction fmtClock(ts){\n  const d = new Date(Number(ts) * 1000);\n  return String(d.getHours()).padStart(2,\u00270\u0027) + \u0027:\u0027 + String(d.getMinutes()).padStart(2,\u00270\u0027);\n}\nfunction fmtDay(ts){\n  const d = new Date(Number(ts) * 1000);\n  return String(d.getDate()).padStart(2,\u00270\u0027) + \u0027.\u0027 + String(d.getMonth()+1).padStart(2,\u00270\u0027);\n}\n\nfunction setRange(h){\n  histHours = h;\n  [\u0027h24\u0027,\u0027h168\u0027,\u0027h720\u0027].forEach(id =\u003e $(id).classList.remove(\u0027on\u0027));\n  $(h === 24 ? \u0027h24\u0027 : h === 168 ? \u0027h168\u0027 : \u0027h720\u0027).classList.add(\u0027on\u0027);\n  loadHistory();\n}\n\nasync function loadHistory(manual){\n  try{\n    histData = await api(\u0027/api/history?hours=\u0027 + histHours);\n    drawChart();\n    if(manual) toast(\u0027Grafik yenilendi\u0027);\n  }catch(e){ if(manual) toast(\u0027Geçmiş yüklenemedi\u0027, true); }\n}\n\nasync function sampleNow(){\n  try{\n    await api(\u0027/api/history/sample\u0027, {method:\u0027POST\u0027});\n    S = await api(\u0027/api/status\u0027);\n    lastHistCount = S.hist;\n    render();\n    await loadHistory();\n    toast(\u0027Örnek kaydedildi\u0027);\n  }catch(e){ toast(\u0027Kaydedilemedi\u0027, true); }\n}\n\nasync function clearHistory(){\n  if(!confirm(\u0027Tüm sıcaklık geçmişi silinsin mi?\u0027)) return;\n  try{\n    await api(\u0027/api/history/clear\u0027, {method:\u0027POST\u0027});\n    histData = {points:[]};\n    drawChart();\n    S = await api(\u0027/api/status\u0027);\n    lastHistCount = S.hist;\n    render();\n    toast(\u0027Geçmiş silindi\u0027);\n  }catch(e){ toast(\u0027Silinemedi\u0027, true); }\n}\n\nfunction drawChart(){\n  const cv = $(\u0027chart\u0027);\n  if(!cv) return;\n  const w = Math.max(280, cv.clientWidth || 300), h = 200;\n  const dpr = window.devicePixelRatio || 1;\n  cv.width = Math.round(w * dpr);\n  cv.height = Math.round(h * dpr);\n  const g = cv.getContext(\u00272d\u0027);\n  g.setTransform(dpr, 0, 0, dpr, 0, 0);\n  g.clearRect(0, 0, w, h);\n\n  const padL = 36, padR = 10, padT = 12, padB = 22;\n  const cw = w - padL - padR, ch = h - padT - padB;\n  const pts = (histData \u0026\u0026 histData.points) || [];\n  const info = $(\u0027histInfo\u0027);\n\n  g.font = \u002711px system-ui,sans-serif\u0027;\n\n  if(pts.length \u003c 2){\n    g.beginPath();\n    g.moveTo(padL, padT); g.lineTo(padL, padT + ch); g.lineTo(padL + cw, padT + ch);\n    g.strokeStyle = \u0027rgba(36,50,82,.9)\u0027; g.stroke();\n    g.fillStyle = \u0027#94a6c3\u0027; g.textAlign = \u0027center\u0027;\n    g.fillText(histData ? \u0027Henüz yeterli kayıt yok\u0027 : \u0027Yükleniyor…\u0027, w / 2, h / 2);\n    g.textAlign = \u0027left\u0027;\n    if(info) info.textContent = histData ? (pts.length + \u0027 nokta\u0027) : \u0027\u0027;\n    return;\n  }\n\n  let lo = 99, hi = -99;\n  pts.forEach(p =\u003e {\n    const v = Number(p.v), s = Number(p.s);\n    if(isFinite(v)){ lo = Math.min(lo, v); hi = Math.max(hi, v); }\n    if(isFinite(s)){ lo = Math.min(lo, s); hi = Math.max(hi, s); }\n  });\n  if(!isFinite(lo) || !isFinite(hi)){ lo = 5; hi = 30; }\n  lo = Math.floor(lo - 1); hi = Math.ceil(hi + 1);\n  if(hi - lo \u003c 4) hi = lo + 4;\n\n  const t0 = histData.timeOk ? Number(pts[0].t) : 0;\n  const t1 = histData.timeOk ? Math.max(Number(pts[pts.length-1].t), Number(histData.now || 0)) : pts.length - 1;\n\n  const X = i =\u003e {\n    if(histData.timeOk){\n      const tt = Number(pts[i].t);\n      return padL + (t1 === t0 ? cw / 2 : ((tt - t0) / (t1 - t0)) * cw);\n    }\n    return padL + (pts.length === 1 ? cw / 2 : (i / (pts.length - 1)) * cw);\n  };\n  const Y = v =\u003e padT + ch - ((clamp(Number(v), lo, hi) - lo) / (hi - lo)) * ch;\n\n  g.textAlign = \u0027right\u0027; g.fillStyle = \u0027#94a6c3\u0027;\n  const steps = 4;\n  for(let k = 0; k \u003c= steps; k++){\n    const val = lo + (hi - lo) * k / steps;\n    const yy = padT + ch - (k / steps) * ch;\n    g.beginPath(); g.moveTo(padL, yy); g.lineTo(padL + cw, yy);\n    g.strokeStyle = \u0027rgba(36,50,82,.7)\u0027; g.stroke();\n    g.fillText(val.toFixed(0) + \u0027°\u0027, padL - 6, yy + 4);\n  }\n  g.textAlign = \u0027left\u0027;\n\n  const grad = g.createLinearGradient(0, padT, 0, padT + ch);\n  grad.addColorStop(0, \u0027rgba(255,158,85,.35)\u0027);\n  grad.addColorStop(1, \u0027rgba(255,158,85,0)\u0027);\n  g.beginPath();\n  pts.forEach((p, i) =\u003e { const xx = X(i), yy = Y(p.v); i ? g.lineTo(xx, yy) : g.moveTo(xx, yy); });\n  g.lineTo(X(pts.length - 1), padT + ch);\n  g.lineTo(X(0), padT + ch);\n  g.closePath();\n  g.fillStyle = grad; g.fill();\n\n  g.beginPath();\n  pts.forEach((p, i) =\u003e { const xx = X(i), yy = Y(p.v); i ? g.lineTo(xx, yy) : g.moveTo(xx, yy); });\n  g.strokeStyle = \u0027#ff9e55\u0027; g.lineWidth = 2; g.lineJoin = \u0027round\u0027; g.stroke();\n\n  g.beginPath();\n  pts.forEach((p, i) =\u003e { const xx = X(i), yy = Y(p.s); i ? g.lineTo(xx, yy) : g.moveTo(xx, yy); });\n  g.setLineDash([5, 4]); g.strokeStyle = \u0027#49b8ff\u0027; g.lineWidth = 1.5; g.stroke();\n  g.setLineDash([]);\n\n  g.fillStyle = \u0027#94a6c3\u0027; g.textAlign = \u0027center\u0027;\n  const ticks = 3;\n  for(let k = 0; k \u003c= ticks; k++){\n    const idx = Math.round((pts.length - 1) * k / ticks);\n    const p = pts[idx];\n    const label = histData.timeOk\n      ? (histHours \u003e 48 ? fmtDay(p.t) : fmtClock(p.t))\n      : (\u0027#\u0027 + (idx + 1));\n    g.fillText(label, X(idx), h - 6);\n  }\n  g.textAlign = \u0027left\u0027;\n\n  if(info){\n    const vs = pts.map(p =\u003e Number(p.v)).filter(v =\u003e isFinite(v));\n    if(vs.length){\n      info.textContent = pts.length + \u0027 nokta • min \u0027 + Math.min.apply(null, vs).toFixed(1) +\n                         \u0027° • max \u0027 + Math.max.apply(null, vs).toFixed(1) + \u0027°\u0027;\n    }\n  }\n}\n\nlet resizeTimer = null;\nwindow.addEventListener(\u0027resize\u0027, () =\u003e {\n  clearTimeout(resizeTimer);\n  resizeTimer = setTimeout(drawChart, 150);\n});\n\npoll();\n\u003c/script\u003e\n\u003c/body\u003e\n\u003c/html\u003e\n";
+
+// ---- Web arayüzünü telefon çerçevesine göm ----
+document.getElementById('uiFrame').srcdoc = UI_HTML;
+
+// ---- Tam ekran: gömülü arayüzü pencereyi kaplayan katmanda aç ----
+let fsReady = false;
+function openFullUi(ev){
+  if(ev) ev.preventDefault();
+  const box = document.getElementById('fsBox');
+  if(!fsReady){
+    document.getElementById('fsFrame').srcdoc = UI_HTML;
+    fsReady = true;
+  }
+  box.classList.add('on');
+  document.body.style.overflow = 'hidden';
+  return false;
+}
+function closeFullUi(){
+  document.getElementById('fsBox').classList.remove('on');
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', e => { if(e.key === 'Escape') closeFullUi(); });
+
+// ---- OLED emülasyonu (128x64, 6x8 karakter ızgarası) ----
+const NET = { apip: '192.168.4.1', ip: '192.168.1.57', ssid: 'EvWifi', rssi: -58, clientIp: '192.168.4.2' };
+
+const SCENES = {
+  heat:   { temp: 21.4, sp: 22.0, hum: 55,  flow: 42.5, mode: true,  link: true,  sensorOk: true,  demand: true  },
+  idle:   { temp: 22.3, sp: 22.0, hum: 54,  flow: 41.8, mode: true,  link: true,  sensorOk: true,  demand: false },
+  off:    { temp: 19.8, sp: 22.0, hum: 56,  flow: null, mode: false, link: true,  sensorOk: true,  demand: false },
+  sensor: { temp: null, sp: 22.0, hum: null, flow: null, mode: true, link: true,  sensorOk: false, demand: false },
+  nolink: { temp: 21.4, sp: 22.0, hum: 55,  flow: null, mode: true, link: false, sensorOk: true,  demand: false }
+};
+
+// OledTheme.cpp icindeki THEME_TABLE ile ayni alanlar
+const THEMES = [
+  { id:'klasik',  name:'Klasik',    header:1, tempSize:2, tempCenter:0, setpointCol:1, sep:1, status:1, hum:1, boost:1, water:1, page:1, labels:1, invert:0, dim:0 },
+  { id:'minimal', name:'Minimal',   header:0, tempSize:3, tempCenter:1, setpointCol:0, sep:0, status:0, hum:0, boost:0, water:0, page:0, labels:0, invert:0, dim:0 },
+  { id:'ters',    name:'Ters',      header:4, tempSize:2, tempCenter:0, setpointCol:1, sep:1, status:3, hum:1, boost:1, water:0, page:1, labels:1, invert:1, dim:0 },
+  { id:'kutu',    name:'Kutu',      header:3, tempSize:2, tempCenter:0, setpointCol:1, sep:2, status:2, hum:1, boost:1, water:1, page:1, labels:1, invert:0, dim:0 },
+  { id:'genis',   name:'Genis',     header:1, tempSize:3, tempCenter:1, setpointCol:0, sep:2, status:1, hum:1, boost:1, water:0, page:1, labels:0, invert:0, dim:0 },
+  { id:'gece',    name:'Gece',      header:2, tempSize:3, tempCenter:1, setpointCol:0, sep:3, status:0, hum:0, boost:1, water:0, page:0, labels:0, invert:0, dim:1 },
+  { id:'retro',   name:'Retro',     header:2, tempSize:2, tempCenter:0, setpointCol:1, sep:3, status:2, hum:1, boost:1, water:1, page:1, labels:1, invert:0, dim:0 },
+  { id:'durum',   name:'Durum',     header:1, tempSize:2, tempCenter:0, setpointCol:0, sep:0, status:3, hum:1, boost:1, water:1, page:1, labels:0, invert:0, dim:0 },
+  { id:'kompakt', name:'Kompakt',   header:4, tempSize:2, tempCenter:0, setpointCol:1, sep:0, status:0, hum:1, boost:1, water:1, page:1, labels:0, invert:0, dim:0 },
+  { id:'dev',     name:'Dev Rakam', header:0, tempSize:3, tempCenter:1, setpointCol:0, sep:1, status:1, hum:0, boost:0, water:0, page:0, labels:0, invert:0, dim:0 }
+];
+
+const HEADER_NAMES  = ['yok', 'cizgi', 'cift', 'kutu', 'serit'];
+const STATUS_NAMES  = ['metin', 'bar', 'cerceve', 'ters'];
+const PAGE_COUNT    = 5;
+
+const UPTIME = 2 * 86400 + 14 * 3600 + 22 * 60; // 2 gün 14 sa 22 dk
+let sceneKey = 'heat';
+let boostOn = false;
+let themeId = 'klasik';
+const SLEEP = { enabled: true, active: false, start: '23:00', end: '07:00', sp: 18.0, failsafe: false };
+
+const esc = t => String(t).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+const chars = t => Array.from(String(t)).map(c => '<span>' + (c === ' ' ? '&nbsp;' : esc(c)) + '</span>').join('');
+const charW = cls => (cls || '').indexOf('s3') >= 0 ? 18 : (cls || '').indexOf('s2') >= 0 ? 12 : 6;
+const row = (x, y, t, cls) => '<div class="r ' + (cls || '') + '" style="left:' + x + 'px;top:' + y + 'px">' + chars(t) + '</div>';
+const rowR = (right, y, t, cls) => row(right - Array.from(String(t)).length * charW(cls), y, t, cls);
+const hl = y => '<div class="hl" style="top:' + y + 'px"></div>';
+
+const theme = () => THEMES.find(t => t.id === themeId) || THEMES[0];
+const headerH = th => th.header === 0 ? 0 : th.header === 2 ? 11 : 10;
+
+// oledThemeHeader(): ust serit cizimi
+function header(title, page, th) {
+  if (!th.header) return '';
+  const pg = th.page ? page + '/' + PAGE_COUNT : '';
+  let h = '';
+  if (th.header === 4) {
+    h += '<div class="inv" style="left:0;top:0;width:128px;height:9px;border-radius:0"></div>';
+    h += row(2, 1, title, 'dark');
+    if (pg) h += rowR(126, 1, pg, 'dark');
+  } else {
+    const ty = th.header === 3 ? 1 : 0;
+    h += row(0, ty, title);
+    if (pg) h += rowR(128, ty, pg);
+    if (th.header === 1) h += hl(9);
+    if (th.header === 2) h += hl(8) + hl(10);
+    if (th.header === 3) h += '<div class="box" style="top:0;height:10px"></div>';
+  }
+  return h;
+}
+
+// oledThemeSeparator()
+function separator(y, th) {
+  if (y < 0 || y > 63) return '';
+  if (th.sep === 1) return hl(y);
+  if (th.sep === 2) return (y > 0 ? hl(y - 1) : '') + hl(y);
+  if (th.sep === 3) return '<div class="dots" style="top:' + y + 'px"></div>';
+  return '';
+}
+
+// oledThemeStatus(): durum metni her temada yatay ortalanir
+function status(y, label, highlight, th) {
+  y = Math.max(0, Math.min(52, y));
+  const tx = Math.max(0, Math.floor((128 - Array.from(label).length * 6) / 2));
+  if (th.status === 1) {
+    if (highlight) {
+      return '<div class="inv" style="left:0;top:' + (y - 1) + 'px;width:128px;height:11px;border-radius:0"></div>'
+        + row(tx, y, label, 'dark');
+    }
+    return row(tx, y, label);
+  }
+  if (th.status === 2) {
+    return '<div class="box" style="top:' + (y - 1) + 'px;height:11px"></div>' + row(tx, y, label);
+  }
+  if (th.status === 3) {
+    return '<div class="inv" style="left:0;top:' + (y - 1) + 'px;width:128px;height:11px;border-radius:0"></div>'
+      + row(tx, y, label, 'dark');
+  }
+  return row(tx, y, label);
+}
+
+function statusText(s) {
+  if (!s.sensorOk) return 'SENSOR HATASI';
+  if (!s.link) return 'KOMBI BAGLI DEGIL';
+  if (!s.mode) return 'KAPALI/DON KOR.';
+  if (s.demand) return 'ISITIYOR';
+  return 'BEKLIYOR';
+}
+
+// drawMainPage(): yerlesim matematigi .ino ile ayni
+function page1(s) {
+  const th = theme();
+  const tempStr = s.sensorOk ? s.temp.toFixed(1) : '--.-';
+  const heating = !!(s.demand && s.link && s.mode);
+
+  const base  = headerH(th) + 2;
+  const tempY = base + (th.tempSize === 3 ? 0 : 2);
+  const sepY  = tempY + (th.tempSize === 3 ? 25 : 19);
+  const statY = th.sep ? sepY + 3 : sepY + 1;
+  const footY = th.header ? 54 : ((statY + 14 < 55) ? statY + 14 : 55);
+
+  let h = header('TERMOSTAT', 1, th);
+  if (SLEEP.active && th.header) h += row(72, 0, 'UYKU');
+
+  const cls = th.tempSize === 3 ? 's3' : 's2';
+  const tempW = tempStr.length * 6 * th.tempSize;
+  let tempX = th.tempCenter ? Math.floor((128 - tempW) / 2) : 0;
+  if (tempX < 0) tempX = 0;
+  h += row(tempX, tempY, tempStr, cls);
+  h += row(tempX + tempW + 2, tempY + (th.tempSize === 3 ? 14 : 6), 'C');
+
+  if (th.setpointCol && !th.tempCenter) {
+    // HEDEF etiketi yerine hedef, cerceve icinde buyuk yazilir
+    const sp = s.sp.toFixed(1);
+    const bx = 58, by = tempY - 1, bw = 68, bh = 19;
+    const spW = sp.length * 12;
+    const cx = bx + Math.max(2, Math.floor((bw - (spW + 7)) / 2));
+    h += '<div class="box" style="left:' + bx + 'px;top:' + by + 'px;width:' + bw + 'px;height:' + bh + 'px"></div>';
+    h += row(cx, by + 1, sp, 's2');
+    h += row(cx + spW + 1, by + 10, 'C');
+  } else if (th.setpointCol) {
+    h += row(84, tempY + 1, th.labels ? 'HEDEF' : 'HD');
+    h += row(84, tempY + 11, s.sp.toFixed(1) + 'C');
+  }
+
+  h += separator(sepY, th);
+  h += status(statY, statusText(s), heating, th);
+
+  if (th.hum) {
+    h += row(0, footY, (s.sensorOk && s.hum !== null) ? 'Nem %' + Math.round(s.hum) : 'Nem --');
+  }
+  if (th.boost && boostOn) {
+    h += row(68, footY, 'BST 45dk');
+  } else if (th.water && s.flow !== null) {
+    h += rowR(128, footY, 'Su ' + s.flow.toFixed(1) + 'C');
+  } else if (!th.setpointCol && th.labels) {
+    h += rowR(128, footY, 'Hd ' + s.sp.toFixed(1));
+  }
+  return h;
+}
+
+function page2(s) {
+  const th = theme();
+  let ssid = NET.ssid;
+  if (ssid.length > 19) ssid = ssid.slice(0, 19);
+  let h = header('AG BILGISI', 2, th);
+  h += row(0, 12, 'AP: ' + NET.apip);
+  h += row(0, 21, 'IP: ' + NET.ip);
+  h += row(0, 30, 'STA: ' + ssid);
+  h += row(0, 39, 'Kombi: ' + (s.link ? 'BAGLI' : 'YOK'));
+  if (s.link) h += row(0, 48, 'Role IP: ' + NET.clientIp);
+  h += row(0, 56, 'Sinyal: ' + NET.rssi + ' dBm');
+  return h;
+}
+
+function page3(s) {
+  const th = theme();
+  const d = Math.floor(UPTIME / 86400);
+  const hh = Math.floor((UPTIME % 86400) / 3600);
+  const mm = Math.floor((UPTIME % 3600) / 60);
+  const up = (d > 0 ? d + 'g ' : '') + hh + 's ' + mm + 'd';
+  let h = header('BILGI', 3, th);
+  h += row(0, 12, 'Histerezis: 0.3C');
+  h += row(0, 21, 'Kalibrasyon: +0.0C');
+  h += row(0, 30, 'Don koruma: 5.0C');
+  h += row(0, 39, 'Boost: ' + (boostOn ? '45 dk' : 'yok'));
+  h += row(0, 48, 'Calisma: ' + up);
+  h += row(0, 56, 'FW 1.0.0  Heap:38k');
+  return h;
+}
+
+function page4(s) {
+  const th = theme();
+  let h = header('UYKU MODU', 4, th);
+  h += row(0, 12, 'Durum: ' + (!SLEEP.enabled ? 'kapali' : SLEEP.active ? 'AKTIF' : 'bekliyor'));
+  h += row(0, 21, 'Aralik: ' + SLEEP.start + ' - ' + SLEEP.end);
+  h += row(0, 30, 'Uyku hedefi: ' + SLEEP.sp.toFixed(1) + 'C');
+  h += row(0, 39, 'Normal hedef: ' + s.sp.toFixed(1) + 'C');
+  h += row(0, 48, 'Saat: NTP OK 03:24');
+  h += row(0, 56, 'Role FS: ' + (SLEEP.failsafe ? 'ACIK kalir' : 'kapanir'));
+  return h;
+}
+
+// drawThemePage()
+function page5(s) {
+  const th = theme();
+  const idx = THEMES.indexOf(th) + 1;
+  let h = header('TEMA', 5, th);
+  h += row(0, 12, 'Tema: ' + idx + '/' + THEMES.length + (th.invert ? ' NEG' : '') + (th.dim ? ' DIM' : ''));
+  h += row(0, 21, 'Ad: ' + th.name);
+  h += row(0, 30, 'Kimlik: ' + th.id);
+  h += row(0, 39, 'Ust: ' + HEADER_NAMES[th.header]);
+  h += row(0, 48, 'Durum: ' + STATUS_NAMES[th.status]);
+  h += row(0, 56, 'Enkoder: tema sec');
+  return h;
+}
+
+const PAGES = { 1: page1, 2: page2, 3: page3, 4: page4, 5: page5 };
+
+function render() {
+  const s = SCENES[sceneKey];
+  const th = theme();
+  document.querySelectorAll('.oled').forEach(el => {
+    let scr = el.querySelector('.scr');
+    if (!scr) {
+      scr = document.createElement('div');
+      scr.className = 'scr';
+      el.appendChild(scr);
+    }
+    scr.classList.toggle('neg', !!th.invert);
+    scr.classList.toggle('dim', !!th.dim);
+    const p = Number(el.dataset.page);
+    scr.innerHTML = (PAGES[p] || page1)(s);
+  });
+}
+
+document.getElementById('scenes').addEventListener('click', e => {
+  const btn = e.target.closest('[data-scene]');
+  if (!btn) return;
+  sceneKey = btn.dataset.scene;
+  document.querySelectorAll('[data-scene]').forEach(b => b.setAttribute('aria-pressed', String(b === btn)));
+  render();
+});
+
+document.getElementById('themes').addEventListener('click', e => {
+  const btn = e.target.closest('[data-theme]');
+  if (!btn) return;
+  themeId = btn.dataset.theme;
+  document.querySelectorAll('[data-theme]').forEach(b => b.setAttribute('aria-pressed', String(b === btn)));
+  render();
+});
+
+document.getElementById('boostBtn').addEventListener('click', e => {
+  boostOn = !boostOn;
+  e.currentTarget.setAttribute('aria-pressed', String(boostOn));
+  e.currentTarget.textContent = boostOn ? 'Boost iptal' : 'Boost 45 dk';
+  render();
+});
+
+// Ölçek: 128 px genişlik ekrana sığsın, tam sayı kalsın (piksel netliği)
+function fitScale() {
+  const avail = Math.min(window.innerWidth - 96, 470);
+  const s = Math.max(2, Math.min(4, Math.floor(avail / 128)));
+  document.documentElement.style.setProperty('--s', String(s));
+}
+window.addEventListener('resize', fitScale);
+fitScale();
+render();
+</script>
+</body>
+</html>

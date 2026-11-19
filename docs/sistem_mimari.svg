@@ -1,0 +1,112 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 680" width="1100" height="680" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <style>
+      .bg{fill:#ffffff}
+      .title{fill:#0f172a;font-size:24px;font-weight:700}
+      .sub{fill:#64748b;font-size:13px}
+      .unit{fill:#eef4ff;stroke:#1e3a8a;stroke-width:2;rx:16}
+      .unit2{fill:#fff7ed;stroke:#c2410c;stroke-width:2;rx:16}
+      .dev{fill:#f8fafc;stroke:#475569;stroke-width:1.6;rx:12}
+      .h{fill:#0f172a;font-size:15px;font-weight:700}
+      .hs{fill:#c2410c;font-size:15px;font-weight:700}
+      .t{fill:#334155;font-size:12px}
+      .m{fill:#64748b;font-size:11px}
+      .chip{fill:#ffffff;stroke:#cbd5e1;rx:8}
+      .chipt{fill:#334155;font-size:11px;font-weight:600}
+      .flow{stroke:#1e3a8a;stroke-width:2.4;fill:none;stroke-linecap:round}
+      .flow2{stroke:#c2410c;stroke-width:2.4;fill:none;stroke-linecap:round}
+      .dash{stroke:#94a3b8;stroke-width:2;stroke-dasharray:6 5;fill:none}
+      .lbl{fill:#475569;font-size:11px;font-weight:600}
+      .code{fill:#0f172a;font-size:10px;font-family:Consolas,monospace}
+    </style>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1e3a8a"/>
+    </marker>
+    <marker id="arr2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#c2410c"/>
+    </marker>
+    <marker id="arr3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+    </marker>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="1100" height="680"/>
+  <text class="title" x="60" y="44">KOMBİ TERMOSTAT SİSTEMİ — GENEL MİMARİ</text>
+  <text class="sub" x="60" y="68">İki NodeMCU v3 • yerel Wi-Fi • bulut bağımlılığı yok</text>
+
+  <!-- Room unit -->
+  <rect class="unit" x="70" y="150" width="300" height="250" rx="16"/>
+  <text class="h" x="92" y="182">ODA TERMOSTATI</text>
+  <text class="m" x="92" y="199">NodeMCU v3 • ESP8266</text>
+  <text class="t" x="92" y="225">Sıcaklık ölçümü (DHT11/22 veya DS18B20)</text>
+  <text class="t" x="92" y="245">Histerezis + minimum süre kontrolü</text>
+  <text class="t" x="92" y="265">0.96" OLED + rotary encoder</text>
+  <text class="t" x="92" y="285">Mobil uyumlu web arayüzü</text>
+  <rect class="chip" x="92" y="305" width="86" height="26" rx="8"/>
+  <text class="chipt" x="106" y="322">AP + STA</text>
+  <rect class="chip" x="186" y="305" width="86" height="26" rx="8"/>
+  <text class="chipt" x="200" y="322">HTTP :80</text>
+  <rect class="chip" x="280" y="305" width="70" height="26" rx="8"/>
+  <text class="chipt" x="292" y="322">OLED</text>
+  <text class="m" x="92" y="356">AP IP: 192.168.4.1</text>
+  <text class="code" x="92" y="378">http://192.168.4.1</text>
+
+  <!-- Boiler unit -->
+  <rect class="unit2" x="730" y="150" width="300" height="250" rx="16"/>
+  <text class="hs" x="752" y="182">KOMBİ RÖLE ÜNİTESİ</text>
+  <text class="m" x="752" y="199">NodeMCU v3 • ESP8266</text>
+  <text class="t" x="752" y="225">Oda ünitesine STA olarak bağlanır</text>
+  <text class="t" x="752" y="245">Röle ile kuru kontak sürer</text>
+  <text class="t" x="752" y="265">5 dk komut gelmezse röle kapanır</text>
+  <text class="t" x="752" y="285">Opsiyonel DS18B20 su sıcaklığı</text>
+  <rect class="chip" x="752" y="305" width="86" height="26" rx="8"/>
+  <text class="chipt" x="766" y="322">TCP Client</text>
+  <rect class="chip" x="846" y="305" width="86" height="26" rx="8"/>
+  <text class="chipt" x="860" y="322">Fail-safe</text>
+  <rect class="chip" x="940" y="305" width="70" height="26" rx="8"/>
+  <text class="chipt" x="952" y="322">Röle</text>
+  <text class="m" x="752" y="356">IP: 192.168.4.x (DHCP)</text>
+  <text class="m" x="752" y="378">Kombi su sıcaklığı geri bildirimi</text>
+
+  <!-- Link room <-> boiler -->
+  <line x1="400" y1="232" x2="706" y2="232" class="flow" marker-end="url(#arr)"/>
+  <line x1="730" y1="300" x2="424" y2="300" class="flow2" marker-end="url(#arr2)"/>
+  <text class="lbl" x="565" y="220" text-anchor="middle">Wi-Fi AP: TERMOSTAT-AP • TCP 8266</text>
+  <text class="code" x="565" y="252" text-anchor="middle">SET heat=0/1 sp=21.0 hyst=0.3 mode=1</text>
+  <text class="code" x="565" y="320" text-anchor="middle">STATUS relay=1 flow=42.5 rssi=-58 up=123</text>
+  <text class="m" x="565" y="338" text-anchor="middle">her 2 saniyede bir</text>
+
+  <!-- Phone -->
+  <rect class="dev" x="70" y="500" width="210" height="120" rx="14"/>
+  <rect x="92" y="516" width="52" height="88" rx="8" fill="#0f172a"/>
+  <rect x="98" y="526" width="40" height="58" rx="4" fill="#e2e8f0"/>
+  <circle cx="118" cy="592" r="4" fill="#64748b"/>
+  <text class="h" x="160" y="540">Telefon / PC</text>
+  <text class="t" x="160" y="562">Tarayıcı ile kontrol</text>
+  <text class="m" x="160" y="582">Aynı ağa bağlanır</text>
+  <text class="code" x="160" y="602">192.168.4.1</text>
+
+  <line x1="175" y1="500" x2="175" y2="424" class="flow" marker-start="url(#arr)" marker-end="url(#arr)"/>
+  <text class="lbl" x="188" y="462">Wi-Fi • HTTP :80</text>
+
+  <!-- Router -->
+  <rect x="450" y="58" width="220" height="86" rx="12" fill="#f8fafc" stroke="#94a3b8" stroke-width="2" stroke-dasharray="6 5"/>
+  <text class="h" x="472" y="86">Ev Wi-Fi (opsiyonel)</text>
+  <text class="m" x="472" y="106">STA bağlantısı</text>
+  <text class="m" x="472" y="124">2.4 GHz • mDNS: termostat.local</text>
+
+  <path class="dash" d="M220,150 V101 H450" marker-end="url(#arr3)"/>
+  <text class="lbl" x="238" y="132">STA (isteğe bağlı)</text>
+
+  <!-- Combi -->
+  <rect class="dev" x="730" y="500" width="300" height="120" rx="14"/>
+  <text class="h" x="752" y="530">Doğalgaz Kombisi</text>
+  <text class="t" x="752" y="552">Oda termostatı girişi (kuru kontak)</text>
+  <text class="m" x="752" y="574">Kombinin kendi emniyet ve limit</text>
+  <text class="m" x="752" y="592">korumaları devrede kalır.</text>
+  <line x1="880" y1="400" x2="880" y2="488" class="flow2" marker-end="url(#arr2)"/>
+  <text class="lbl" x="894" y="452">COM / NO</text>
+
+  <!-- Bottom note -->
+  <text class="m" x="60" y="656">Not: Oda ünitesinin AP'si her zaman açıktır; röle ünitesi bu ağa bağlanır. Ev Wi-Fi bağlantısı isteğe bağlıdır ve AP'yi kapatmaz.</text>
+</svg>

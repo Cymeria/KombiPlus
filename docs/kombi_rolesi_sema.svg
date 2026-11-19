@@ -1,0 +1,138 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 820" width="1200" height="820" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <style>
+      .bg{fill:#ffffff}
+      .title{fill:#0f172a;font-size:24px;font-weight:700}
+      .sub{fill:#64748b;font-size:13px}
+      .box{fill:#f1f5ff;stroke:#1e3a8a;stroke-width:2;rx:14}
+      .dev{fill:#f8fafc;stroke:#475569;stroke-width:1.8;rx:12}
+      .devtitle{fill:#0f172a;font-size:15px;font-weight:700}
+      .devsub{fill:#64748b;font-size:11px}
+      .pin{fill:#0f172a;font-size:13px;font-weight:600}
+      .pinsub{fill:#64748b;font-size:10px}
+      .w5v{stroke:#dc2626;stroke-width:3;fill:none;stroke-linecap:round}
+      .wgnd{stroke:#111827;stroke-width:3;fill:none;stroke-linecap:round}
+      .wsig{stroke:#ea580c;stroke-width:3;fill:none;stroke-linecap:round}
+      .wdat{stroke:#0d9488;stroke-width:3;fill:none;stroke-linecap:round}
+      .wcont{stroke:#475569;stroke-width:3;fill:none;stroke-linecap:round}
+      .lbl{fill:#475569;font-size:11px;font-weight:600}
+      .note{fill:#fffbeb;stroke:#f59e0b;stroke-width:1.2;stroke-dasharray:5 4;rx:10}
+      .notetext{fill:#78350f;font-size:12px}
+      .warn{fill:#fef2f2;stroke:#dc2626;stroke-width:1.6;rx:10}
+      .warntitle{fill:#b91c1c;font-size:14px;font-weight:700}
+      .warntext{fill:#7f1d1d;font-size:12px}
+      .boardpin{fill:#1e3a8a}
+    </style>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="1200" height="820"/>
+  <text class="title" x="60" y="46">KOMBİ RÖLE ÜNİTESİ — BAĞLANTI ŞEMASI</text>
+  <text class="sub" x="60" y="70">NodeMCU v3 (ESP8266) • 1 kanal röle modülü • opsiyonel DS18B20 su sensörü</text>
+
+  <!-- Warning -->
+  <rect class="warn" x="60" y="88" width="1080" height="58" rx="10"/>
+  <text class="warntitle" x="78" y="112">⚠ GÜVENLİK</text>
+  <text class="warntext" x="78" y="132">Kombi içinde 230 V bulunur. Röle yalnızca kombinin kuru kontak termostat girişine bağlanmalıdır; montaj yetkili servis tarafından yapılmalıdır.</text>
+
+  <!-- NodeMCU -->
+  <rect class="box" x="120" y="180" width="260" height="420" rx="16"/>
+  <text x="250" y="218" text-anchor="middle" class="devtitle">NodeMCU v3</text>
+  <text x="250" y="236" text-anchor="middle" class="devsub">ESP-12E / ESP8266</text>
+  <rect x="207" y="574" width="86" height="16" rx="3" fill="#cbd5e1" stroke="#64748b"/>
+  <text x="392" y="608" text-anchor="start" class="pinsub">micro-USB (5 V)</text>
+
+  <text class="pin" x="134" y="234">D1 · GPIO5</text>
+  <text class="pin" x="134" y="284">VIN · 5 V</text>
+  <text class="pin" x="134" y="314">GND</text>
+  <text class="pin" x="134" y="454">D2 · GPIO4</text>
+  <text class="pin" x="134" y="494">3V3</text>
+  <text class="pin" x="134" y="524">GND</text>
+
+  <circle cx="380" cy="230" r="4" class="boardpin"/>
+  <circle cx="380" cy="280" r="4" class="boardpin"/>
+  <circle cx="380" cy="310" r="4" class="boardpin"/>
+  <circle cx="380" cy="450" r="4" class="boardpin"/>
+  <circle cx="380" cy="490" r="4" class="boardpin"/>
+  <circle cx="380" cy="520" r="4" class="boardpin"/>
+
+  <!-- Relay module -->
+  <rect class="dev" x="700" y="180" width="230" height="190" rx="12"/>
+  <text x="722" y="212" class="devtitle">1 Kanal Röle</text>
+  <text x="722" y="230" class="devsub">5 V • opto-izolasyonlu</text>
+
+  <rect x="790" y="246" width="80" height="62" rx="6" fill="#e2e8f0" stroke="#475569"/>
+  <text x="830" y="270" text-anchor="middle" class="devsub">bobin +</text>
+  <text x="830" y="286" text-anchor="middle" class="devsub">kontak</text>
+  <text x="830" y="302" text-anchor="middle" class="pinsub">COM / NO</text>
+
+  <text class="pin" x="692" y="234" text-anchor="end">IN</text>
+  <text class="pin" x="692" y="284" text-anchor="end">VCC</text>
+  <text class="pin" x="692" y="314" text-anchor="end">GND</text>
+  <text class="pin" x="920" y="250" text-anchor="end">COM</text>
+  <text class="pin" x="920" y="294" text-anchor="end">NO</text>
+
+  <circle cx="930" cy="260" r="4" class="boardpin"/>
+  <circle cx="930" cy="304" r="4" class="boardpin"/>
+
+  <!-- Board -> relay -->
+  <path class="wsig" d="M380,230 H700"/>
+  <path class="w5v"  d="M380,280 H700"/>
+  <path class="wgnd" d="M380,310 H700"/>
+  <text class="lbl" x="500" y="224">D1 → IN (sinyal)</text>
+  <text class="lbl" x="500" y="274">VIN → VCC (5 V)</text>
+  <text class="lbl" x="500" y="304">GND → GND</text>
+
+  <!-- Combi terminal -->
+  <rect class="dev" x="760" y="430" width="330" height="170" rx="12"/>
+  <text x="782" y="462" class="devtitle">Kombi Termostat Girişi</text>
+  <text x="782" y="480" class="devsub">kuru kontak • düşük gerilim</text>
+  <circle cx="850" cy="430" r="7" fill="#f8fafc" stroke="#475569" stroke-width="2"/>
+  <circle cx="930" cy="430" r="7" fill="#f8fafc" stroke="#475569" stroke-width="2"/>
+  <text x="832" y="422" text-anchor="end" class="pinsub">T1</text>
+  <text x="948" y="422" text-anchor="start" class="pinsub">T2</text>
+  <text x="782" y="535" class="notetext">Röle COM ve NO uçları, kombinin oda termostatı</text>
+  <text x="782" y="553" class="notetext">klemensine seri bağlanır. Kontak kapanınca</text>
+  <text x="782" y="571" class="notetext">kombi ısıtma talebi alır. Kombinin kendi limit</text>
+  <text x="782" y="589" class="notetext">termostatı ve emniyet korumaları devrede kalır.</text>
+
+  <path class="wcont" d="M934,260 H952 V380 H850 V423"/>
+  <path class="wcont" d="M934,304 H970 V404 H930 V423"/>
+
+  <!-- DS18B20 -->
+  <rect class="dev" x="650" y="640" width="290" height="130" rx="12"/>
+  <text x="730" y="672" class="devtitle">DS18B20 (opsiyonel)</text>
+  <text x="730" y="690" class="devsub">waterproof su sensörü</text>
+  <text class="pin" x="662" y="664">DATA</text>
+  <text class="pin" x="662" y="694">VCC</text>
+  <text class="pin" x="662" y="724">GND</text>
+  <text x="672" y="752" class="pinsub">DATA–3V3 arası 4.7 kΩ pull-up</text>
+
+  <path class="wdat" d="M380,450 H620 V660 H650"/>
+  <path class="w5v"  d="M380,490 H600 V690 H650"/>
+  <path class="wgnd" d="M380,520 H580 V720 H650"/>
+  <text class="lbl" x="530" y="444">DATA (D2)</text>
+  <text class="lbl" x="516" y="484">3.3 V</text>
+  <text class="lbl" x="500" y="514">GND</text>
+
+  <!-- Power -->
+  <rect class="dev" x="100" y="650" width="200" height="80" rx="10"/>
+  <text x="200" y="680" text-anchor="middle" class="devtitle">5 V USB</text>
+  <text x="200" y="700" text-anchor="middle" class="devsub">adaptör</text>
+  <text x="200" y="717" text-anchor="middle" class="pinsub">röle bobini için yeterli akım</text>
+  <line x1="250" y1="590" x2="250" y2="650" class="wgnd"/>
+
+  <!-- Notes -->
+  <rect class="note" x="960" y="650" width="220" height="120" rx="10"/>
+  <text class="notetext" x="974" y="674">Röle aktif-low ise:</text>
+  <text class="notetext" x="986" y="692">RELAY_ACTIVE_LOW = 1</text>
+  <text class="notetext" x="974" y="716">Aktif-high ise:</text>
+  <text class="notetext" x="986" y="734">RELAY_ACTIVE_LOW = 0</text>
+  <text class="notetext" x="974" y="756">DS18B20 yoksa: FLOW=0</text>
+
+  <!-- Legend -->
+  <text class="lbl" x="650" y="800">Renkler:</text>
+  <line x1="702" y1="796" x2="732" y2="796" class="w5v"/><text class="pinsub" x="738" y="800">5 V</text>
+  <line x1="790" y1="796" x2="820" y2="796" class="wgnd"/><text class="pinsub" x="826" y="800">GND</text>
+  <line x1="878" y1="796" x2="908" y2="796" class="wsig"/><text class="pinsub" x="914" y="800">Sinyal</text>
+  <line x1="974" y1="796" x2="1004" y2="796" class="wdat"/><text class="pinsub" x="1010" y="800">1-Wire</text>
+</svg>

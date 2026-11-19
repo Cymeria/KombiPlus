@@ -1,0 +1,165 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 760" width="1100" height="760" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <style>
+      .bg{fill:#ffffff}
+      .title{fill:#0f172a;font-size:24px;font-weight:700}
+      .sub{fill:#64748b;font-size:13px}
+      .box{fill:#f1f5ff;stroke:#1e3a8a;stroke-width:2;rx:14}
+      .dev{fill:#f8fafc;stroke:#475569;stroke-width:1.8;rx:12}
+      .devtitle{fill:#0f172a;font-size:15px;font-weight:700}
+      .devsub{fill:#64748b;font-size:11px}
+      .pin{fill:#0f172a;font-size:13px;font-weight:600}
+      .pinsub{fill:#64748b;font-size:10px}
+      .w3v{stroke:#dc2626;stroke-width:3;fill:none;stroke-linecap:round}
+      .wgnd{stroke:#111827;stroke-width:3;fill:none;stroke-linecap:round}
+      .wscl{stroke:#16a34a;stroke-width:3;fill:none;stroke-linecap:round}
+      .wsda{stroke:#2563eb;stroke-width:3;fill:none;stroke-linecap:round}
+      .wdat{stroke:#ea580c;stroke-width:3;fill:none;stroke-linecap:round}
+      .wenc{stroke:#7c3aed;stroke-width:3;fill:none;stroke-linecap:round}
+      .dot{fill:#0f172a}
+      .note{fill:#fffbeb;stroke:#f59e0b;stroke-width:1.2;stroke-dasharray:5 4;rx:10}
+      .notetext{fill:#78350f;font-size:12px}
+      .lbl{fill:#475569;font-size:11px;font-weight:600}
+      .boardpin{fill:#1e3a8a}
+    </style>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="1100" height="760"/>
+  <text class="title" x="40" y="46">ODA TERMOSTATI — BAĞLANTI ŞEMASI</text>
+  <text class="sub" x="40" y="70">NodeMCU v3 (ESP8266) • 0.96" SSD1306 OLED • KY-040 encoder • DHT11 / DHT22 / DS18B20</text>
+
+  <!-- NodeMCU board -->
+  <rect class="box" x="400" y="140" width="260" height="440" rx="16"/>
+  <text x="530" y="178" text-anchor="middle" class="devtitle">NodeMCU v3</text>
+  <text x="530" y="196" text-anchor="middle" class="devsub">ESP-12E / ESP8266</text>
+  <rect x="487" y="574" width="86" height="16" rx="3" fill="#cbd5e1" stroke="#64748b"/>
+  <text x="600" y="606" text-anchor="start" class="pinsub">micro-USB (5 V)</text>
+
+  <!-- OLED -->
+  <rect class="dev" x="70" y="160" width="200" height="160" rx="12"/>
+  <text x="92" y="192" class="devtitle">0.96" OLED</text>
+  <text x="92" y="210" class="devsub">SSD1306 • I²C • 128×64</text>
+  <rect x="92" y="226" width="146" height="62" rx="6" fill="#0f172a"/>
+  <text x="170" y="252" text-anchor="middle" fill="#7dd3fc" font-size="12">21.4°C</text>
+  <text x="170" y="272" text-anchor="middle" fill="#94a3b8" font-size="10">HEDEF 22.0°C</text>
+
+  <text class="pin" x="266" y="204" text-anchor="end">VCC</text>
+  <text class="pin" x="266" y="224" text-anchor="end">GND</text>
+  <text class="pin" x="266" y="254" text-anchor="end">SCL</text>
+  <text class="pin" x="266" y="284" text-anchor="end">SDA</text>
+
+  <!-- Encoder -->
+  <rect class="dev" x="70" y="400" width="200" height="210" rx="12"/>
+  <text x="92" y="432" class="devtitle">KY-040 Encoder</text>
+  <text x="92" y="450" class="devsub">döndürme + buton</text>
+  <circle cx="150" cy="495" r="26" fill="#e2e8f0" stroke="#475569" stroke-width="2"/>
+  <circle cx="150" cy="495" r="7" fill="#64748b"/>
+  <text x="198" y="500" class="devsub">döndür</text>
+  <rect x="120" y="540" width="60" height="28" rx="6" fill="#e2e8f0" stroke="#475569"/>
+  <text x="150" y="559" text-anchor="middle" class="devsub">buton</text>
+
+  <text class="pin" x="260" y="444" text-anchor="end">CLK</text>
+  <text class="pin" x="260" y="474" text-anchor="end">DT</text>
+  <text class="pin" x="260" y="504" text-anchor="end">SW</text>
+  <text class="pin" x="260" y="544" text-anchor="end">GND</text>
+  <text class="pin" x="260" y="564" text-anchor="end">+</text>
+
+  <!-- Sensor -->
+  <rect class="dev" x="820" y="190" width="210" height="170" rx="12"/>
+  <text x="880" y="222" class="devtitle">DHT22 / DS18B20</text>
+  <text x="880" y="240" class="devsub">sıcaklık (+ nem) sensörü</text>
+  <rect x="886" y="256" width="70" height="80" rx="6" fill="#e2e8f0" stroke="#475569"/>
+  <line x1="906" y1="336" x2="906" y2="352" stroke="#475569" stroke-width="2"/>
+  <line x1="922" y1="336" x2="922" y2="352" stroke="#475569" stroke-width="2"/>
+  <line x1="938" y1="336" x2="938" y2="352" stroke="#475569" stroke-width="2"/>
+
+  <text class="pin" x="832" y="238">VCC</text>
+  <text class="pin" x="832" y="278">DATA</text>
+  <text class="pin" x="832" y="318">GND</text>
+
+  <!-- Board pin labels -->
+  <text class="pin" x="414" y="194">3V3</text>
+  <text class="pin" x="414" y="214">GND</text>
+  <text class="pin" x="414" y="254">D1 · GPIO5</text>
+  <text class="pin" x="414" y="284">D2 · GPIO4</text>
+  <text class="pin" x="414" y="444">D5 · GPIO14</text>
+  <text class="pin" x="414" y="474">D6 · GPIO12</text>
+  <text class="pin" x="414" y="504">D7 · GPIO13</text>
+  <text class="pin" x="414" y="544">GND</text>
+  <text class="pin" x="414" y="564">3V3</text>
+
+  <text class="pin" x="646" y="238" text-anchor="end">3V3</text>
+  <text class="pin" x="646" y="278" text-anchor="end">D4 · GPIO2</text>
+  <text class="pin" x="646" y="318" text-anchor="end">GND</text>
+
+  <!-- Board pin pads -->
+  <circle cx="400" cy="190" r="4" class="boardpin"/>
+  <circle cx="400" cy="210" r="4" class="boardpin"/>
+  <circle cx="400" cy="250" r="4" class="boardpin"/>
+  <circle cx="400" cy="280" r="4" class="boardpin"/>
+  <circle cx="400" cy="440" r="4" class="boardpin"/>
+  <circle cx="400" cy="470" r="4" class="boardpin"/>
+  <circle cx="400" cy="500" r="4" class="boardpin"/>
+  <circle cx="400" cy="540" r="4" class="boardpin"/>
+  <circle cx="400" cy="560" r="4" class="boardpin"/>
+
+  <circle cx="660" cy="234" r="4" class="boardpin"/>
+  <circle cx="660" cy="274" r="4" class="boardpin"/>
+  <circle cx="660" cy="314" r="4" class="boardpin"/>
+
+  <!-- OLED wires -->
+  <path class="w3v"  d="M270,200 H400 V190"/>
+  <path class="wgnd" d="M270,220 H400 V210"/>
+  <path class="wscl" d="M270,250 H400"/>
+  <path class="wsda" d="M270,280 H400"/>
+
+  <!-- Encoder wires -->
+  <path class="wenc" d="M270,440 H400"/>
+  <path class="wenc" d="M270,470 H400"/>
+  <path class="wenc" d="M270,500 H400"/>
+  <path class="wgnd" d="M270,540 H400"/>
+  <path class="w3v"  d="M270,560 H400"/>
+
+  <!-- Sensor wires -->
+  <path class="w3v"  d="M660,234 H820"/>
+  <path class="wdat" d="M660,274 H820"/>
+  <path class="wgnd" d="M660,314 H820"/>
+
+  <!-- wire labels -->
+  <text class="lbl" x="296" y="194">3.3 V</text>
+  <text class="lbl" x="296" y="214">GND</text>
+  <text class="lbl" x="318" y="244">SCL</text>
+  <text class="lbl" x="318" y="274">SDA</text>
+  <text class="lbl" x="318" y="434">CLK</text>
+  <text class="lbl" x="318" y="464">DT</text>
+  <text class="lbl" x="318" y="494">SW</text>
+  <text class="lbl" x="318" y="534">GND</text>
+  <text class="lbl" x="318" y="554">3.3 V</text>
+  <text class="lbl" x="700" y="228">3.3 V</text>
+  <text class="lbl" x="700" y="268">DATA</text>
+  <text class="lbl" x="700" y="308">GND</text>
+
+  <!-- Power -->
+  <rect class="dev" x="440" y="650" width="180" height="66" rx="10"/>
+  <text x="530" y="678" text-anchor="middle" class="devtitle">5 V USB</text>
+  <text x="530" y="697" text-anchor="middle" class="devsub">micro-USB adaptör</text>
+  <line x1="530" y1="650" x2="530" y2="590" class="wgnd"/>
+
+  <!-- Notes -->
+  <rect class="note" x="780" y="400" width="270" height="72" rx="10"/>
+  <text class="notetext" x="794" y="422">DS18B20: DATA ile 3V3 arasına</text>
+  <text class="notetext" x="794" y="440">4.7 kΩ pull-up direnç takın.</text>
+  <text class="notetext" x="794" y="458">DHT modüllerinde pull-up genelde dahildir.</text>
+
+  <rect class="note" x="70" y="640" width="330" height="80" rx="10"/>
+  <text class="notetext" x="84" y="662">• OLED, encoder ve sensör 3.3 V ile beslenir.</text>
+  <text class="notetext" x="84" y="680">• Encoder butonu dahili pull-up kullanır (D7).</text>
+  <text class="notetext" x="84" y="698">• D3 / D8 pinlerine harici yük bağlamayın (boot).</text>
+
+  <!-- Legend -->
+  <text class="lbl" x="760" y="668">Renkler:</text>
+  <line x1="812" y1="664" x2="842" y2="664" class="w3v"/><text class="pinsub" x="848" y="668">3.3 V</text>
+  <line x1="888" y1="664" x2="918" y2="664" class="wgnd"/><text class="pinsub" x="924" y="668">GND</text>
+  <line x1="958" y1="664" x2="988" y2="664" class="wscl"/><text class="pinsub" x="994" y="668">I²C</text>
+  <line x1="1026" y1="664" x2="1056" y2="664" class="wenc"/><text class="pinsub" x="1062" y="668">Enc</text>
+</svg>

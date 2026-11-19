@@ -1,0 +1,23 @@
+# Arduino derleme çıktıları
+build/
+*.bin
+*.elf
+*.map
+
+# Proje içine kurulan arduino-cli
+tools/arduino-cli/
+
+# Freebuff Desktop proje işaretleri
+.freebuff/
+
+# Editör / işletim sistemi
+.vscode/
+.idea/
+*.code-workspace
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Geçici / yerel dosyalar
+*.tmp
+*.log

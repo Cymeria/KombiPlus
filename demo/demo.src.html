@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kombi Termostat — Arayüz Demosu</title>
+<style>
+  :root{
+    --s:3;
+    --bg:#080d17; --card:#111a2a; --line:#22304a; --txt:#e8eefb; --mut:#94a6c3;
+    --acc:#ff8a3d; --acc2:#ffb066; --ok:#2dd47c;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    min-height:100vh;color:var(--txt);
+    background:
+      radial-gradient(1100px 520px at 82% -12%,#1b2a4a 0%,transparent 58%),
+      radial-gradient(900px 480px at -12% 108%,#241a2e 0%,transparent 55%),
+      var(--bg);
+    font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+    padding:34px 20px 56px;
+  }
+  .wrap{max-width:1320px;margin:0 auto}
+  .kicker{
+    display:inline-block;font-size:11px;letter-spacing:2.4px;font-weight:700;color:#ffc59b;
+    border:1px solid rgba(255,138,61,.45);background:rgba(255,138,61,.08);
+    padding:5px 11px;border-radius:999px;margin-bottom:14px;
+  }
+  h1{font-size:clamp(24px,3.4vw,34px);line-height:1.15;margin:0 0 10px;letter-spacing:-.4px}
+  .lead{color:var(--mut);max-width:760px;margin:0 0 30px;font-size:15px}
+  code{font:12.5px ui-monospace,Consolas,"Courier New",monospace;background:#172235;border:1px solid #243252;border-radius:5px;padding:1px 5px;color:#cfe0ff}
+  .sec{margin:0 0 46px}
+  .secHead{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;flex-wrap:wrap;margin:0 0 16px;border-bottom:1px solid var(--line);padding-bottom:12px}
+  h2{font-size:17px;margin:0;letter-spacing:.2px}
+  .secHead p{margin:0;color:var(--mut);font-size:13px}
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 20px}
+  .chip{
+    font:inherit;font-size:13px;font-weight:600;color:var(--txt);background:#162134;
+    border:1px solid var(--line);border-radius:999px;padding:8px 14px;cursor:pointer;
+    transition:background .15s,border-color .15s,transform .08s;
+  }
+  .chip:hover{background:#1c2942}
+  .chip:active{transform:scale(.97)}
+  .chip[aria-pressed="true"]{
+    background:linear-gradient(90deg,#e9622c,#ff9e55);border-color:transparent;color:#1a0d04;
+  }
+  .chip.boost[aria-pressed="true"]{background:linear-gradient(90deg,#2f7d55,#2dd47c);color:#052012}
+  .chip.theme[aria-pressed="true"]{background:linear-gradient(90deg,#3f6fd8,#6fa2ff);color:#04122b}
+  .toolbar .sep{width:1px;height:24px;background:var(--line);margin:0 4px}
+  .toolbar .lbl{font-size:12px;letter-spacing:1.4px;font-weight:700;color:var(--mut);text-transform:uppercase}
+
+  .oledGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(calc(128px * var(--s) + 34px),1fr));gap:18px}
+  figure.dev{margin:0;text-align:center;background:linear-gradient(180deg,var(--card),#0c1322);border:1px solid var(--line);border-radius:16px;padding:10px;box-shadow:0 14px 34px rgba(0,0,0,.32)}
+  .bezel{
+    display:inline-block;padding:10px;border-radius:9px;
+    background:linear-gradient(160deg,#1e2839,#0b111c);
+    border:1px solid #2a3a55;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.06), 0 8px 18px rgba(0,0,0,.45);
+  }
+  figcaption{text-align:left;margin-top:12px;color:var(--mut);font-size:12px;display:flex;justify-content:space-between;gap:8px}
+  figcaption b{color:#cfe0ff;font-weight:600}
+
+  .oled{
+    position:relative;width:calc(128px * var(--s));height:calc(64px * var(--s));
+    background:#04070d;border-radius:3px;overflow:hidden;
+    box-shadow:inset 0 0 22px rgba(70,130,255,.16), 0 0 0 1px #1c2942;
+  }
+  .scr{position:absolute;left:0;top:0;width:128px;height:64px;background:#04070d;transform:scale(var(--s));transform-origin:top left}
+  .scr .r{
+    position:absolute;display:flex;height:8px;
+    font:7.5px/8px ui-monospace,Consolas,"Courier New",monospace;
+    color:#d3e6ff;text-shadow:0 0 3px rgba(120,180,255,.55);white-space:nowrap;
+  }
+  .scr .r span{display:block;width:6px;text-align:center}
+  .scr .r.s2{height:16px;font:16px/16px ui-monospace,Consolas,"Courier New",monospace}
+  .scr .r.s2 span{width:12px}
+  .scr .r.s3{height:24px;font:24px/24px ui-monospace,Consolas,"Courier New",monospace}
+  .scr .r.s3 span{width:18px}
+  .scr .r.dark{color:#04070d;text-shadow:none}
+  .scr .hl{position:absolute;left:0;width:128px;height:1px;background:#d3e6ff;opacity:.85}
+  .scr .inv{position:absolute;background:#e6f1ff;border-radius:1px}
+  .scr .box{position:absolute;left:0;width:128px;border:1px solid #d3e6ff;border-radius:1px}
+  .scr .dots{position:absolute;left:0;width:128px;height:1px;background:repeating-linear-gradient(90deg,#d3e6ff 0 1px,transparent 1px 3px);opacity:.85}
+  /* invertDisplay(): panelde beyaz<->siyah tam ters doner (renk filtresi degil) */
+  .scr.neg{background:#eef4ff}
+  .scr.neg .r{color:#06090f;text-shadow:none}
+  .scr.neg .hl,.scr.neg .dots{background:#06090f;opacity:1}
+  .scr.neg .inv{background:#06090f}
+  .scr.neg .box{border-color:#06090f}
+  .scr.neg .r.dark{color:#eef4ff;text-shadow:none}
+  .scr.dim{opacity:.45}
+  .scr::after{
+    content:"";position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(rgba(160,205,255,.12) .5px,transparent .7px) 0 0/1px 1px;
+    mix-blend-mode:screen;
+  }
+
+  .notes{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;margin-top:18px}
+  .note{background:#0e1727;border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:12.5px;color:var(--mut)}
+  .note b{color:#dbe7fb;display:block;margin-bottom:3px;font-size:12px;letter-spacing:.3px}
+
+  .phoneWrap{display:flex;justify-content:center;margin:6px 0 14px}
+  .phone{
+    width:400px;max-width:100%;padding:8px;border-radius:46px;
+    background:linear-gradient(160deg,#1b2537,#0a0f19);
+    border:1px solid #2c3c58;
+    box-shadow:0 34px 70px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.06);
+  }
+  .phone iframe{
+    display:block;width:100%;height:740px;border:0;border-radius:38px;
+    background:#0b1220;
+  }
+  @media(max-width:480px){ .phone iframe{height:620px} }
+  .openRow{display:flex;justify-content:center;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--mut)}
+  .openRow a{color:#ffc59b;text-decoration:none;border-bottom:1px dashed rgba(255,138,61,.5);padding-bottom:1px}
+  .openRow a:hover{color:#ffd9bd}
+  .fsBox{position:fixed;inset:0;z-index:60;display:none;background:#0b1220}
+  .fsBox.on{display:block}
+  .fsBox iframe{width:100%;height:100%;border:0;display:block;background:#0b1220}
+  .fsClose{
+    position:fixed;top:10px;right:10px;z-index:61;width:40px;height:40px;border-radius:50%;
+    border:1px solid var(--line);background:rgba(20,30,51,.9);color:#e8eefb;font-size:22px;
+    line-height:1;cursor:pointer;display:none
+  }
+  .fsBox.on + .fsClose{display:block}
+
+  footer{margin-top:46px;border-top:1px solid var(--line);padding-top:16px;color:var(--mut);font-size:12px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <span class="kicker">TASARIM DEMOSU</span>
+    <h1>Kombi Termostat — Oda Ünitesi Arayüzü</h1>
+    <p class="lead">
+      OLED ekranın beş sayfası, on OLED teması ve cihazın gömülü web arayüzü. Hepsi tarayıcıda çalışır;
+      donanım, Wi-Fi veya sunucu gerekmez. Ekran yerleşimleri <code>oda_termostati.ino</code> ve
+      <code>src/OledTheme</code> içindeki çizim koduyla, web arayüzü ise <code>web_ui.h</code> ile
+      aynı kuralları kullanır.
+    </p>
+  </header>
+
+  <section class="sec">
+    <div class="secHead">
+      <h2>0.96" OLED — 128 × 64 piksel</h2>
+      <p>Encoder ile sayfa değişir: 1 ana ekran · 2 ağ bilgisi · 3 bilgi · 4 uyku modu · 5 tema</p>
+    </div>
+
+    <div class="toolbar" id="scenes">
+      <button class="chip" data-scene="heat" aria-pressed="true">Isıtıyor</button>
+      <button class="chip" data-scene="idle" aria-pressed="false">Bekliyor</button>
+      <button class="chip" data-scene="off" aria-pressed="false">Kapalı</button>
+      <button class="chip" data-scene="sensor" aria-pressed="false">Sensör hatası</button>
+      <button class="chip" data-scene="nolink" aria-pressed="false">Kombi bağlı değil</button>
+      <span class="sep"></span>
+      <button class="chip boost" id="boostBtn" aria-pressed="false">Boost 45 dk</button>
+    </div>
+
+    <div class="toolbar" id="themes">
+      <span class="lbl">Tema</span>
+      <button class="chip theme" data-theme="klasik" aria-pressed="true">Klasik</button>
+      <button class="chip theme" data-theme="minimal" aria-pressed="false">Minimal</button>
+      <button class="chip theme" data-theme="ters" aria-pressed="false">Ters</button>
+      <button class="chip theme" data-theme="kutu" aria-pressed="false">Kutu</button>
+      <button class="chip theme" data-theme="genis" aria-pressed="false">Geniş</button>
+      <button class="chip theme" data-theme="gece" aria-pressed="false">Gece</button>
+      <button class="chip theme" data-theme="retro" aria-pressed="false">Retro</button>
+      <button class="chip theme" data-theme="durum" aria-pressed="false">Durum</button>
+      <button class="chip theme" data-theme="kompakt" aria-pressed="false">Kompakt</button>
+      <button class="chip theme" data-theme="dev" aria-pressed="false">Dev Rakam</button>
+    </div>
+
+    <div class="oledGrid">
+      <figure class="dev">
+        <div class="bezel"><div class="oled" data-page="1"></div></div>
+        <figcaption><b>Sayfa 1/5 — Ana ekran</b><span>sıcaklık · hedef · durum</span></figcaption>
+      </figure>
+      <figure class="dev">
+        <div class="bezel"><div class="oled" data-page="2"></div></div>
+        <figcaption><b>Sayfa 2/5 — Ağ bilgisi</b><span>AP · IP · röle</span></figcaption>
+      </figure>
+      <figure class="dev">
+        <div class="bezel"><div class="oled" data-page="3"></div></div>
+        <figcaption><b>Sayfa 3/5 — Bilgi</b><span>ayarlar · süre · sürüm</span></figcaption>
+      </figure>
+      <figure class="dev">
+        <div class="bezel"><div class="oled" data-page="4"></div></div>
+        <figcaption><b>Sayfa 4/5 — Uyku modu</b><span>saat aralığı · uyku hedefi · NTP</span></figcaption>
+      </figure>
+      <figure class="dev">
+        <div class="bezel"><div class="oled" data-page="5"></div></div>
+        <figcaption><b>Sayfa 5/5 — Tema</b><span>tema listesi · LittleFS</span></figcaption>
+      </figure>
+    </div>
+
+    <div class="notes">
+      <div class="note"><b>Tema sistemi</b>10 tema <code>/themes/&lt;id&gt;.txt</code> dosyasında durur; ilk açılışta yoksa gömülü varsayılanlardan üretilir. Seçim <code>/config.txt</code> içindeki <code>theme=</code> satırında saklanır.</div>
+      <div class="note"><b>Sayfa 5</b>Sayfa 5'te encoder döndürmek temayı değiştirir: üst şerit, sıcaklık boyutu, ayırıcı, durum stili ve alt bilgi alanları anında güncellenir.</div>
+      <div class="note"><b>Isıtıyor</b>Isı talebi varken durum satırı temanın stilinde (bar · çerçeve · ters şerit) vurgulanır.</div>
+      <div class="note"><b>Encoder</b>Kısa basış sayfa değiştirir; uzun basış modu açar/kapatır.</div>
+      <div class="note"><b>Boost</b>Aktifken alt satırda <code>BST 45dk</code> görünür ve hedef +1.5 °C kabul edilir.</div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="secHead">
+      <h2>Web arayüzü — mobil görünüm</h2>
+      <p>Gerçek gömülü sayfa, demo verisiyle canlı çalışıyor</p>
+    </div>
+
+    <div class="phoneWrap">
+      <div class="phone"><iframe id="uiFrame" title="Kombi Termostat web arayüzü"></iframe></div>
+    </div>
+
+    <div class="openRow">
+      <a id="fullUi" href="#" onclick="return openFullUi(event)">Tam ekran aç</a>
+      <span>·</span>
+      <span>Kaydırın; hedef sıcaklığı değiştirin, uyku modunu, röle davranışını, MQTT/Telegram ve sıcaklık geçmişi bölümlerini deneyin.</span>
+    </div>
+  </section>
+
+  <div class="fsBox" id="fsBox"><iframe id="fsFrame" title="Kombi Termostat web arayüzü (tam ekran)"></iframe></div>
+  <button class="fsClose" id="fsClose" onclick="closeFullUi()" aria-label="Tam ekranı kapat">×</button>
+
+  <footer>
+    <span>Kombi Termostat · NodeMCU v3 (ESP8266) · firmware 1.0.0</span>
+    <span>AP: TERMOSTAT-AP · http://192.168.4.1</span>
+  </footer>
+</div>
+
+<script>
+const UI_HTML = __UI_HTML__;
+
+// ---- Web arayüzünü telefon çerçevesine göm ----
+document.getElementById('uiFrame').srcdoc = UI_HTML;
+
+// ---- Tam ekran: gömülü arayüzü pencereyi kaplayan katmanda aç ----
+let fsReady = false;
+function openFullUi(ev){
+  if(ev) ev.preventDefault();
+  const box = document.getElementById('fsBox');
+  if(!fsReady){
+    document.getElementById('fsFrame').srcdoc = UI_HTML;
+    fsReady = true;
+  }
+  box.classList.add('on');
+  document.body.style.overflow = 'hidden';
+  return false;
+}
+function closeFullUi(){
+  document.getElementById('fsBox').classList.remove('on');
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', e => { if(e.key === 'Escape') closeFullUi(); });
+
+// ---- OLED emülasyonu (128x64, 6x8 karakter ızgarası) ----
+const NET = { apip: '192.168.4.1', ip: '192.168.1.57', ssid: 'EvWifi', rssi: -58, clientIp: '192.168.4.2' };
+
+const SCENES = {
+  heat:   { temp: 21.4, sp: 22.0, hum: 55,  flow: 42.5, mode: true,  link: true,  sensorOk: true,  demand: true  },
+  idle:   { temp: 22.3, sp: 22.0, hum: 54,  flow: 41.8, mode: true,  link: true,  sensorOk: true,  demand: false },
+  off:    { temp: 19.8, sp: 22.0, hum: 56,  flow: null, mode: false, link: true,  sensorOk: true,  demand: false },
+  sensor: { temp: null, sp: 22.0, hum: null, flow: null, mode: true, link: true,  sensorOk: false, demand: false },
+  nolink: { temp: 21.4, sp: 22.0, hum: 55,  flow: null, mode: true, link: false, sensorOk: true,  demand: false }
+};
+
+// OledTheme.cpp icindeki THEME_TABLE ile ayni alanlar
+const THEMES = [
+  { id:'klasik',  name:'Klasik',    header:1, tempSize:2, tempCenter:0, setpointCol:1, sep:1, status:1, hum:1, boost:1, water:1, page:1, labels:1, invert:0, dim:0 },
+  { id:'minimal', name:'Minimal',   header:0, tempSize:3, tempCenter:1, setpointCol:0, sep:0, status:0, hum:0, boost:0, water:0, page:0, labels:0, invert:0, dim:0 },
+  { id:'ters',    name:'Ters',      header:4, tempSize:2, tempCenter:0, setpointCol:1, sep:1, status:3, hum:1, boost:1, water:0, page:1, labels:1, invert:1, dim:0 },
+  { id:'kutu',    name:'Kutu',      header:3, tempSize:2, tempCenter:0, setpointCol:1, sep:2, status:2, hum:1, boost:1, water:1, page:1, labels:1, invert:0, dim:0 },
+  { id:'genis',   name:'Genis',     header:1, tempSize:3, tempCenter:1, setpointCol:0, sep:2, status:1, hum:1, boost:1, water:0, page:1, labels:0, invert:0, dim:0 },
+  { id:'gece',    name:'Gece',      header:2, tempSize:3, tempCenter:1, setpointCol:0, sep:3, status:0, hum:0, boost:1, water:0, page:0, labels:0, invert:0, dim:1 },
+  { id:'retro',   name:'Retro',     header:2, tempSize:2, tempCenter:0, setpointCol:1, sep:3, status:2, hum:1, boost:1, water:1, page:1, labels:1, invert:0, dim:0 },
+  { id:'durum',   name:'Durum',     header:1, tempSize:2, tempCenter:0, setpointCol:0, sep:0, status:3, hum:1, boost:1, water:1, page:1, labels:0, invert:0, dim:0 },
+  { id:'kompakt', name:'Kompakt',   header:4, tempSize:2, tempCenter:0, setpointCol:1, sep:0, status:0, hum:1, boost:1, water:1, page:1, labels:0, invert:0, dim:0 },
+  { id:'dev',     name:'Dev Rakam', header:0, tempSize:3, tempCenter:1, setpointCol:0, sep:1, status:1, hum:0, boost:0, water:0, page:0, labels:0, invert:0, dim:0 }
+];
+
+const HEADER_NAMES  = ['yok', 'cizgi', 'cift', 'kutu', 'serit'];
+const STATUS_NAMES  = ['metin', 'bar', 'cerceve', 'ters'];
+const PAGE_COUNT    = 5;
+
+const UPTIME = 2 * 86400 + 14 * 3600 + 22 * 60; // 2 gün 14 sa 22 dk
+let sceneKey = 'heat';
+let boostOn = false;
+let themeId = 'klasik';
+const SLEEP = { enabled: true, active: false, start: '23:00', end: '07:00', sp: 18.0, failsafe: false };
+
+const esc = t => String(t).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+const chars = t => Array.from(String(t)).map(c => '<span>' + (c === ' ' ? '&nbsp;' : esc(c)) + '</span>').join('');
+const charW = cls => (cls || '').indexOf('s3') >= 0 ? 18 : (cls || '').indexOf('s2') >= 0 ? 12 : 6;
+const row = (x, y, t, cls) => '<div class="r ' + (cls || '') + '" style="left:' + x + 'px;top:' + y + 'px">' + chars(t) + '</div>';
+const rowR = (right, y, t, cls) => row(right - Array.from(String(t)).length * charW(cls), y, t, cls);
+const hl = y => '<div class="hl" style="top:' + y + 'px"></div>';
+
+const theme = () => THEMES.find(t => t.id === themeId) || THEMES[0];
+const headerH = th => th.header === 0 ? 0 : th.header === 2 ? 11 : 10;
+
+// oledThemeHeader(): ust serit cizimi
+function header(title, page, th) {
+  if (!th.header) return '';
+  const pg = th.page ? page + '/' + PAGE_COUNT : '';
+  let h = '';
+  if (th.header === 4) {
+    h += '<div class="inv" style="left:0;top:0;width:128px;height:9px;border-radius:0"></div>';
+    h += row(2, 1, title, 'dark');
+    if (pg) h += rowR(126, 1, pg, 'dark');
+  } else {
+    const ty = th.header === 3 ? 1 : 0;
+    h += row(0, ty, title);
+    if (pg) h += rowR(128, ty, pg);
+    if (th.header === 1) h += hl(9);
+    if (th.header === 2) h += hl(8) + hl(10);
+    if (th.header === 3) h += '<div class="box" style="top:0;height:10px"></div>';
+  }
+  return h;
+}
+
+// oledThemeSeparator()
+function separator(y, th) {
+  if (y < 0 || y > 63) return '';
+  if (th.sep === 1) return hl(y);
+  if (th.sep === 2) return (y > 0 ? hl(y - 1) : '') + hl(y);
+  if (th.sep === 3) return '<div class="dots" style="top:' + y + 'px"></div>';
+  return '';
+}
+
+// oledThemeStatus(): durum metni her temada yatay ortalanir
+function status(y, label, highlight, th) {
+  y = Math.max(0, Math.min(52, y));
+  const tx = Math.max(0, Math.floor((128 - Array.from(label).length * 6) / 2));
+  if (th.status === 1) {
+    if (highlight) {
+      return '<div class="inv" style="left:0;top:' + (y - 1) + 'px;width:128px;height:11px;border-radius:0"></div>'
+        + row(tx, y, label, 'dark');
+    }
+    return row(tx, y, label);
+  }
+  if (th.status === 2) {
+    return '<div class="box" style="top:' + (y - 1) + 'px;height:11px"></div>' + row(tx, y, label);
+  }
+  if (th.status === 3) {
+    return '<div class="inv" style="left:0;top:' + (y - 1) + 'px;width:128px;height:11px;border-radius:0"></div>'
+      + row(tx, y, label, 'dark');
+  }
+  return row(tx, y, label);
+}
+
+function statusText(s) {
+  if (!s.sensorOk) return 'SENSOR HATASI';
+  if (!s.link) return 'KOMBI BAGLI DEGIL';
+  if (!s.mode) return 'KAPALI/DON KOR.';
+  if (s.demand) return 'ISITIYOR';
+  return 'BEKLIYOR';
+}
+
+// drawMainPage(): yerlesim matematigi .ino ile ayni
+function page1(s) {
+  const th = theme();
+  const tempStr = s.sensorOk ? s.temp.toFixed(1) : '--.-';
+  const heating = !!(s.demand && s.link && s.mode);
+
+  const base  = headerH(th) + 2;
+  const tempY = base + (th.tempSize === 3 ? 0 : 2);
+  const sepY  = tempY + (th.tempSize === 3 ? 25 : 19);
+  const statY = th.sep ? sepY + 3 : sepY + 1;
+  const footY = th.header ? 54 : ((statY + 14 < 55) ? statY + 14 : 55);
+
+  let h = header('TERMOSTAT', 1, th);
+  if (SLEEP.active && th.header) h += row(72, 0, 'UYKU');
+
+  const cls = th.tempSize === 3 ? 's3' : 's2';
+  const tempW = tempStr.length * 6 * th.tempSize;
+  let tempX = th.tempCenter ? Math.floor((128 - tempW) / 2) : 0;
+  if (tempX < 0) tempX = 0;
+  h += row(tempX, tempY, tempStr, cls);
+  h += row(tempX + tempW + 2, tempY + (th.tempSize === 3 ? 14 : 6), 'C');
+
+  if (th.setpointCol && !th.tempCenter) {
+    // HEDEF etiketi yerine hedef, cerceve icinde buyuk yazilir
+    const sp = s.sp.toFixed(1);
+    const bx = 58, by = tempY - 1, bw = 68, bh = 19;
+    const spW = sp.length * 12;
+    const cx = bx + Math.max(2, Math.floor((bw - (spW + 7)) / 2));
+    h += '<div class="box" style="left:' + bx + 'px;top:' + by + 'px;width:' + bw + 'px;height:' + bh + 'px"></div>';
+    h += row(cx, by + 1, sp, 's2');
+    h += row(cx + spW + 1, by + 10, 'C');
+  } else if (th.setpointCol) {
+    h += row(84, tempY + 1, th.labels ? 'HEDEF' : 'HD');
+    h += row(84, tempY + 11, s.sp.toFixed(1) + 'C');
+  }
+
+  h += separator(sepY, th);
+  h += status(statY, statusText(s), heating, th);
+
+  if (th.hum) {
+    h += row(0, footY, (s.sensorOk && s.hum !== null) ? 'Nem %' + Math.round(s.hum) : 'Nem --');
+  }
+  if (th.boost && boostOn) {
+    h += row(68, footY, 'BST 45dk');
+  } else if (th.water && s.flow !== null) {
+    h += rowR(128, footY, 'Su ' + s.flow.toFixed(1) + 'C');
+  } else if (!th.setpointCol && th.labels) {
+    h += rowR(128, footY, 'Hd ' + s.sp.toFixed(1));
+  }
+  return h;
+}
+
+function page2(s) {
+  const th = theme();
+  let ssid = NET.ssid;
+  if (ssid.length > 19) ssid = ssid.slice(0, 19);
+  let h = header('AG BILGISI', 2, th);
+  h += row(0, 12, 'AP: ' + NET.apip);
+  h += row(0, 21, 'IP: ' + NET.ip);
+  h += row(0, 30, 'STA: ' + ssid);
+  h += row(0, 39, 'Kombi: ' + (s.link ? 'BAGLI' : 'YOK'));
+  if (s.link) h += row(0, 48, 'Role IP: ' + NET.clientIp);
+  h += row(0, 56, 'Sinyal: ' + NET.rssi + ' dBm');
+  return h;
+}
+
+function page3(s) {
+  const th = theme();
+  const d = Math.floor(UPTIME / 86400);
+  const hh = Math.floor((UPTIME % 86400) / 3600);
+  const mm = Math.floor((UPTIME % 3600) / 60);
+  const up = (d > 0 ? d + 'g ' : '') + hh + 's ' + mm + 'd';
+  let h = header('BILGI', 3, th);
+  h += row(0, 12, 'Histerezis: 0.3C');
+  h += row(0, 21, 'Kalibrasyon: +0.0C');
+  h += row(0, 30, 'Don koruma: 5.0C');
+  h += row(0, 39, 'Boost: ' + (boostOn ? '45 dk' : 'yok'));
+  h += row(0, 48, 'Calisma: ' + up);
+  h += row(0, 56, 'FW 1.0.0  Heap:38k');
+  return h;
+}
+
+function page4(s) {
+  const th = theme();
+  let h = header('UYKU MODU', 4, th);
+  h += row(0, 12, 'Durum: ' + (!SLEEP.enabled ? 'kapali' : SLEEP.active ? 'AKTIF' : 'bekliyor'));
+  h += row(0, 21, 'Aralik: ' + SLEEP.start + ' - ' + SLEEP.end);
+  h += row(0, 30, 'Uyku hedefi: ' + SLEEP.sp.toFixed(1) + 'C');
+  h += row(0, 39, 'Normal hedef: ' + s.sp.toFixed(1) + 'C');
+  h += row(0, 48, 'Saat: NTP OK 03:24');
+  h += row(0, 56, 'Role FS: ' + (SLEEP.failsafe ? 'ACIK kalir' : 'kapanir'));
+  return h;
+}
+
+// drawThemePage()
+function page5(s) {
+  const th = theme();
+  const idx = THEMES.indexOf(th) + 1;
+  let h = header('TEMA', 5, th);
+  h += row(0, 12, 'Tema: ' + idx + '/' + THEMES.length + (th.invert ? ' NEG' : '') + (th.dim ? ' DIM' : ''));
+  h += row(0, 21, 'Ad: ' + th.name);
+  h += row(0, 30, 'Kimlik: ' + th.id);
+  h += row(0, 39, 'Ust: ' + HEADER_NAMES[th.header]);
+  h += row(0, 48, 'Durum: ' + STATUS_NAMES[th.status]);
+  h += row(0, 56, 'Enkoder: tema sec');
+  return h;
+}
+
+const PAGES = { 1: page1, 2: page2, 3: page3, 4: page4, 5: page5 };
+
+function render() {
+  const s = SCENES[sceneKey];
+  const th = theme();
+  document.querySelectorAll('.oled').forEach(el => {
+    let scr = el.querySelector('.scr');
+    if (!scr) {
+      scr = document.createElement('div');
+      scr.className = 'scr';
+      el.appendChild(scr);
+    }
+    scr.classList.toggle('neg', !!th.invert);
+    scr.classList.toggle('dim', !!th.dim);
+    const p = Number(el.dataset.page);
+    scr.innerHTML = (PAGES[p] || page1)(s);
+  });
+}
+
+document.getElementById('scenes').addEventListener('click', e => {
+  const btn = e.target.closest('[data-scene]');
+  if (!btn) return;
+  sceneKey = btn.dataset.scene;
+  document.querySelectorAll('[data-scene]').forEach(b => b.setAttribute('aria-pressed', String(b === btn)));
+  render();
+});
+
+document.getElementById('themes').addEventListener('click', e => {
+  const btn = e.target.closest('[data-theme]');
+  if (!btn) return;
+  themeId = btn.dataset.theme;
+  document.querySelectorAll('[data-theme]').forEach(b => b.setAttribute('aria-pressed', String(b === btn)));
+  render();
+});
+
+document.getElementById('boostBtn').addEventListener('click', e => {
+  boostOn = !boostOn;
+  e.currentTarget.setAttribute('aria-pressed', String(boostOn));
+  e.currentTarget.textContent = boostOn ? 'Boost iptal' : 'Boost 45 dk';
+  render();
+});
+
+// Ölçek: 128 px genişlik ekrana sığsın, tam sayı kalsın (piksel netliği)
+function fitScale() {
+  const avail = Math.min(window.innerWidth - 96, 470);
+  const s = Math.max(2, Math.min(4, Math.floor(avail / 128)));
+  document.documentElement.style.setProperty('--s', String(s));
+}
+window.addEventListener('resize', fitScale);
+fitScale();
+render();
+</script>
+</body>
+</html>
