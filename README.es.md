@@ -93,6 +93,10 @@ con doble clic. La demo ejecuta una API simulada dentro del navegador.
 - **OLED 0.96" SSD1306** (128×64, I²C): temperatura, consigna, estado, red e información
 - **Encoder KY‑040:** girar cambia la consigna, pulsación corta cambia de página, larga el modo
 - **10 temas OLED** en archivos editables `/themes/*.txt` de LittleFS
+- **8 idiomas de interfaz** — inglés, turco, ruso, español, portugués, japonés, coreano y
+  chino. En el primer arranque la unidad pide el idioma (OLED: girar para elegir, pulsar para
+  confirmar; web: selector a pantalla completa) y lo guarda en `lang=`. En el OLED se admiten
+  en/tr/es/pt (fuente solo ASCII); el resto se muestra en inglés.
 - **Interfaz web móvil:** consigna, modo, boost, modo noche, comportamiento del relé,
   MQTT/Telegram, gráfico histórico, histéresis, calibración, antihielo,
   **escáner de redes Wi-Fi** e información del sistema

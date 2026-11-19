@@ -93,6 +93,10 @@ dosyasına çift tıklamak yeterlidir. Demo, tarayıcı içinde sahte bir API ç
 - **10 OLED teması** — LittleFS üzerinde düzenlenebilir `/themes/*.txt` dosyaları
 - **Mobil öncelikli web arayüzü:** hedef, mod, boost, uyku, röle davranışı, MQTT/Telegram,
   geçmiş grafiği, histerezis, kalibrasyon, don koruması, **Wi‑Fi ağ tarayıcı**, sistem bilgisi
+- **8 arayüz dili** — İngilizce, Türkçe, Rusça, İspanyolca, Portekizce, Japonca, Korece ve Çince.
+  İlk açılışta oda ünitesi dil sorar (OLED: çevir–seç, bas–onayla; web: tam ekran seçim) ve `lang=`
+  olarak saklar; sonradan **Dil** kartından değiştirilir. OLED etiketleri gömülü font ASCII
+  olduğu için en/tr/es/pt kapsar, diğer dillerde ekran İngilizceye düşer.
 - **Uyku modu:** saat aralığında farklı hedef (NTP saati)
 - **MQTT:** retained durum JSON'u + `anahtar=değer` komutları
 - **Telegram botu:** durum ve kontrol, yalnızca tanımlı sohbet
@@ -309,6 +313,7 @@ Gömülü web sunucusu 80 portunda JSON sunar — Home Assistant, betikler veya 
 | GET | `/api/set?boost=15` | 15 dk boost (`0` iptal) |
 | GET | `/api/set?sleep=1&sleepstart=23:00&sleepend=07:00&sleepsp=18` | Uyku modu |
 | GET | `/api/set?failsafe=1` | Röle: son talebi koru |
+| GET | `/api/set?lang=ja` | Arayüz dili: en/tr/ru/es/pt/ja/ko/zh |
 | GET | `/api/set?theme=gece` | OLED teması seç |
 | GET | `/api/theme` | Tema listesi + aktif tema |
 | GET | `/api/theme?set=retro` | Tema seç |

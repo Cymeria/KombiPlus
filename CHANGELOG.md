@@ -21,6 +21,12 @@ First stable release. Both devices report `FW 1.0.0`.
   relay behaviour, hysteresis, calibration, frost protection, system info and history chart.
 - **Wi-Fi network scanner** — `/api/scan` plus a "Scan networks" list in *Wi-Fi settings*, so a
   network can be picked instead of typed.
+- **Multilingual interface (8 languages)** — English, Turkish, Russian, Spanish, Portuguese,
+  Japanese, Korean and Chinese in the embedded web UI. On first boot the room unit asks for a
+  language (OLED: turn to pick, press to confirm; web UI: full-screen picker) and stores it as
+  `lang=` in `/config.txt`; it is also exposed by `/api/set?lang=xx` and `/api/status`. OLED
+  labels are localized for en/tr/es/pt because the built-in font is ASCII-only; other languages
+  fall back to English on the display.
 - **Wi-Fi settings** — home network SSID/password; the access point stays up for the relay unit.
 - **Boost** — +1.5 °C for 5 / 15 / 30 minutes.
 - **Sleep mode** — alternative setpoint inside an NTP-based time window.

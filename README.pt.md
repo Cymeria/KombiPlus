@@ -93,6 +93,10 @@ dois cliques. A demo executa uma API simulada dentro do navegador.
 - **OLED 0.96" SSD1306** (128×64, I²C): temperatura, setpoint, estado, rede e informações
 - **Encoder KY‑040:** girar ajusta o setpoint, toque curto troca a página, toque longo o modo
 - **10 temas OLED** em arquivos editáveis `/themes/*.txt` no LittleFS
+- **8 idiomas de interface** — inglês, turco, russo, espanhol, português, japonês, coreano e
+  chinês. No primeiro boot a unidade pede o idioma (OLED: girar para escolher, pressionar para
+  confirmar; web: seletor em tela cheia) e o salva como `lang=`. No OLED valem en/tr/es/pt
+  (fonte apenas ASCII); os demais aparecem em inglês.
 - **Interface web para celular:** setpoint, modo, boost, modo dormir, comportamento do relé,
   MQTT/Telegram, gráfico do histórico, histerese, calibração, antigelo,
   **varredura de redes Wi-Fi** e informações do sistema

@@ -96,6 +96,11 @@ by double-clicking it. It runs a mock API inside the browser, so nothing is inst
 - **10 OLED themes** stored as editable `/themes/*.txt` files on LittleFS
 - **Mobile-first web UI** — setpoint, mode, boost, sleep, relay behaviour, MQTT/Telegram,
   history chart, hysteresis, calibration, frost protection, **Wi-Fi network scanner**, system info
+- **8 UI languages** — English, Turkish, Russian, Spanish, Portuguese, Japanese, Korean and
+  Chinese. On first boot the room unit asks for a language (OLED: turn to pick, press to confirm;
+  web UI: full-screen picker) and keeps it as `lang=`; change it any time from the *Language*
+  card. OLED labels cover en/tr/es/pt — the built-in font is ASCII-only, so other languages fall
+  back to English on the display.
 - **Sleep mode** — a different setpoint inside a time window (NTP clock)
 - **MQTT** — retained status JSON + `key=value` commands
 - **Telegram bot** — status and control, restricted to one chat ID
@@ -313,6 +318,7 @@ The embedded web server serves JSON on port 80 — handy for Home Assistant, scr
 | GET | `/api/set?boost=15` | 15 min boost (`0` cancels) |
 | GET | `/api/set?sleep=1&sleepstart=23:00&sleepend=07:00&sleepsp=18` | Sleep mode |
 | GET | `/api/set?failsafe=1` | Relay fail-safe: hold last demand |
+| GET | `/api/set?lang=ja` | Interface language: en/tr/ru/es/pt/ja/ko/zh |
 | GET | `/api/set?theme=gece` | Select OLED theme |
 | GET | `/api/theme` | Theme list + active theme |
 | GET | `/api/theme?set=retro` | Select a theme |

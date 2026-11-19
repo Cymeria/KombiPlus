@@ -167,6 +167,18 @@ canvas{width:100%;height:200px;display:block;border-radius:12px;background:#0d16
 .net b{font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .net span{color:var(--mut);font-size:12px;white-space:nowrap}
 .net.sel{border-color:var(--acc);background:rgba(255,138,61,.14)}
+
+select{font:inherit;color:var(--txt);background:#0d1628;border:1px solid var(--line);border-radius:11px;padding:10px 12px;outline:none;min-width:150px}
+select:focus{border-color:var(--acc)}
+.langmask{position:fixed;inset:0;background:rgba(6,10,20,.88);display:flex;align-items:center;justify-content:center;padding:18px;z-index:20}
+.langmask[hidden]{display:none}
+.langbox{width:100%;max-width:520px;background:linear-gradient(180deg,var(--card),var(--bg2));border:1px solid var(--line);border-radius:20px;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.55);text-align:center}
+.langbox .logo{margin:0 auto 4px;width:48px;height:48px;border-radius:16px;font-size:24px}
+.langbox h2{margin:8px 0 4px;font-size:19px}
+.langbox p{margin:0;font-size:13px;color:var(--mut)}
+.langgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:16px}
+.langgrid button{text-align:left;padding:12px 14px;font-size:14px}
+.langgrid button.on{border-color:var(--acc);background:rgba(255,138,61,.14)}
 </style>
 </head>
 <body>
@@ -184,7 +196,7 @@ canvas{width:100%;height:200px;display:block;border-radius:12px;background:#0d16
 
   <section class="card hero">
     <div class="room">
-      <div class="label">Oda Sıcaklığı</div>
+      <div class="label" data-t="roomTemp">Oda Sıcaklığı</div>
       <div class="big" id="bigWrap"><span id="temp">--</span><span class="deg">°C</span></div>
       <div class="meta">
         <span id="hum">Nem —</span>
@@ -193,7 +205,7 @@ canvas{width:100%;height:200px;display:block;border-radius:12px;background:#0d16
       </div>
     </div>
     <div class="target">
-      <div class="label">Hedef Sıcaklık</div>
+      <div class="label" data-t="targetTemp">Hedef Sıcaklık</div>
       <div class="targetRow">
         <button class="circle" onclick="step(-0.5)" aria-label="Azalt">−</button>
         <div class="sp"><span id="spVal">21.0</span><span class="unit2">°C</span></div>
@@ -205,26 +217,26 @@ canvas{width:100%;height:200px;display:block;border-radius:12px;background:#0d16
   </section>
 
   <section class="stats">
-    <div class="card stat"><span class="label">Durum</span><b id="state">—</b></div>
-    <div class="card stat"><span class="label">Kombi</span><b id="relay">—</b></div>
-    <div class="card stat"><span class="label">Boost</span><b id="boost">Kapalı</b></div>
+    <div class="card stat"><span class="label" data-t="state">Durum</span><b id="state">—</b></div>
+    <div class="card stat"><span class="label" data-t="boiler">Kombi</span><b id="relay">—</b></div>
+    <div class="card stat"><span class="label" data-t="boost">Boost</span><b id="boost">Kapalı</b></div>
   </section>
 
   <section class="card row">
     <div>
-      <div class="label">Çalışma Modu</div>
+      <div class="label" data-t="workMode">Çalışma Modu</div>
       <div class="hint" id="modeHint">Açık: hedef sıcaklığa göre ısıtır.</div>
     </div>
     <button class="toggle" id="modeBtn" onclick="toggleMode()" aria-label="Mod değiştir"><span></span></button>
   </section>
 
   <section class="card">
-    <div class="label">Hızlı Isıtma (Boost)</div>
+    <div class="label" data-t="quickBoost">Hızlı Isıtma (Boost)</div>
     <div class="btns">
-      <button onclick="boost(5)">5 dk</button>
-      <button onclick="boost(15)">15 dk</button>
-      <button onclick="boost(30)">30 dk</button>
-      <button class="ghost" onclick="boost(0)">İptal</button>
+      <button onclick="boost(5)" data-t="min5">5 dk</button>
+      <button onclick="boost(15)" data-t="min15">15 dk</button>
+      <button onclick="boost(30)" data-t="min30">30 dk</button>
+      <button class="ghost" onclick="boost(0)" data-t="cancel">İptal</button>
     </div>
     <div class="hint" id="boostHint">Boost, hedefi geçici olarak +1.5 °C yükseltir.</div>
   </section>
@@ -232,142 +244,158 @@ canvas{width:100%;height:200px;display:block;border-radius:12px;background:#0d16
   <section class="card">
     <div class="rowline">
       <div>
-        <div class="label">Uyku Modu</div>
+        <div class="label" data-t="sleepMode">Uyku Modu</div>
         <div class="hint" id="sleepHint">Belirlenen saat aralığında daha düşük hedef uygulanır.</div>
       </div>
       <button class="toggle" id="sleepBtn" onclick="toggleSleep()" aria-label="Uyku modu"><span></span></button>
     </div>
     <div class="form two" style="margin-top:12px">
-      <label>Başlangıç
+      <label><span data-t="start">Başlangıç</span>
         <input id="sleepStart" type="time">
       </label>
-      <label>Bitiş
+      <label><span data-t="end">Bitiş</span>
         <input id="sleepEnd" type="time">
       </label>
-      <label>Uyku Hedefi (°C)
+      <label><span data-t="sleepTarget">Uyku Hedefi (°C)</span>
         <input id="sleepSp" type="number" step="0.5" min="5" max="30">
       </label>
     </div>
-    <button class="primary" onclick="saveSleep()">Uyku Ayarlarını Kaydet</button>
+    <button class="primary" onclick="saveSleep()" data-t="saveSleep">Uyku Ayarlarını Kaydet</button>
   </section>
 
   <section class="card rowline">
     <div>
-      <div class="label">Röle Davranışı</div>
+      <div class="label" data-t="relayBehavior">Röle Davranışı</div>
       <div class="hint" id="fsHint">Oda ünitesine 5 dakika boyunca ulaşılamazsa röle kapanır.</div>
     </div>
     <button class="toggle" id="fsBtn" onclick="toggleFailSafe()" aria-label="Röle fail-safe"><span></span></button>
   </section>
 
   <section class="card">
-    <div class="label">Sıcaklık Geçmişi</div>
+    <div class="label" data-t="history">Sıcaklık Geçmişi</div>
     <div class="chips">
-      <button class="chip on" id="h24" onclick="setRange(24)">24 saat</button>
-      <button class="chip" id="h168" onclick="setRange(168)">7 gün</button>
-      <button class="chip" id="h720" onclick="setRange(720)">30 gün</button>
+      <button class="chip on" id="h24" onclick="setRange(24)" data-t="h24">24 saat</button>
+      <button class="chip" id="h168" onclick="setRange(168)" data-t="d7">7 gün</button>
+      <button class="chip" id="h720" onclick="setRange(720)" data-t="d30">30 gün</button>
     </div>
     <canvas id="chart" height="200"></canvas>
     <div class="legend">
-      <span><i style="background:#ff9e55"></i>Oda</span>
-      <span><i style="background:#49b8ff"></i>Hedef</span>
+      <span><i style="background:#ff9e55"></i><span data-t="legendRoom">Oda</span></span>
+      <span><i style="background:#49b8ff"></i><span data-t="legendTarget">Hedef</span></span>
       <span id="histInfo"></span>
     </div>
     <div class="mini">
-      <button onclick="sampleNow()">Şimdi Kaydet</button>
-      <button onclick="loadHistory(true)">Yenile</button>
-      <button onclick="clearHistory()">Temizle</button>
+      <button onclick="sampleNow()" data-t="now">Şimdi Kaydet</button>
+      <button onclick="loadHistory(true)" data-t="refresh">Yenile</button>
+      <button onclick="clearHistory()" data-t="clear">Temizle</button>
     </div>
-    <a class="linkbtn" href="/fs" target="_blank" rel="noopener">LittleFS Dosya Yöneticisi →</a>
-    <div class="hint">Saatlik kayıtlar LittleFS'de <b>/history.csv</b> dosyasında tutulur (en fazla ~30 gün).</div>
+    <a class="linkbtn" href="/fs" target="_blank" rel="noopener" data-t="fsManager">LittleFS Dosya Yöneticisi →</a>
+    <div class="hint" data-t="historyHint">Saatlik kayıtlar LittleFS'de /history.csv dosyasında tutulur (en fazla ~30 gün).</div>
   </section>
 
   <details class="card">
-    <summary>MQTT &amp; Telegram <span class="chev">⌄</span></summary>
-    <div class="hint">MQTT ile durum yayınlanır ve komut alınır. Telegram botu ile uzaktan kontrol edilebilir.
-      Şifre/token alanlarını boş bırakırsanız mevcut değer korunur.</div>
+    <summary><span data-t="mqttTel">MQTT &amp; Telegram</span> <span class="chev">⌄</span></summary>
+    <div class="hint" data-t="mqttHint">MQTT ile durum yayınlanır ve komut alınır. Telegram botu ile uzaktan kontrol edilebilir; şifre/token alanlarını boş bırakırsanız mevcut değer korunur.</div>
     <div class="form two">
-      <label>MQTT Sunucu
+      <label><span data-t="mqttHost">MQTT Sunucu</span>
         <input id="mqtthost" type="text" placeholder="192.168.1.10" autocomplete="off">
       </label>
-      <label>MQTT Port
+      <label><span data-t="mqttPort">MQTT Port</span>
         <input id="mqttport" type="number" min="1" max="65535" placeholder="1883">
       </label>
-      <label>MQTT Kullanıcı
+      <label><span data-t="mqttUser">MQTT Kullanıcı</span>
         <input id="mqttuser" type="text" autocomplete="off">
       </label>
-      <label>MQTT Şifre
-        <input id="mqttpass" type="password" placeholder="Değişmeyecekse boş" autocomplete="new-password">
+      <label><span data-t="mqttPass">MQTT Şifre</span>
+        <input id="mqttpass" type="password" data-tp="keep" placeholder="Değişmeyecekse boş" autocomplete="new-password">
       </label>
-      <label>Konu Öneki
+      <label><span data-t="mqttPrefix">Konu Öneki</span>
         <input id="mqttprefix" type="text" placeholder="kombi" autocomplete="off">
       </label>
       <label>Telegram Bot Token
-        <input id="tgtoken" type="password" placeholder="Değişmeyecekse boş" autocomplete="new-password">
+        <input id="tgtoken" type="password" data-tp="keep" placeholder="Değişmeyecekse boş" autocomplete="new-password">
       </label>
       <label>Telegram Chat ID
         <input id="tgchat" type="text" autocomplete="off">
       </label>
     </div>
-    <button class="primary" onclick="saveNet()">Bağlantı Ayarlarını Kaydet</button>
-    <button class="ghost" style="width:100%;margin-top:8px" onclick="clearNet()">MQTT/Telegram Ayarlarını Sil</button>
-    <div class="kv" style="margin-top:12px"><span>MQTT durumu</span><b id="mqttState">—</b></div>
-    <div class="kv"><span>Telegram durumu</span><b id="tgState">—</b></div>
+    <button class="primary" onclick="saveNet()" data-t="saveNet">Bağlantı Ayarlarını Kaydet</button>
+    <button class="ghost" style="width:100%;margin-top:8px" onclick="clearNet()" data-t="delNet">MQTT/Telegram Ayarlarını Sil</button>
+    <div class="kv" style="margin-top:12px"><span data-t="mqttStatus">MQTT durumu</span><b id="mqttState">—</b></div>
+    <div class="kv"><span data-t="tgStatus">Telegram durumu</span><b id="tgState">—</b></div>
   </details>
 
   <details class="card">
-    <summary>Ayarlar <span class="chev">⌄</span></summary>
+    <summary><span data-t="settings">Ayarlar</span> <span class="chev">⌄</span></summary>
     <div class="form two">
-      <label>Histerezis (°C)
+      <label><span data-t="hysteresis">Histerezis (°C)</span>
         <input id="hyst" type="number" step="0.1" min="0.1" max="3">
       </label>
-      <label>Kalibrasyon (°C)
+      <label><span data-t="calibration">Kalibrasyon (°C)</span>
         <input id="cal" type="number" step="0.1" min="-5" max="5">
       </label>
-      <label>Don Koruması (°C)
+      <label><span data-t="frost">Don Koruması (°C)</span>
         <input id="frost" type="number" step="0.5" min="2" max="10">
       </label>
     </div>
-    <button class="primary" onclick="saveSettings()">Ayarları Kaydet</button>
-    <div class="hint">Histerezis: hedefin altında/üstünde açma-kapama aralığı. Kalibrasyon: sensör düzeltmesi.</div>
+    <button class="primary" onclick="saveSettings()" data-t="saveSettings">Ayarları Kaydet</button>
+    <div class="hint" data-t="settingsHint">Histerezis: hedefin altında/üstünde açma-kapama aralığı. Kalibrasyon: sensör düzeltmesi.</div>
   </details>
 
   <details class="card">
-    <summary>Wi-Fi Ayarları <span class="chev">⌄</span></summary>
-    <div class="hint">Kombi röle ünitesi bu cihazın AP'sine bağlanır; AP her zaman açıktır.
-      Ev ağına da bağlanmak için bilgileri girin. SSID'yi boş bırakırsanız yalnızca AP modunda çalışır.</div>
+    <summary><span data-t="wifi">Wi-Fi Ayarları</span> <span class="chev">⌄</span></summary>
+    <div class="hint" data-t="wifiHint">Kombi röle ünitesi bu cihazın AP'sine bağlanır; AP her zaman açıktır. Ev ağına da bağlanmak için bilgileri girin; SSID'yi boş bırakırsanız yalnızca AP modunda çalışır.</div>
     <div class="netrow">
-      <button class="ghost" id="scanBtn" onclick="scanWifi()">Ağları Tara</button>
-      <span class="hint" id="scanHint">Çevredeki ağları tarayıp listeden seçebilirsiniz.</span>
+      <button class="ghost" id="scanBtn" onclick="scanWifi()" data-t="scan">Ağları Tara</button>
+      <span class="hint" id="scanHint" data-t="scanHint">Çevredeki ağları tarayıp listeden seçebilirsiniz.</span>
     </div>
     <div class="netlist" id="netList"></div>
     <div class="form two">
-      <label>Ev Ağı SSID
+      <label><span data-t="homeSsid">Ev Ağı SSID</span>
         <input id="wifiSsid" type="text" maxlength="32" autocapitalize="none" autocomplete="off">
       </label>
-      <label>Şifre
-        <input id="wifiPass" type="password" maxlength="64" autocomplete="new-password" placeholder="Değişmeyecekse boş bırakın">
+      <label><span data-t="pass">Şifre</span>
+        <input id="wifiPass" type="password" maxlength="64" autocomplete="new-password" data-tp="passKeep" placeholder="Değişmeyecekse boş bırakın">
       </label>
     </div>
-    <button class="primary" onclick="saveWifi()">Kaydet ve Yeniden Başlat</button>
+    <button class="primary" onclick="saveWifi()" data-t="saveWifi">Kaydet ve Yeniden Başlat</button>
   </details>
 
   <section class="card">
-    <div class="label">Sistem</div>
-    <div class="kv"><span>IP adresi</span><b id="ip">—</b></div>
-    <div class="kv"><span>AP adresi</span><b id="apip">—</b></div>
-    <div class="kv"><span>Ev ağı</span><b id="ssidView">—</b></div>
-    <div class="kv"><span>Sinyal</span><b id="rssi">—</b></div>
-    <div class="kv"><span>Kombi bağlantısı</span><b id="client">—</b></div>
-    <div class="kv"><span>Çalışma süresi</span><b id="uptime">—</b></div>
-    <div class="kv"><span>Boş bellek</span><b id="heap">—</b></div>
-    <div class="kv"><span>Sürüm</span><b id="fw">—</b></div>
-    <div class="kv"><span>Saat (NTP)</span><b id="timeState">—</b></div>
-    <div class="kv"><span>Geçmiş kayıt</span><b id="histCount">—</b></div>
+    <div class="rowline">
+      <div>
+        <div class="label" data-t="language">Dil</div>
+        <div class="hint" data-t="languageHint">Web arayüzü ve bildirim dili</div>
+      </div>
+      <select id="langSel" onchange="pickLang(this.value)"></select>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="label" data-t="system">Sistem</div>
+    <div class="kv"><span data-t="ipAddr">IP adresi</span><b id="ip">—</b></div>
+    <div class="kv"><span data-t="apAddr">AP adresi</span><b id="apip">—</b></div>
+    <div class="kv"><span data-t="homeNet">Ev ağı</span><b id="ssidView">—</b></div>
+    <div class="kv"><span data-t="signal">Sinyal</span><b id="rssi">—</b></div>
+    <div class="kv"><span data-t="boilerLink">Kombi bağlantısı</span><b id="client">—</b></div>
+    <div class="kv"><span data-t="uptime">Çalışma süresi</span><b id="uptime">—</b></div>
+    <div class="kv"><span data-t="heap">Boş bellek</span><b id="heap">—</b></div>
+    <div class="kv"><span data-t="version">Sürüm</span><b id="fw">—</b></div>
+    <div class="kv"><span data-t="clock">Saat (NTP)</span><b id="timeState">—</b></div>
+    <div class="kv"><span data-t="histCount">Geçmiş kayıt</span><b id="histCount">—</b></div>
     <div class="kv"><span>LittleFS</span><b id="fsUse">—</b></div>
-    <button class="danger" onclick="reboot()">Yeniden Başlat</button>
+    <button class="danger" onclick="reboot()" data-t="reboot">Yeniden Başlat</button>
   </section>
 
   <p class="foot">Kombi Termostat • NodeMCU v3 • AP: 192.168.4.1</p>
+</div>
+<div class="langmask" id="langMask" hidden>
+  <div class="langbox">
+    <div class="logo">&#9832;</div>
+    <h2 data-t="chooseLang">Dil seçin</h2>
+    <p data-t="chooseLangHint">Arayüz dili cihaza kaydedilir; sonra Ayarlar bölümünden değiştirebilirsiniz.</p>
+    <div class="langgrid" id="langGrid"></div>
+  </div>
 </div>
 <div class="toast" id="toast"></div>
 
@@ -380,7 +408,7 @@ canvas{width:100%;height:200px;display:block;border-radius:12px;background:#0d16
     demand: true, relay: true, boost: 0,
     ip: '192.168.1.57', apip: '192.168.4.1', ssid: 'EvWifi',
     rssi: -58, client: '192.168.4.2', uptime: 8040, heap: 38200,
-    fw: '1.0.0', hyst: 0.3, cal: 0, frost: 5.0,
+    fw: '1.0.0', lang: '', hyst: 0.3, cal: 0, frost: 5.0,
     sleepEn: 1, sleep: 1, sleepStart: '23:00', sleepEnd: '07:00', sleepSp: 18.0,
     failsafe: 0, mqtt: 1, mqttCfg: '192.168.1.10', mqttPort: 1883, mqttPrefix: 'kombi',
     tg: 1, tgOk: 12, tgErr: '', tgChat: '123456789',
@@ -463,6 +491,7 @@ canvas{width:100%;height:200px;display:block;border-radius:12px;background:#0d16
       if (q.has('sleepend')) MOCK.sleepEnd = q.get('sleepend');
       if (q.has('sleepsp')) MOCK.sleepSp = Number(q.get('sleepsp'));
       if (q.has('failsafe')) MOCK.failsafe = Number(q.get('failsafe')) ? 1 : 0;
+      if (q.has('lang')) MOCK.lang = q.get('lang');
       tick();
       return ok(MOCK);
     }
@@ -526,7 +555,7 @@ canvas{width:100%;height:200px;display:block;border-radius:12px;background:#0d16
 </script>
 <script>
 const $ = id => document.getElementById(id);
-let S = null, timer = null, dragging = false, toastTimer = null, firstRender = true;
+let S = null, timer = null, dragging = false, toastTimer = null, firstRender = true, langReady = false;
 let histHours = 24, histData = null, lastHistCount = -1;
 
 function clamp(v,a,b){ return Math.max(a,Math.min(b,v)); }
@@ -560,23 +589,23 @@ function paintRange(v){
 function uptimeText(sec){
   sec = Number(sec) || 0;
   const d = Math.floor(sec/86400), h = Math.floor((sec%86400)/3600), m = Math.floor((sec%3600)/60);
-  if(d > 0) return d + ' gün ' + h + ' sa';
-  if(h > 0) return h + ' sa ' + m + ' dk';
-  return m + ' dk';
+  if(d > 0) return d + ' ' + t('unitD') + ' ' + h + ' ' + t('unitH');
+  if(h > 0) return h + ' ' + t('unitH') + ' ' + m + ' ' + t('unitM');
+  return m + ' ' + t('unitM');
 }
 
 function render(){
   if(!S) return;
-  setPill(S.link ? 'ok' : 'warn', S.link ? 'Kombi bağlı' : 'Kombi bağlı değil');
+  setPill(S.link ? 'ok' : 'warn', t(S.link ? 'linked' : 'notLinked'));
 
-  const t = (S.sensorOk && S.temp !== null) ? Number(S.temp) : null;
-  $('temp').textContent = t === null ? '--' : t.toFixed(1);
+  const cur = (S.sensorOk && S.temp !== null) ? Number(S.temp) : null;
+  $('temp').textContent = cur === null ? '--' : cur.toFixed(1);
   const big = $('bigWrap');
-  big.classList.toggle('cold', t !== null && t < S.sp - 1);
-  big.classList.toggle('hot', t !== null && t > S.sp + 1);
+  big.classList.toggle('cold', cur !== null && cur < S.sp - 1);
+  big.classList.toggle('hot', cur !== null && cur > S.sp + 1);
 
-  $('hum').textContent = 'Nem ' + (S.hum === null ? '—' : Math.round(S.hum) + '%');
-  $('flow').textContent = 'Kombi suyu ' + (S.flow > -100 ? Number(S.flow).toFixed(1) + '°C' : '—');
+  $('hum').textContent = t('hum') + ' ' + (S.hum === null ? '—' : Math.round(S.hum) + '%');
+  $('flow').textContent = t('flow') + ' ' + (S.flow > -100 ? Number(S.flow).toFixed(1) + '°C' : '—');
 
   if(!dragging){
     $('spVal').textContent = Number(S.sp).toFixed(1);
@@ -585,63 +614,59 @@ function render(){
   }
 
   const state = $('state');
-  if(!S.sensorOk){ state.textContent = 'Sensör hatası'; state.className = 'bad'; }
-  else if(!S.link){ state.textContent = 'Bağlantı yok'; state.className = 'bad'; }
-  else if(!S.mode){ state.textContent = 'Kapalı'; state.className = ''; }
-  else if(S.demand){ state.textContent = 'Isıtıyor'; state.className = 'hot'; }
-  else { state.textContent = 'Bekliyor'; state.className = 'ok'; }
+  if(!S.sensorOk){ state.textContent = t('stSensor'); state.className = 'bad'; }
+  else if(!S.link){ state.textContent = t('stNoLink'); state.className = 'bad'; }
+  else if(!S.mode){ state.textContent = t('stOff'); state.className = ''; }
+  else if(S.demand){ state.textContent = t('stHeating'); state.className = 'hot'; }
+  else { state.textContent = t('stWaiting'); state.className = 'ok'; }
 
   const relay = $('relay');
-  relay.textContent = S.relay ? 'Aktif' : 'Kapalı';
+  relay.textContent = S.relay ? t('active') : t('stOff');
   relay.className = S.relay ? 'hot' : '';
 
-  $('boost').textContent = S.boost > 0 ? Math.ceil(S.boost/60) + ' dk' : 'Kapalı';
+  $('boost').textContent = S.boost > 0 ? Math.ceil(S.boost/60) + ' ' + t('unitM') : t('stOff');
   $('boostHint').textContent = S.boost > 0
-    ? 'Boost aktif: yaklaşık ' + Math.ceil(S.boost/60) + ' dk kaldı.'
-    : 'Boost, hedefi geçici olarak +1.5 °C yükseltir.';
+    ? tf('boostLeft', {n: Math.ceil(S.boost/60)})
+    : t('boostHint');
 
   const btn = $('modeBtn');
   btn.classList.toggle('on', !!S.mode);
-  $('modeHint').textContent = S.mode ? 'Açık: hedef sıcaklığa göre ısıtır.' : 'Kapalı: yalnızca don koruması devrede.';
+  $('modeHint').textContent = t(S.mode ? 'modeOnHint' : 'modeOffHint');
 
   $('ip').textContent = S.ip || '—';
   $('apip').textContent = S.apip || '—';
-  $('ssidView').textContent = S.sta ? (S.ssid || '—') : 'AP modu';
+  $('ssidView').textContent = S.sta ? (S.ssid || '—') : t('apMode');
   $('rssi').textContent = S.sta ? (S.rssi + ' dBm') : '—';
-  $('client').textContent = S.client ? S.client : 'Bağlı değil';
+  $('client').textContent = S.client ? S.client : t('notConnected');
   $('uptime').textContent = uptimeText(S.uptime);
   $('heap').textContent = Math.round(S.heap/1024) + ' KB';
   $('fw').textContent = S.fw;
-  $('net').textContent = S.sta ? ('Ev ağı • ' + S.ip) : ('AP • ' + S.apip);
+  $('net').textContent = S.sta ? (t('homeNet') + ' • ' + S.ip) : ('AP • ' + S.apip);
 
   // ---- Uyku / role fail-safe / baglanti ----
   const sleepOn = !!S.sleepEn;
   $('sleepBtn').classList.toggle('on', sleepOn);
   if(!sleepOn){
-    $('sleepHint').textContent = 'Belirlenen saat aralığında daha düşük hedef uygulanır.';
+    $('sleepHint').textContent = t('sleepHint');
   }else if(S.sleep === 2){
-    $('sleepHint').textContent = 'AKTİF • hedef ' + fmt(S.sleepSp) + ' °C • ' + S.sleepStart + '–' + S.sleepEnd;
+    $('sleepHint').textContent = tf('sleepActive', {sp: fmt(S.sleepSp), a: S.sleepStart, b: S.sleepEnd});
   }else{
-    $('sleepHint').textContent = 'Bekliyor • ' + S.sleepStart + '–' + S.sleepEnd + ' • ' + fmt(S.sleepSp) + ' °C';
+    $('sleepHint').textContent = tf('sleepWaiting', {sp: fmt(S.sleepSp), a: S.sleepStart, b: S.sleepEnd});
   }
-  $('effHint').textContent = (S.sleep === 2)
-    ? 'Uygulanan hedef: ' + fmt(S.eff) + ' °C (uyku modu)'
-    : 'Uygulanan hedef: ' + fmt(S.eff) + ' °C';
+  $('effHint').textContent = tf(S.sleep === 2 ? 'effSleep' : 'effNormal', {sp: fmt(S.eff)});
 
   $('fsBtn').classList.toggle('on', !!S.failsafe);
-  $('fsHint').textContent = S.failsafe
-    ? 'Oda ünitesine 5 dk ulaşılamazsa röle son talebi korur (AÇIK kalabilir).'
-    : 'Oda ünitesine 5 dk ulaşılamazsa röle kapanır (güvenli).';
+  $('fsHint').textContent = t(S.failsafe ? 'fsHintHold' : 'fsHintClose');
 
   $('mqttState').textContent = S.mqtt
-    ? 'Bağlı • konu: ' + (S.mqttPrefix || 'kombi')
-    : (S.mqttCfg ? 'Bağlanıyor…' : 'Yapılandırılmadı');
+    ? tf('connected', {t: (S.mqttPrefix || 'kombi')})
+    : (S.mqttCfg ? t('connecting') : t('cfgNone'));
   $('tgState').textContent = S.tg
-    ? ((S.tgOk >= 0 ? 'Çalışıyor' : 'Bekliyor') + (S.tgErr ? ' • ' + S.tgErr : ''))
-    : 'Yapılandırılmadı';
+    ? ((S.tgOk >= 0 ? t('running') : t('waiting')) + (S.tgErr ? ' • ' + S.tgErr : ''))
+    : t('cfgNone');
 
-  $('timeState').textContent = S.timeOk ? 'Senkron' : 'Bekleniyor';
-  $('histCount').textContent = S.hist + ' kayıt';
+  $('timeState').textContent = S.timeOk ? t('synced') : t('pending');
+  $('histCount').textContent = tf('recs', {n: S.hist});
   $('fsUse').textContent = S.fsTotal
     ? (Math.round(S.fsUsed / 1024) + ' / ' + Math.round(S.fsTotal / 1024) + ' KB')
     : '—';
@@ -670,9 +695,16 @@ function render(){
 async function poll(){
   try{
     S = await api('/api/status');
+    if(!langReady){
+      langReady = true;
+      let local = '';
+      try{ local = localStorage.getItem('kombiLang') || ''; }catch(e){}
+      applyLang(S.lang || local || guessLang());
+      if(!S.lang) showLangModal();
+    }
     render();
   }catch(e){
-    setPill('bad', 'Bağlantı yok');
+    setPill('bad', t('stNoLink'));
   }
   clearTimeout(timer);
   timer = setTimeout(poll, 2500);
@@ -684,7 +716,7 @@ async function sendSet(params, okMsg){
     firstRender = false;
     render();
     if(okMsg) toast(okMsg);
-  }catch(e){ toast('İşlem başarısız', true); }
+  }catch(e){ toast(t('saveError'), true); }
 }
 
 function step(d){
@@ -708,14 +740,14 @@ $('range').addEventListener('change', e => {
 });
 
 function toggleMode(){ if(S) sendSet({mode: S.mode ? 0 : 1}); }
-function boost(m){ sendSet({boost:m}, m > 0 ? ('Boost ' + m + ' dk başlatıldı') : 'Boost iptal edildi'); }
+function boost(m){ sendSet({boost:m}, m > 0 ? tf('boostStarted', {n: m}) : t('boostCancelled')); }
 
 function saveSettings(){
   const hyst = Number($('hyst').value);
   const cal = Number($('cal').value);
   const frost = Number($('frost').value);
-  if(!isFinite(hyst) || !isFinite(cal) || !isFinite(frost)){ toast('Geçerli değer girin', true); return; }
-  sendSet({hyst:hyst, cal:cal, frost:frost}, 'Ayarlar kaydedildi');
+  if(!isFinite(hyst) || !isFinite(cal) || !isFinite(frost)){ toast(t('invalidValue'), true); return; }
+  sendSet({hyst:hyst, cal:cal, frost:frost}, t('settingsSaved'));
 }
 
 let scanning = false;
@@ -724,17 +756,17 @@ async function scanWifi(){
   scanning = true;
   const btn = $('scanBtn'), list = $('netList'), hint = $('scanHint');
   btn.disabled = true;
-  btn.textContent = 'Taranıyor…';
-  hint.textContent = 'Çevredeki ağlar aranıyor, birkaç saniye sürebilir.';
+  btn.textContent = t('scanning');
+  hint.textContent = t('scanBusy');
   try{
     const r = await api('/api/scan');
     const nets = (r && r.nets) ? r.nets : [];
     list.textContent = '';
     list.classList.add('on');
     if(nets.length === 0){
-      hint.textContent = 'Ağ bulunamadı; SSID\'yi elle girebilirsiniz.';
+      hint.textContent = t('scanNone');
     }else{
-      hint.textContent = nets.length + ' ağ bulundu. Seçmek için dokunun.';
+      hint.textContent = tf('scanFound', {n: nets.length});
       nets.forEach(n => {
         const b = document.createElement('button');
         b.type = 'button';
@@ -755,11 +787,11 @@ async function scanWifi(){
       });
     }
   }catch(e){
-    hint.textContent = 'Tarama başarısız oldu; SSID\'yi elle girebilirsiniz.';
-    toast('Ağ taraması başarısız', true);
+    hint.textContent = t('scanFail');
+    toast(t('scanFailToast'), true);
   }
   btn.disabled = false;
-  btn.textContent = 'Ağları Tara';
+  btn.textContent = t('scan');
   scanning = false;
 }
 
@@ -767,38 +799,37 @@ async function saveWifi(){
   const ssid = $('wifiSsid').value.trim();
   const pass = $('wifiPass').value;
   if(ssid.length === 0){
-    if(!confirm('Ev ağı bilgileri silinsin ve yalnızca AP modunda çalışılsın mı?')) return;
+    if(!confirm(t('wifiClearConfirm'))) return;
   }
   try{
     await api('/api/wifi', {method:'POST', body:new URLSearchParams({ssid:ssid, pass:pass})});
-    toast('Kaydedildi. Cihaz yeniden başlıyor…');
-    setPill('warn', 'Yeniden başlıyor');
+    toast(t('wifiSaved'));
+    setPill('warn', t('restarting'));
     setTimeout(() => { location.reload(); }, 9000);
   }catch(e){ toast('Kaydedilemedi', true); }
 }
 
 async function reboot(){
-  if(!confirm('Cihaz yeniden başlatılsın mı?')) return;
+  if(!confirm(t('rebootConfirm'))) return;
   try{ await api('/api/reboot', {method:'POST'}); }catch(e){}
-  toast('Yeniden başlıyor…');
+  toast(t('rebootToast'));
   setTimeout(() => { location.reload(); }, 8000);
 }
 
 function toggleSleep(){
-  if(S) sendSet({sleep: S.sleepEn ? 0 : 1}, S.sleepEn ? 'Uyku modu kapatıldı' : 'Uyku modu açıldı');
+  if(S) sendSet({sleep: S.sleepEn ? 0 : 1}, t(S.sleepEn ? 'sleepOffToast' : 'sleepOnToast'));
 }
 
 function saveSleep(){
   const a = $('sleepStart').value || '23:00';
   const b = $('sleepEnd').value || '07:00';
   const sp = Number($('sleepSp').value);
-  if(!isFinite(sp) || sp < 5 || sp > 30){ toast('Geçerli uyku hedefi girin', true); return; }
-  sendSet({sleep: (S && S.sleepEn) ? 1 : 0, sleepstart:a, sleepend:b, sleepsp:sp}, 'Uyku ayarları kaydedildi');
+  if(!isFinite(sp) || sp < 5 || sp > 30){ toast(t('sleepInvalid'), true); return; }
+  sendSet({sleep: (S && S.sleepEn) ? 1 : 0, sleepstart:a, sleepend:b, sleepsp:sp}, t('sleepSaved'));
 }
 
 function toggleFailSafe(){
-  if(S) sendSet({failsafe: S.failsafe ? 0 : 1},
-    S.failsafe ? 'Bağlantı kopunca röle kapanacak' : 'Bağlantı kopunca röle son talebi koruyacak');
+  if(S) sendSet({failsafe: S.failsafe ? 0 : 1}, t(S.failsafe ? 'fsCloseToast' : 'fsHoldToast'));
 }
 
 async function saveNet(){
@@ -817,18 +848,18 @@ async function saveNet(){
     $('tgtoken').value = '';
     S = await api('/api/status');
     render();
-    toast('Bağlantı ayarları kaydedildi');
-  }catch(e){ toast('Kaydedilemedi', true); }
+    toast(t('netSaved'));
+  }catch(e){ toast(t('saveError'), true); }
 }
 
 async function clearNet(){
-  if(!confirm('MQTT ve Telegram ayarları silinsin mi?')) return;
+  if(!confirm(t('confirmDelNet'))) return;
   try{
     await api('/api/net', {method:'POST', body:new URLSearchParams({mqttclear:'1', tgclear:'1'})});
     S = await api('/api/status');
     render();
-    toast('Bağlantı ayarları silindi');
-  }catch(e){ toast('Silinemedi', true); }
+    toast(t('netDeleted'));
+  }catch(e){ toast(t('saveError'), true); }
 }
 
 // ---------------- Sicaklik gecmisi grafigi ----------------
@@ -852,8 +883,8 @@ async function loadHistory(manual){
   try{
     histData = await api('/api/history?hours=' + histHours);
     drawChart();
-    if(manual) toast('Grafik yenilendi');
-  }catch(e){ if(manual) toast('Geçmiş yüklenemedi', true); }
+    if(manual) toast(t('refreshed'));
+  }catch(e){ if(manual) toast(t('histError'), true); }
 }
 
 async function sampleNow(){
@@ -863,12 +894,12 @@ async function sampleNow(){
     lastHistCount = S.hist;
     render();
     await loadHistory();
-    toast('Örnek kaydedildi');
-  }catch(e){ toast('Kaydedilemedi', true); }
+    toast(t('sampleSaved'));
+  }catch(e){ toast(t('saveError'), true); }
 }
 
 async function clearHistory(){
-  if(!confirm('Tüm sıcaklık geçmişi silinsin mi?')) return;
+  if(!confirm(t('confirmClear'))) return;
   try{
     await api('/api/history/clear', {method:'POST'});
     histData = {points:[]};
@@ -876,8 +907,8 @@ async function clearHistory(){
     S = await api('/api/status');
     lastHistCount = S.hist;
     render();
-    toast('Geçmiş silindi');
-  }catch(e){ toast('Silinemedi', true); }
+    toast(t('histCleared'));
+  }catch(e){ toast(t('saveError'), true); }
 }
 
 function drawChart(){
@@ -903,9 +934,9 @@ function drawChart(){
     g.moveTo(padL, padT); g.lineTo(padL, padT + ch); g.lineTo(padL + cw, padT + ch);
     g.strokeStyle = 'rgba(36,50,82,.9)'; g.stroke();
     g.fillStyle = '#94a6c3'; g.textAlign = 'center';
-    g.fillText(histData ? 'Henüz yeterli kayıt yok' : 'Yükleniyor…', w / 2, h / 2);
+    g.fillText(t(histData ? 'noRecords' : 'loading'), w / 2, h / 2);
     g.textAlign = 'left';
-    if(info) info.textContent = histData ? (pts.length + ' nokta') : '';
+    if(info) info.textContent = histData ? tf('points', {n: pts.length}) : '';
     return;
   }
 
@@ -976,7 +1007,7 @@ function drawChart(){
   if(info){
     const vs = pts.map(p => Number(p.v)).filter(v => isFinite(v));
     if(vs.length){
-      info.textContent = pts.length + ' nokta • min ' + Math.min.apply(null, vs).toFixed(1) +
+      info.textContent = tf('points', {n: pts.length}) + ' • min ' + Math.min.apply(null, vs).toFixed(1) +
                          '° • max ' + Math.max.apply(null, vs).toFixed(1) + '°';
     }
   }
@@ -988,6 +1019,547 @@ window.addEventListener('resize', () => {
   resizeTimer = setTimeout(drawChart, 150);
 });
 
+// ---------------- Coklu dil (i18n) ----------------
+const LANGS = ['en', 'tr', 'ru', 'es', 'pt', 'ja', 'ko', 'zh'];
+const LANG_NAMES = {
+  en: 'English', tr: 'Türkçe', ru: 'Русский', es: 'Español',
+  pt: 'Português', ja: '日本語', ko: '한국어', zh: '中文'
+};
+const TX = {};
+let LANG = 'en';
+
+function t(key){
+  const d = TX[LANG] || {};
+  if(d[key] !== undefined) return d[key];
+  const e = TX.en || {};
+  return e[key] !== undefined ? e[key] : key;
+}
+
+function tf(key, vars){
+  let s = t(key);
+  Object.keys(vars || {}).forEach(k => { s = s.split('{' + k + '}').join(vars[k]); });
+  return s;
+}
+
+function applyLang(code){
+  if(LANGS.indexOf(code) < 0) code = 'en';
+  LANG = code;
+  document.documentElement.lang = code;
+  document.querySelectorAll('[data-t]').forEach(el => { el.textContent = t(el.dataset.t); });
+  document.querySelectorAll('[data-tp]').forEach(el => { el.placeholder = t(el.dataset.tp); });
+  const sel = $('langSel');
+  if(sel) sel.value = code;
+  try{ localStorage.setItem('kombiLang', code); }catch(e){}
+  if(S) render();
+}
+
+async function pickLang(code){
+  applyLang(code);
+  hideLangModal();
+  if(S) S.lang = code;
+  try{
+    await api('/api/set?lang=' + encodeURIComponent(code));
+    toast(t('saved'));
+  }catch(e){
+    toast(t('saveError'), true);
+  }
+}
+
+function showLangModal(){
+  const g = $('langGrid');
+  if(!g) return;
+  g.textContent = '';
+  LANGS.forEach(code => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = LANG_NAMES[code];
+    if(code === LANG) b.classList.add('on');
+    b.onclick = () => pickLang(code);
+    g.appendChild(b);
+  });
+  $('langMask').hidden = false;
+}
+
+function hideLangModal(){
+  const m = $('langMask');
+  if(m) m.hidden = true;
+}
+
+function guessLang(){
+  const n = (navigator.language || 'en').slice(0, 2).toLowerCase();
+  return LANGS.indexOf(n) >= 0 ? n : 'en';
+}
+
+function initLangOptions(){
+  const sel = $('langSel');
+  if(!sel) return;
+  sel.textContent = '';
+  LANGS.forEach(code => {
+    const o = document.createElement('option');
+    o.value = code;
+    o.textContent = LANG_NAMES[code];
+    sel.appendChild(o);
+  });
+}
+
+TX.en = {
+  title: 'Kombi Termostat', unitSub: 'Room unit', connecting: 'Connecting', linked: 'Boiler linked', notLinked: 'Boiler offline',
+  roomTemp: 'Room temperature', targetTemp: 'Target temperature', hum: 'Humidity', flow: 'Boiler water',
+  state: 'State', boiler: 'Boiler', boost: 'Boost', workMode: 'Operating mode',
+  quickBoost: 'Quick heat (Boost)', min5: '5 min', min15: '15 min', min30: '30 min', cancel: 'Cancel',
+  sleepMode: 'Sleep mode', start: 'Start', end: 'End', sleepTarget: 'Sleep target (°C)', saveSleep: 'Save sleep settings',
+  relayBehavior: 'Relay behaviour', history: 'Temperature history', h24: '24 hours', d7: '7 days', d30: '30 days',
+  legendRoom: 'Room', legendTarget: 'Target', now: 'Save now', refresh: 'Refresh', clear: 'Clear',
+  fsManager: 'LittleFS file manager →',
+  historyHint: 'Hourly samples are stored in /history.csv on LittleFS (about 30 days).',
+  mqttTel: 'MQTT & Telegram',
+  mqttHint: 'MQTT publishes the status and accepts commands. The Telegram bot allows remote control; leave password/token empty to keep the current value.',
+  mqttHost: 'MQTT host', mqttPort: 'MQTT port', mqttUser: 'MQTT user', mqttPass: 'MQTT password', mqttPrefix: 'Topic prefix',
+  keep: 'Leave empty to keep', saveNet: 'Save connection settings', delNet: 'Delete MQTT/Telegram settings',
+  mqttStatus: 'MQTT status', tgStatus: 'Telegram status',
+  settings: 'Settings', hysteresis: 'Hysteresis (°C)', calibration: 'Calibration (°C)', frost: 'Frost protection (°C)',
+  saveSettings: 'Save settings',
+  settingsHint: 'Hysteresis: switching band above/below the target. Calibration: sensor offset.',
+  wifi: 'Wi-Fi settings',
+  wifiHint: 'The boiler relay unit connects to this device access point, which always stays on. Enter home network details to join it too; an empty SSID keeps AP-only mode.',
+  scan: 'Scan networks', scanHint: 'Scan nearby networks and pick one from the list.',
+  homeSsid: 'Home network SSID', pass: 'Password', passKeep: 'Leave empty to keep', saveWifi: 'Save and restart',
+  language: 'Language', languageHint: 'Web interface and message language',
+  chooseLang: 'Choose your language',
+  chooseLangHint: 'The language is stored on the device; you can change it later in the Settings section.',
+  system: 'System', ipAddr: 'IP address', apAddr: 'AP address', homeNet: 'Home network', signal: 'Signal',
+  boilerLink: 'Boiler link', uptime: 'Uptime', heap: 'Free memory', version: 'Version', clock: 'Clock (NTP)',
+  histCount: 'History records', reboot: 'Restart',
+  stHeating: 'Heating', stWaiting: 'Waiting', stOff: 'Off', stSensor: 'Sensor error', stNoLink: 'No link', active: 'Active',
+  modeOnHint: 'On: heats towards the target temperature.', modeOffHint: 'Off: only frost protection is active.',
+  boostHint: 'Boost raises the target by +1.5 °C temporarily.', boostLeft: 'Boost active: about {n} min left.',
+  boostStarted: 'Boost started for {n} min', boostCancelled: 'Boost cancelled',
+  sleepHint: 'A lower target is applied inside the configured time window.',
+  sleepActive: 'ACTIVE • target {sp} °C • {a}–{b}', sleepWaiting: 'Waiting • {a}–{b} • {sp} °C',
+  sleepOnToast: 'Sleep mode on', sleepOffToast: 'Sleep mode off', sleepSaved: 'Sleep settings saved',
+  sleepInvalid: 'Enter a valid sleep target',
+  effSleep: 'Applied target: {sp} °C (sleep mode)', effNormal: 'Applied target: {sp} °C',
+  fsHintHold: 'If the room unit is unreachable for 5 min the relay keeps the last demand (may stay ON).',
+  fsHintClose: 'If the room unit is unreachable for 5 min the relay opens (safe).',
+  fsHoldToast: 'On lost link the relay will keep the last demand', fsCloseToast: 'On lost link the relay will open',
+  noRecords: 'Not enough records yet', loading: 'Loading…', points: '{n} points', refreshed: 'Chart refreshed',
+  histError: 'History could not load', sampleSaved: 'Sample stored', sampleError: 'Could not save',
+  confirmClear: 'Delete all temperature history?', histCleared: 'History deleted',
+  cfgNone: 'Not configured', running: 'Running', waiting: 'Waiting', connected: 'Connected • topic: {t}',
+  netSaved: 'Connection settings saved', confirmDelNet: 'Delete MQTT and Telegram settings?', netDeleted: 'Connection settings deleted',
+  settingsSaved: 'Settings saved', invalidValue: 'Enter a valid value',
+  scanning: 'Scanning…', scanBusy: 'Looking for nearby networks, this may take a few seconds.',
+  scanFound: '{n} networks found. Tap to select.', scanNone: 'No network found; you can type the SSID.',
+  scanFail: 'Scan failed; you can type the SSID.', scanFailToast: 'Network scan failed',
+  wifiClearConfirm: 'Delete home network details and run in AP-only mode?', wifiSaved: 'Saved. Device restarting…',
+  restarting: 'Restarting', rebootConfirm: 'Restart the device?', rebootToast: 'Restarting…',
+  saveError: 'Could not save', saved: 'Saved', notConnected: 'Not connected', apMode: 'AP mode',
+  synced: 'Synced', pending: 'Pending', recs: '{n} records', unitD: 'd', unitH: 'h', unitM: 'm'
+};
+
+TX.tr = {
+  title: 'Kombi Termostat', unitSub: 'Oda ünitesi', connecting: 'Bağlanıyor', linked: 'Kombi bağlı', notLinked: 'Kombi bağlı değil',
+  roomTemp: 'Oda Sıcaklığı', targetTemp: 'Hedef Sıcaklık', hum: 'Nem', flow: 'Kombi suyu',
+  state: 'Durum', boiler: 'Kombi', boost: 'Boost', workMode: 'Çalışma Modu',
+  quickBoost: 'Hızlı Isıtma (Boost)', min5: '5 dk', min15: '15 dk', min30: '30 dk', cancel: 'İptal',
+  sleepMode: 'Uyku Modu', start: 'Başlangıç', end: 'Bitiş', sleepTarget: 'Uyku Hedefi (°C)', saveSleep: 'Uyku Ayarlarını Kaydet',
+  relayBehavior: 'Röle Davranışı', history: 'Sıcaklık Geçmişi', h24: '24 saat', d7: '7 gün', d30: '30 gün',
+  legendRoom: 'Oda', legendTarget: 'Hedef', now: 'Şimdi Kaydet', refresh: 'Yenile', clear: 'Temizle',
+  fsManager: 'LittleFS Dosya Yöneticisi →',
+  historyHint: 'Saatlik kayıtlar LittleFS\'de /history.csv dosyasında tutulur (en fazla ~30 gün).',
+  mqttTel: 'MQTT & Telegram',
+  mqttHint: 'MQTT ile durum yayınlanır ve komut alınır. Telegram botu ile uzaktan kontrol edilebilir; şifre/token alanlarını boş bırakırsanız mevcut değer korunur.',
+  mqttHost: 'MQTT Sunucu', mqttPort: 'MQTT Port', mqttUser: 'MQTT Kullanıcı', mqttPass: 'MQTT Şifre', mqttPrefix: 'Konu Öneki',
+  keep: 'Değişmeyecekse boş', saveNet: 'Bağlantı Ayarlarını Kaydet', delNet: 'MQTT/Telegram Ayarlarını Sil',
+  mqttStatus: 'MQTT durumu', tgStatus: 'Telegram durumu',
+  settings: 'Ayarlar', hysteresis: 'Histerezis (°C)', calibration: 'Kalibrasyon (°C)', frost: 'Don Koruması (°C)',
+  saveSettings: 'Ayarları Kaydet',
+  settingsHint: 'Histerezis: hedefin altında/üstünde açma-kapama aralığı. Kalibrasyon: sensör düzeltmesi.',
+  wifi: 'Wi-Fi Ayarları',
+  wifiHint: 'Kombi röle ünitesi bu cihazın AP\'sine bağlanır; AP her zaman açıktır. Ev ağına da bağlanmak için bilgileri girin; SSID\'yi boş bırakırsanız yalnızca AP modunda çalışır.',
+  scan: 'Ağları Tara', scanHint: 'Çevredeki ağları tarayıp listeden seçebilirsiniz.',
+  homeSsid: 'Ev Ağı SSID', pass: 'Şifre', passKeep: 'Değişmeyecekse boş bırakın', saveWifi: 'Kaydet ve Yeniden Başlat',
+  language: 'Dil', languageHint: 'Web arayüzü ve bildirim dili',
+  chooseLang: 'Dil seçin',
+  chooseLangHint: 'Arayüz dili cihaza kaydedilir; sonra Ayarlar bölümünden değiştirebilirsiniz.',
+  system: 'Sistem', ipAddr: 'IP adresi', apAddr: 'AP adresi', homeNet: 'Ev ağı', signal: 'Sinyal',
+  boilerLink: 'Kombi bağlantısı', uptime: 'Çalışma süresi', heap: 'Boş bellek', version: 'Sürüm', clock: 'Saat (NTP)',
+  histCount: 'Geçmiş kayıt', reboot: 'Yeniden Başlat',
+  stHeating: 'Isıtıyor', stWaiting: 'Bekliyor', stOff: 'Kapalı', stSensor: 'Sensör hatası', stNoLink: 'Bağlantı yok', active: 'Aktif',
+  modeOnHint: 'Açık: hedef sıcaklığa göre ısıtır.', modeOffHint: 'Kapalı: yalnızca don koruması devrede.',
+  boostHint: 'Boost, hedefi geçici olarak +1.5 °C yükseltir.', boostLeft: 'Boost aktif: yaklaşık {n} dk kaldı.',
+  boostStarted: 'Boost {n} dk başlatıldı', boostCancelled: 'Boost iptal edildi',
+  sleepHint: 'Belirlenen saat aralığında daha düşük hedef uygulanır.',
+  sleepActive: 'AKTİF • hedef {sp} °C • {a}–{b}', sleepWaiting: 'Bekliyor • {a}–{b} • {sp} °C',
+  sleepOnToast: 'Uyku modu açıldı', sleepOffToast: 'Uyku modu kapatıldı', sleepSaved: 'Uyku ayarları kaydedildi',
+  sleepInvalid: 'Geçerli uyku hedefi girin',
+  effSleep: 'Uygulanan hedef: {sp} °C (uyku modu)', effNormal: 'Uygulanan hedef: {sp} °C',
+  fsHintHold: 'Oda ünitesine 5 dk ulaşılamazsa röle son talebi korur (AÇIK kalabilir).',
+  fsHintClose: 'Oda ünitesine 5 dk ulaşılamazsa röle kapanır (güvenli).',
+  fsHoldToast: 'Bağlantı kopunca röle son talebi koruyacak', fsCloseToast: 'Bağlantı kopunca röle kapanacak',
+  noRecords: 'Henüz yeterli kayıt yok', loading: 'Yükleniyor…', points: '{n} nokta', refreshed: 'Grafik yenilendi',
+  histError: 'Geçmiş yüklenemedi', sampleSaved: 'Örnek kaydedildi', sampleError: 'Kaydedilemedi',
+  confirmClear: 'Tüm sıcaklık geçmişi silinsin mi?', histCleared: 'Geçmiş silindi',
+  cfgNone: 'Yapılandırılmadı', running: 'Çalışıyor', waiting: 'Bekliyor', connected: 'Bağlı • konu: {t}',
+  netSaved: 'Bağlantı ayarları kaydedildi', confirmDelNet: 'MQTT ve Telegram ayarları silinsin mi?',
+  netDeleted: 'Bağlantı ayarları silindi',
+  settingsSaved: 'Ayarlar kaydedildi', invalidValue: 'Geçerli değer girin',
+  scanning: 'Taranıyor…', scanBusy: 'Çevredeki ağlar aranıyor, birkaç saniye sürebilir.',
+  scanFound: '{n} ağ bulundu. Seçmek için dokunun.', scanNone: 'Ağ bulunamadı; SSID\'yi elle girebilirsiniz.',
+  scanFail: 'Tarama başarısız oldu; SSID\'yi elle girebilirsiniz.', scanFailToast: 'Ağ taraması başarısız',
+  wifiClearConfirm: 'Ev ağı bilgileri silinsin ve yalnızca AP modunda çalışılsın mı?',
+  wifiSaved: 'Kaydedildi. Cihaz yeniden başlıyor…',
+  restarting: 'Yeniden başlıyor', rebootConfirm: 'Cihaz yeniden başlatılsın mı?', rebootToast: 'Yeniden başlıyor…',
+  saveError: 'Kaydedilemedi', saved: 'Kaydedildi', notConnected: 'Bağlı değil', apMode: 'AP modu',
+  synced: 'Senkron', pending: 'Bekleniyor', recs: '{n} kayıt', unitD: 'gün', unitH: 'sa', unitM: 'dk'
+};
+
+TX.es = {
+  title: 'Kombi Termostat', unitSub: 'Unidad de ambiente', connecting: 'Conectando', linked: 'Caldera conectada', notLinked: 'Caldera sin conexión',
+  roomTemp: 'Temperatura ambiente', targetTemp: 'Temperatura objetivo', hum: 'Humedad', flow: 'Agua de caldera',
+  state: 'Estado', boiler: 'Caldera', boost: 'Boost', workMode: 'Modo de trabajo',
+  quickBoost: 'Calentamiento rápido (Boost)', min5: '5 min', min15: '15 min', min30: '30 min', cancel: 'Cancelar',
+  sleepMode: 'Modo noche', start: 'Inicio', end: 'Fin', sleepTarget: 'Objetivo noche (°C)', saveSleep: 'Guardar ajustes de noche',
+  relayBehavior: 'Comportamiento del relé', history: 'Historial de temperatura', h24: '24 horas', d7: '7 días', d30: '30 días',
+  legendRoom: 'Ambiente', legendTarget: 'Objetivo', now: 'Guardar ahora', refresh: 'Actualizar', clear: 'Borrar',
+  fsManager: 'Gestor de archivos LittleFS →',
+  historyHint: 'Las muestras horarias se guardan en /history.csv en LittleFS (unos 30 días).',
+  mqttTel: 'MQTT y Telegram',
+  mqttHint: 'MQTT publica el estado y acepta comandos. El bot de Telegram permite el control remoto; deje la contraseña/token vacío para conservar el valor actual.',
+  mqttHost: 'Servidor MQTT', mqttPort: 'Puerto MQTT', mqttUser: 'Usuario MQTT', mqttPass: 'Contraseña MQTT', mqttPrefix: 'Prefijo del tema',
+  keep: 'Vacío para conservar', saveNet: 'Guardar ajustes de conexión', delNet: 'Borrar ajustes MQTT/Telegram',
+  mqttStatus: 'Estado MQTT', tgStatus: 'Estado de Telegram',
+  settings: 'Ajustes', hysteresis: 'Histéresis (°C)', calibration: 'Calibración (°C)', frost: 'Protección antihielo (°C)',
+  saveSettings: 'Guardar ajustes',
+  settingsHint: 'Histéresis: banda de conexión arriba/abajo del objetivo. Calibración: corrección del sensor.',
+  wifi: 'Ajustes de Wi-Fi',
+  wifiHint: 'La unidad de relé se conecta al punto de acceso de este dispositivo, que siempre está activo. Introduzca los datos de la red doméstica para unirse también; con SSID vacío solo funciona en modo AP.',
+  scan: 'Buscar redes', scanHint: 'Busque redes cercanas y elija una de la lista.',
+  homeSsid: 'SSID de red doméstica', pass: 'Contraseña', passKeep: 'Vacío para conservar', saveWifi: 'Guardar y reiniciar',
+  language: 'Idioma', languageHint: 'Idioma de la interfaz y de los avisos',
+  chooseLang: 'Elija su idioma',
+  chooseLangHint: 'El idioma se guarda en el dispositivo; puede cambiarlo después en Ajustes.',
+  system: 'Sistema', ipAddr: 'Dirección IP', apAddr: 'Dirección AP', homeNet: 'Red doméstica', signal: 'Señal',
+  boilerLink: 'Conexión caldera', uptime: 'Tiempo activo', heap: 'Memoria libre', version: 'Versión', clock: 'Reloj (NTP)',
+  histCount: 'Registros', reboot: 'Reiniciar',
+  stHeating: 'Calentando', stWaiting: 'Esperando', stOff: 'Apagado', stSensor: 'Fallo del sensor', stNoLink: 'Sin conexión', active: 'Activo',
+  modeOnHint: 'Encendido: calienta según el objetivo.', modeOffHint: 'Apagado: solo protección antihielo.',
+  boostHint: 'Boost sube el objetivo +1.5 °C temporalmente.', boostLeft: 'Boost activo: quedan ~{n} min.',
+  boostStarted: 'Boost iniciado {n} min', boostCancelled: 'Boost cancelado',
+  sleepHint: 'Se aplica un objetivo más bajo dentro del horario configurado.',
+  sleepActive: 'ACTIVO • objetivo {sp} °C • {a}–{b}', sleepWaiting: 'Esperando • {a}–{b} • {sp} °C',
+  sleepOnToast: 'Modo noche activado', sleepOffToast: 'Modo noche desactivado', sleepSaved: 'Ajustes de noche guardados',
+  sleepInvalid: 'Introduzca un objetivo de noche válido',
+  effSleep: 'Objetivo aplicado: {sp} °C (modo noche)', effNormal: 'Objetivo aplicado: {sp} °C',
+  fsHintHold: 'Si la unidad de ambiente no responde 5 min el relé mantiene la última demanda (puede quedar ENCENDIDO).',
+  fsHintClose: 'Si la unidad de ambiente no responde 5 min el relé se abre (seguro).',
+  fsHoldToast: 'Si se pierde la conexión el relé mantendrá la última demanda',
+  fsCloseToast: 'Si se pierde la conexión el relé se abrirá',
+  noRecords: 'Aún no hay registros suficientes', loading: 'Cargando…', points: '{n} puntos', refreshed: 'Gráfico actualizado',
+  histError: 'No se pudo cargar el historial', sampleSaved: 'Muestra guardada', sampleError: 'No se pudo guardar',
+  confirmClear: '¿Borrar todo el historial de temperatura?', histCleared: 'Historial borrado',
+  cfgNone: 'Sin configurar', running: 'En marcha', waiting: 'Esperando', connected: 'Conectado • tema: {t}',
+  netSaved: 'Ajustes de conexión guardados', confirmDelNet: '¿Borrar los ajustes de MQTT y Telegram?',
+  netDeleted: 'Ajustes de conexión borrados',
+  settingsSaved: 'Ajustes guardados', invalidValue: 'Introduzca un valor válido',
+  scanning: 'Buscando…', scanBusy: 'Buscando redes cercanas, puede tardar unos segundos.',
+  scanFound: '{n} redes encontradas. Toque para elegir.', scanNone: 'No se encontró ninguna red; puede escribir el SSID.',
+  scanFail: 'La búsqueda falló; puede escribir el SSID.', scanFailToast: 'La búsqueda de redes falló',
+  wifiClearConfirm: '¿Borrar los datos de la red doméstica y funcionar solo en modo AP?',
+  wifiSaved: 'Guardado. El dispositivo se reinicia…',
+  restarting: 'Reiniciando', rebootConfirm: '¿Reiniciar el dispositivo?', rebootToast: 'Reiniciando…',
+  saveError: 'No se pudo guardar', saved: 'Guardado', notConnected: 'Sin conexión', apMode: 'Modo AP',
+  synced: 'Sincronizado', pending: 'Pendiente', recs: '{n} registros', unitD: 'd', unitH: 'h', unitM: 'min'
+};
+
+TX.pt = {
+  title: 'Kombi Termostat', unitSub: 'Unidade de ambiente', connecting: 'Conectando', linked: 'Caldeira conectada', notLinked: 'Caldeira sem conexão',
+  roomTemp: 'Temperatura ambiente', targetTemp: 'Temperatura alvo', hum: 'Umidade', flow: 'Água da caldeira',
+  state: 'Estado', boiler: 'Caldeira', boost: 'Boost', workMode: 'Modo de operação',
+  quickBoost: 'Aquecimento rápido (Boost)', min5: '5 min', min15: '15 min', min30: '30 min', cancel: 'Cancelar',
+  sleepMode: 'Modo dormir', start: 'Início', end: 'Fim', sleepTarget: 'Alvo dormir (°C)', saveSleep: 'Salvar ajustes do modo dormir',
+  relayBehavior: 'Comportamento do relé', history: 'Histórico de temperatura', h24: '24 horas', d7: '7 dias', d30: '30 dias',
+  legendRoom: 'Ambiente', legendTarget: 'Alvo', now: 'Salvar agora', refresh: 'Atualizar', clear: 'Limpar',
+  fsManager: 'Gerenciador de arquivos LittleFS →',
+  historyHint: 'As amostras horárias ficam em /history.csv no LittleFS (cerca de 30 dias).',
+  mqttTel: 'MQTT e Telegram',
+  mqttHint: 'O MQTT publica o estado e aceita comandos. O bot do Telegram permite controle remoto; deixe a senha/token vazio para manter o valor atual.',
+  mqttHost: 'Servidor MQTT', mqttPort: 'Porta MQTT', mqttUser: 'Usuário MQTT', mqttPass: 'Senha MQTT', mqttPrefix: 'Prefixo do tópico',
+  keep: 'Vazio para manter', saveNet: 'Salvar ajustes de conexão', delNet: 'Apagar ajustes MQTT/Telegram',
+  mqttStatus: 'Status do MQTT', tgStatus: 'Status do Telegram',
+  settings: 'Ajustes', hysteresis: 'Histerese (°C)', calibration: 'Calibração (°C)', frost: 'Proteção antigelo (°C)',
+  saveSettings: 'Salvar ajustes',
+  settingsHint: 'Histerese: faixa de acionamento acima/abaixo do alvo. Calibração: correção do sensor.',
+  wifi: 'Ajustes de Wi-Fi',
+  wifiHint: 'A unidade de relé conecta-se ao ponto de acesso deste dispositivo, que fica sempre ativo. Informe a rede de casa para conectar também; SSID vazio mantém apenas o modo AP.',
+  scan: 'Buscar redes', scanHint: 'Busque redes próximas e escolha uma da lista.',
+  homeSsid: 'SSID da rede de casa', pass: 'Senha', passKeep: 'Vazio para manter', saveWifi: 'Salvar e reiniciar',
+  language: 'Idioma', languageHint: 'Idioma da interface e dos avisos',
+  chooseLang: 'Escolha seu idioma',
+  chooseLangHint: 'O idioma é salvo no dispositivo; você pode alterá-lo depois em Ajustes.',
+  system: 'Sistema', ipAddr: 'Endereço IP', apAddr: 'Endereço AP', homeNet: 'Rede de casa', signal: 'Sinal',
+  boilerLink: 'Conexão da caldeira', uptime: 'Tempo ligado', heap: 'Memória livre', version: 'Versão', clock: 'Relógio (NTP)',
+  histCount: 'Registros', reboot: 'Reiniciar',
+  stHeating: 'Aquecendo', stWaiting: 'Aguardando', stOff: 'Desligado', stSensor: 'Erro no sensor', stNoLink: 'Sem conexão', active: 'Ativo',
+  modeOnHint: 'Ligado: aquece conforme o alvo.', modeOffHint: 'Desligado: apenas proteção antigelo.',
+  boostHint: 'O Boost eleva o alvo em +1.5 °C temporariamente.', boostLeft: 'Boost ativo: cerca de {n} min restantes.',
+  boostStarted: 'Boost iniciado por {n} min', boostCancelled: 'Boost cancelado',
+  sleepHint: 'Um alvo mais baixo é aplicado dentro do horário configurado.',
+  sleepActive: 'ATIVO • alvo {sp} °C • {a}–{b}', sleepWaiting: 'Aguardando • {a}–{b} • {sp} °C',
+  sleepOnToast: 'Modo dormir ativado', sleepOffToast: 'Modo dormir desativado', sleepSaved: 'Ajustes do modo dormir salvos',
+  sleepInvalid: 'Informe um alvo dormir válido',
+  effSleep: 'Alvo aplicado: {sp} °C (modo dormir)', effNormal: 'Alvo aplicado: {sp} °C',
+  fsHintHold: 'Se a unidade de ambiente ficar 5 min inacessível o relé mantém a última demanda (pode ficar LIGADO).',
+  fsHintClose: 'Se a unidade de ambiente ficar 5 min inacessível o relé abre (seguro).',
+  fsHoldToast: 'Ao perder a conexão o relé manterá a última demanda', fsCloseToast: 'Ao perder a conexão o relé abrirá',
+  noRecords: 'Ainda não há registros suficientes', loading: 'Carregando…', points: '{n} pontos', refreshed: 'Gráfico atualizado',
+  histError: 'Não foi possível carregar o histórico', sampleSaved: 'Amostra salva', sampleError: 'Não foi possível salvar',
+  confirmClear: 'Apagar todo o histórico de temperatura?', histCleared: 'Histórico apagado',
+  cfgNone: 'Não configurado', running: 'Em execução', waiting: 'Aguardando', connected: 'Conectado • tópico: {t}',
+  netSaved: 'Ajustes de conexão salvos', confirmDelNet: 'Apagar os ajustes de MQTT e Telegram?',
+  netDeleted: 'Ajustes de conexão apagados',
+  settingsSaved: 'Ajustes salvos', invalidValue: 'Informe um valor válido',
+  scanning: 'Buscando…', scanBusy: 'Procurando redes próximas, pode levar alguns segundos.',
+  scanFound: '{n} redes encontradas. Toque para escolher.', scanNone: 'Nenhuma rede encontrada; digite o SSID.',
+  scanFail: 'A busca falhou; digite o SSID.', scanFailToast: 'A busca de redes falhou',
+  wifiClearConfirm: 'Apagar os dados da rede de casa e usar apenas o modo AP?',
+  wifiSaved: 'Salvo. O dispositivo está reiniciando…',
+  restarting: 'Reiniciando', rebootConfirm: 'Reiniciar o dispositivo?', rebootToast: 'Reiniciando…',
+  saveError: 'Não foi possível salvar', saved: 'Salvo', notConnected: 'Sem conexão', apMode: 'Modo AP',
+  synced: 'Sincronizado', pending: 'Pendente', recs: '{n} registros', unitD: 'd', unitH: 'h', unitM: 'min'
+};
+
+TX.ru = {
+  title: 'Kombi Termostat', unitSub: 'Комнатный блок', connecting: 'Подключение', linked: 'Котёл на связи', notLinked: 'Котёл не на связи',
+  roomTemp: 'Температура в комнате', targetTemp: 'Целевая температура', hum: 'Влажность', flow: 'Вода в котле',
+  state: 'Состояние', boiler: 'Котёл', boost: 'Boost', workMode: 'Режим работы',
+  quickBoost: 'Быстрый нагрев (Boost)', min5: '5 мин', min15: '15 мин', min30: '30 мин', cancel: 'Отмена',
+  sleepMode: 'Ночной режим', start: 'Начало', end: 'Конец', sleepTarget: 'Цель ночью (°C)', saveSleep: 'Сохранить ночные настройки',
+  relayBehavior: 'Поведение реле', history: 'История температуры', h24: '24 часа', d7: '7 дней', d30: '30 дней',
+  legendRoom: 'Комната', legendTarget: 'Цель', now: 'Сохранить сейчас', refresh: 'Обновить', clear: 'Очистить',
+  fsManager: 'Файловый менеджер LittleFS →',
+  historyHint: 'Почасовые записи хранятся в /history.csv на LittleFS (около 30 дней).',
+  mqttTel: 'MQTT и Telegram',
+  mqttHint: 'MQTT публикует состояние и принимает команды. Бот Telegram даёт удалённое управление; оставьте пароль/токен пустым, чтобы сохранить текущее значение.',
+  mqttHost: 'Сервер MQTT', mqttPort: 'Порт MQTT', mqttUser: 'Пользователь MQTT', mqttPass: 'Пароль MQTT', mqttPrefix: 'Префикс темы',
+  keep: 'Пусто — без изменений', saveNet: 'Сохранить настройки связи', delNet: 'Удалить настройки MQTT/Telegram',
+  mqttStatus: 'Состояние MQTT', tgStatus: 'Состояние Telegram',
+  settings: 'Настройки', hysteresis: 'Гистерезис (°C)', calibration: 'Калибровка (°C)', frost: 'Защита от замерзания (°C)',
+  saveSettings: 'Сохранить настройки',
+  settingsHint: 'Гистерезис: полоса включения/выключения вокруг цели. Калибровка: поправка датчика.',
+  wifi: 'Настройки Wi-Fi',
+  wifiHint: 'Блок реле подключается к точке доступа этого устройства, она всегда включена. Укажите домашнюю сеть, чтобы подключиться и к ней; пустой SSID — только режим AP.',
+  scan: 'Поиск сетей', scanHint: 'Найдите сети вокруг и выберите из списка.',
+  homeSsid: 'SSID домашней сети', pass: 'Пароль', passKeep: 'Пусто — без изменений', saveWifi: 'Сохранить и перезагрузить',
+  language: 'Язык', languageHint: 'Язык интерфейса и сообщений',
+  chooseLang: 'Выберите язык',
+  chooseLangHint: 'Язык сохраняется в устройстве; позже его можно изменить в разделе «Настройки».',
+  system: 'Система', ipAddr: 'IP-адрес', apAddr: 'Адрес AP', homeNet: 'Домашняя сеть', signal: 'Сигнал',
+  boilerLink: 'Связь с котлом', uptime: 'Время работы', heap: 'Свободная память', version: 'Версия', clock: 'Часы (NTP)',
+  histCount: 'Записей истории', reboot: 'Перезагрузить',
+  stHeating: 'Нагрев', stWaiting: 'Ожидание', stOff: 'Выключено', stSensor: 'Ошибка датчика', stNoLink: 'Нет связи', active: 'Активно',
+  modeOnHint: 'Вкл: нагрев до целевой температуры.', modeOffHint: 'Выкл: работает только защита от замерзания.',
+  boostHint: 'Boost временно поднимает цель на +1.5 °C.', boostLeft: 'Boost активен: осталось ~{n} мин.',
+  boostStarted: 'Boost запущен на {n} мин', boostCancelled: 'Boost отменён',
+  sleepHint: 'В заданном интервале применяется более низкая цель.',
+  sleepActive: 'АКТИВЕН • цель {sp} °C • {a}–{b}', sleepWaiting: 'Ожидание • {a}–{b} • {sp} °C',
+  sleepOnToast: 'Ночной режим включён', sleepOffToast: 'Ночной режим выключен', sleepSaved: 'Ночные настройки сохранены',
+  sleepInvalid: 'Укажите корректную ночную цель',
+  effSleep: 'Текущая цель: {sp} °C (ночной режим)', effNormal: 'Текущая цель: {sp} °C',
+  fsHintHold: 'Если комнатный блок недоступен 5 мин, реле сохраняет последнюю команду (может остаться ВКЛ).',
+  fsHintClose: 'Если комнатный блок недоступен 5 мин, реле размыкается (безопасно).',
+  fsHoldToast: 'При потере связи реле сохранит последнюю команду', fsCloseToast: 'При потере связи реле разомкнётся',
+  noRecords: 'Пока недостаточно записей', loading: 'Загрузка…', points: '{n} точек', refreshed: 'График обновлён',
+  histError: 'Не удалось загрузить историю', sampleSaved: 'Отсчёт сохранён', sampleError: 'Не удалось сохранить',
+  confirmClear: 'Удалить всю историю температуры?', histCleared: 'История удалена',
+  cfgNone: 'Не настроено', running: 'Работает', waiting: 'Ожидание', connected: 'Подключено • тема: {t}',
+  netSaved: 'Настройки связи сохранены', confirmDelNet: 'Удалить настройки MQTT и Telegram?',
+  netDeleted: 'Настройки связи удалены',
+  settingsSaved: 'Настройки сохранены', invalidValue: 'Введите корректное значение',
+  scanning: 'Поиск…', scanBusy: 'Ищем сети вокруг, это может занять несколько секунд.',
+  scanFound: 'Найдено сетей: {n}. Нажмите, чтобы выбрать.', scanNone: 'Сети не найдены; введите SSID вручную.',
+  scanFail: 'Поиск не удался; введите SSID вручную.', scanFailToast: 'Не удалось выполнить поиск сетей',
+  wifiClearConfirm: 'Удалить данные домашней сети и работать только в режиме AP?',
+  wifiSaved: 'Сохранено. Устройство перезагружается…',
+  restarting: 'Перезагрузка', rebootConfirm: 'Перезагрузить устройство?', rebootToast: 'Перезагрузка…',
+  saveError: 'Не удалось сохранить', saved: 'Сохранено', notConnected: 'Нет подключения', apMode: 'Режим AP',
+  synced: 'Синхронизировано', pending: 'Ожидание', recs: '{n} записей', unitD: 'д', unitH: 'ч', unitM: 'мин'
+};
+
+TX.ja = {
+  title: 'Kombi Termostat', unitSub: '室内ユニット', connecting: '接続中', linked: 'ボイラー接続済み', notLinked: 'ボイラー未接続',
+  roomTemp: '室温', targetTemp: '目標温度', hum: '湿度', flow: 'ボイラー水温',
+  state: '状態', boiler: 'ボイラー', boost: 'ブースト', workMode: '運転モード',
+  quickBoost: '急速暖房（ブースト）', min5: '5分', min15: '15分', min30: '30分', cancel: 'キャンセル',
+  sleepMode: 'おやすみモード', start: '開始', end: '終了', sleepTarget: 'おやすみ目標（°C）', saveSleep: 'おやすみ設定を保存',
+  relayBehavior: 'リレー動作', history: '温度履歴', h24: '24時間', d7: '7日', d30: '30日',
+  legendRoom: '室温', legendTarget: '目標', now: '今すぐ記録', refresh: '更新', clear: '消去',
+  fsManager: 'LittleFS ファイルマネージャー →',
+  historyHint: '1時間ごとの記録は LittleFS の /history.csv に保存されます（約30日分）。',
+  mqttTel: 'MQTT と Telegram',
+  mqttHint: 'MQTT で状態を配信しコマンドを受け付けます。Telegram ボットで遠隔操作できます。パスワード/トークンを空欄にすると現在値が保持されます。',
+  mqttHost: 'MQTT サーバー', mqttPort: 'MQTT ポート', mqttUser: 'MQTT ユーザー', mqttPass: 'MQTT パスワード', mqttPrefix: 'トピック接頭辞',
+  keep: '空欄なら変更なし', saveNet: '接続設定を保存', delNet: 'MQTT/Telegram 設定を削除',
+  mqttStatus: 'MQTT 状態', tgStatus: 'Telegram 状態',
+  settings: '設定', hysteresis: 'ヒステリシス（°C）', calibration: '校正（°C）', frost: '凍結防止（°C）',
+  saveSettings: '設定を保存',
+  settingsHint: 'ヒステリシス：目標の上下で ON/OFF する幅。校正：センサーの補正値。',
+  wifi: 'Wi-Fi 設定',
+  wifiHint: 'ボイラーリレーユニットはこの機器のアクセスポイントに接続します（常に有効）。自宅ネットワークにも接続する場合は情報を入力してください。SSID が空なら AP のみで動作します。',
+  scan: 'ネットワーク検索', scanHint: '周辺のネットワークを検索して一覧から選べます。',
+  homeSsid: '自宅ネットワーク SSID', pass: 'パスワード', passKeep: '空欄なら変更なし', saveWifi: '保存して再起動',
+  language: '言語', languageHint: 'Web 画面と通知の言語',
+  chooseLang: '言語を選択',
+  chooseLangHint: '選択した言語は本体に保存されます。後で「設定」から変更できます。',
+  system: 'システム', ipAddr: 'IP アドレス', apAddr: 'AP アドレス', homeNet: '自宅ネットワーク', signal: '電波',
+  boilerLink: 'ボイラー接続', uptime: '稼働時間', heap: '空きメモリ', version: 'バージョン', clock: '時計（NTP）',
+  histCount: '履歴件数', reboot: '再起動',
+  stHeating: '加熱中', stWaiting: '待機中', stOff: '停止', stSensor: 'センサー異常', stNoLink: '未接続', active: '動作中',
+  modeOnHint: 'ON：目標温度に向けて加熱します。', modeOffHint: 'OFF：凍結防止のみ動作します。',
+  boostHint: 'ブーストは目標を一時的に +1.5 °C 上げます。', boostLeft: 'ブースト中：残り約 {n} 分。',
+  boostStarted: 'ブースト {n} 分を開始', boostCancelled: 'ブーストを解除',
+  sleepHint: '設定した時間帯はより低い目標を適用します。',
+  sleepActive: '実行中 • 目標 {sp} °C • {a}–{b}', sleepWaiting: '待機中 • {a}–{b} • {sp} °C',
+  sleepOnToast: 'おやすみモード ON', sleepOffToast: 'おやすみモード OFF', sleepSaved: 'おやすみ設定を保存しました',
+  sleepInvalid: '有効なおやすみ目標を入力してください',
+  effSleep: '適用中の目標：{sp} °C（おやすみ）', effNormal: '適用中の目標：{sp} °C',
+  fsHintHold: '室内ユニットと5分間通信できない場合、リレーは最後の要求を保持します（ON のままの可能性）。',
+  fsHintClose: '室内ユニットと5分間通信できない場合、リレーは開きます（安全）。',
+  fsHoldToast: '通信が切れたらリレーは最後の要求を保持します', fsCloseToast: '通信が切れたらリレーは開きます',
+  noRecords: 'まだ十分な記録がありません', loading: '読み込み中…', points: '{n} 点', refreshed: 'グラフを更新しました',
+  histError: '履歴を読み込めません', sampleSaved: '記録しました', sampleError: '保存できません',
+  confirmClear: '温度履歴をすべて削除しますか？', histCleared: '履歴を削除しました',
+  cfgNone: '未設定', running: '稼働中', waiting: '待機中', connected: '接続済み • トピック: {t}',
+  netSaved: '接続設定を保存しました', confirmDelNet: 'MQTT と Telegram の設定を削除しますか？',
+  netDeleted: '接続設定を削除しました',
+  settingsSaved: '設定を保存しました', invalidValue: '有効な値を入力してください',
+  scanning: '検索中…', scanBusy: '周辺のネットワークを検索しています。数秒かかります。',
+  scanFound: '{n} 件見つかりました。タップして選択。', scanNone: 'ネットワークが見つかりません。SSID を直接入力できます。',
+  scanFail: '検索に失敗しました。SSID を直接入力できます。', scanFailToast: 'ネットワーク検索に失敗しました',
+  wifiClearConfirm: '自宅ネットワーク情報を削除して AP モードのみで動作しますか？',
+  wifiSaved: '保存しました。再起動します…',
+  restarting: '再起動中', rebootConfirm: '本体を再起動しますか？', rebootToast: '再起動中…',
+  saveError: '保存できません', saved: '保存しました', notConnected: '未接続', apMode: 'AP モード',
+  synced: '同期済み', pending: '待機中', recs: '{n} 件', unitD: '日', unitH: '時間', unitM: '分'
+};
+
+TX.ko = {
+  title: 'Kombi Termostat', unitSub: '실내 유닛', connecting: '연결 중', linked: '보일러 연결됨', notLinked: '보일러 연결 안 됨',
+  roomTemp: '실내 온도', targetTemp: '설정 온도', hum: '습도', flow: '보일러 수온',
+  state: '상태', boiler: '보일러', boost: '부스트', workMode: '운전 모드',
+  quickBoost: '빠른 난방 (부스트)', min5: '5분', min15: '15분', min30: '30분', cancel: '취소',
+  sleepMode: '취침 모드', start: '시작', end: '종료', sleepTarget: '취침 목표 (°C)', saveSleep: '취침 설정 저장',
+  relayBehavior: '릴레이 동작', history: '온도 기록', h24: '24시간', d7: '7일', d30: '30일',
+  legendRoom: '실내', legendTarget: '목표', now: '지금 저장', refresh: '새로고침', clear: '삭제',
+  fsManager: 'LittleFS 파일 관리자 →',
+  historyHint: '매시간 기록은 LittleFS의 /history.csv에 저장됩니다(약 30일).',
+  mqttTel: 'MQTT 및 Telegram',
+  mqttHint: 'MQTT로 상태를 게시하고 명령을 받습니다. Telegram 봇으로 원격 제어할 수 있습니다. 비밀번호/토큰을 비우면 현재 값이 유지됩니다.',
+  mqttHost: 'MQTT 서버', mqttPort: 'MQTT 포트', mqttUser: 'MQTT 사용자', mqttPass: 'MQTT 비밀번호', mqttPrefix: '토픽 접두어',
+  keep: '비우면 유지', saveNet: '연결 설정 저장', delNet: 'MQTT/Telegram 설정 삭제',
+  mqttStatus: 'MQTT 상태', tgStatus: 'Telegram 상태',
+  settings: '설정', hysteresis: '히스테리시스 (°C)', calibration: '보정 (°C)', frost: '동파 방지 (°C)',
+  saveSettings: '설정 저장',
+  settingsHint: '히스테리시스: 목표 위/아래 ON/OFF 폭. 보정: 센서 보정값.',
+  wifi: 'Wi-Fi 설정',
+  wifiHint: '보일러 릴레이 유닛은 이 기기의 AP에 접속하며 AP는 항상 켜져 있습니다. 집 네트워크에도 연결하려면 정보를 입력하세요. SSID가 비어 있으면 AP 모드만 사용합니다.',
+  scan: '네트워크 검색', scanHint: '주변 네트워크를 검색해 목록에서 선택할 수 있습니다.',
+  homeSsid: '집 네트워크 SSID', pass: '비밀번호', passKeep: '비우면 유지', saveWifi: '저장 후 재시작',
+  language: '언어', languageHint: '웹 화면과 알림 언어',
+  chooseLang: '언어 선택',
+  chooseLangHint: '선택한 언어는 기기에 저장되며 나중에 설정에서 변경할 수 있습니다.',
+  system: '시스템', ipAddr: 'IP 주소', apAddr: 'AP 주소', homeNet: '집 네트워크', signal: '신호',
+  boilerLink: '보일러 연결', uptime: '가동 시간', heap: '여유 메모리', version: '버전', clock: '시계 (NTP)',
+  histCount: '기록 수', reboot: '재시작',
+  stHeating: '난방 중', stWaiting: '대기 중', stOff: '꺼짐', stSensor: '센서 오류', stNoLink: '연결 없음', active: '작동 중',
+  modeOnHint: '켜짐: 설정 온도까지 난방합니다.', modeOffHint: '꺼짐: 동파 방지만 작동합니다.',
+  boostHint: '부스트는 목표를 일시적으로 +1.5 °C 올립니다.', boostLeft: '부스트 작동 중: 약 {n}분 남음.',
+  boostStarted: '부스트 {n}분 시작', boostCancelled: '부스트 취소됨',
+  sleepHint: '설정한 시간대에는 더 낮은 목표가 적용됩니다.',
+  sleepActive: '작동 중 • 목표 {sp} °C • {a}–{b}', sleepWaiting: '대기 • {a}–{b} • {sp} °C',
+  sleepOnToast: '취침 모드 켜짐', sleepOffToast: '취침 모드 꺼짐', sleepSaved: '취침 설정이 저장되었습니다',
+  sleepInvalid: '올바른 취침 목표를 입력하세요',
+  effSleep: '적용 목표: {sp} °C (취침 모드)', effNormal: '적용 목표: {sp} °C',
+  fsHintHold: '실내 유닛과 5분간 통신이 없으면 릴레이는 마지막 요청을 유지합니다(켜진 상태일 수 있음).',
+  fsHintClose: '실내 유닛과 5분간 통신이 없으면 릴레이가 열립니다(안전).',
+  fsHoldToast: '연결이 끊기면 릴레이가 마지막 요청을 유지합니다',
+  fsCloseToast: '연결이 끊기면 릴레이가 열립니다',
+  noRecords: '아직 기록이 충분하지 않습니다', loading: '불러오는 중…', points: '{n}개 지점', refreshed: '그래프를 새로고침했습니다',
+  histError: '기록을 불러올 수 없습니다', sampleSaved: '저장했습니다', sampleError: '저장할 수 없습니다',
+  confirmClear: '모든 온도 기록을 삭제할까요?', histCleared: '기록을 삭제했습니다',
+  cfgNone: '설정 안 됨', running: '작동 중', waiting: '대기', connected: '연결됨 • 토픽: {t}',
+  netSaved: '연결 설정을 저장했습니다', confirmDelNet: 'MQTT 및 Telegram 설정을 삭제할까요?',
+  netDeleted: '연결 설정을 삭제했습니다',
+  settingsSaved: '설정을 저장했습니다', invalidValue: '올바른 값을 입력하세요',
+  scanning: '검색 중…', scanBusy: '주변 네트워크를 찾는 중입니다. 몇 초 걸릴 수 있습니다.',
+  scanFound: '{n}개 네트워크를 찾았습니다. 눌러서 선택하세요.', scanNone: '네트워크를 찾지 못했습니다. SSID를 직접 입력하세요.',
+  scanFail: '검색 실패. SSID를 직접 입력하세요.', scanFailToast: '네트워크 검색 실패',
+  wifiClearConfirm: '집 네트워크 정보를 삭제하고 AP 모드로만 동작할까요?',
+  wifiSaved: '저장했습니다. 기기가 재시작됩니다…',
+  restarting: '재시작 중', rebootConfirm: '기기를 재시작할까요?', rebootToast: '재시작 중…',
+  saveError: '저장할 수 없습니다', saved: '저장했습니다', notConnected: '연결 없음', apMode: 'AP 모드',
+  synced: '동기화됨', pending: '대기 중', recs: '{n}개', unitD: '일', unitH: '시간', unitM: '분'
+};
+
+TX.zh = {
+  title: 'Kombi Termostat', unitSub: '室内单元', connecting: '连接中', linked: '锅炉已连接', notLinked: '锅炉未连接',
+  roomTemp: '室内温度', targetTemp: '目标温度', hum: '湿度', flow: '锅炉水温',
+  state: '状态', boiler: '锅炉', boost: 'Boost', workMode: '运行模式',
+  quickBoost: '快速加热（Boost）', min5: '5 分钟', min15: '15 分钟', min30: '30 分钟', cancel: '取消',
+  sleepMode: '睡眠模式', start: '开始', end: '结束', sleepTarget: '睡眠目标（°C）', saveSleep: '保存睡眠设置',
+  relayBehavior: '继电器行为', history: '温度历史', h24: '24 小时', d7: '7 天', d30: '30 天',
+  legendRoom: '室内', legendTarget: '目标', now: '立即记录', refresh: '刷新', clear: '清除',
+  fsManager: 'LittleFS 文件管理器 →',
+  historyHint: '每小时记录保存在 LittleFS 的 /history.csv（约 30 天）。',
+  mqttTel: 'MQTT 与 Telegram',
+  mqttHint: 'MQTT 发布状态并接收命令；Telegram 机器人可远程控制。密码/令牌留空则保持当前值。',
+  mqttHost: 'MQTT 服务器', mqttPort: 'MQTT 端口', mqttUser: 'MQTT 用户', mqttPass: 'MQTT 密码', mqttPrefix: '主题前缀',
+  keep: '留空则保持不变', saveNet: '保存连接设置', delNet: '删除 MQTT/Telegram 设置',
+  mqttStatus: 'MQTT 状态', tgStatus: 'Telegram 状态',
+  settings: '设置', hysteresis: '回差（°C）', calibration: '校准（°C）', frost: '防冻保护（°C）',
+  saveSettings: '保存设置',
+  settingsHint: '回差：目标上下开停的温度范围。校准：传感器修正值。',
+  wifi: 'Wi-Fi 设置',
+  wifiHint: '锅炉继电器单元连接本机的热点，热点始终开启。要同时加入家庭网络请填写信息；SSID 留空则仅热点模式。',
+  scan: '搜索网络', scanHint: '搜索附近网络并从列表中选择。',
+  homeSsid: '家庭网络 SSID', pass: '密码', passKeep: '留空则保持不变', saveWifi: '保存并重启',
+  language: '语言', languageHint: '网页界面与提示语言',
+  chooseLang: '选择语言',
+  chooseLangHint: '语言会保存到设备，之后可在“设置”中更改。',
+  system: '系统', ipAddr: 'IP 地址', apAddr: 'AP 地址', homeNet: '家庭网络', signal: '信号',
+  boilerLink: '锅炉连接', uptime: '运行时间', heap: '可用内存', version: '版本', clock: '时钟（NTP）',
+  histCount: '历史记录', reboot: '重启',
+  stHeating: '加热中', stWaiting: '待机', stOff: '关闭', stSensor: '传感器故障', stNoLink: '未连接', active: '运行中',
+  modeOnHint: '开启：按目标温度加热。', modeOffHint: '关闭：仅防冻保护。',
+  boostHint: 'Boost 会临时将目标提高 +1.5 °C。', boostLeft: 'Boost 运行中：剩余约 {n} 分钟。',
+  boostStarted: 'Boost 已启动 {n} 分钟', boostCancelled: 'Boost 已取消',
+  sleepHint: '在设定时间段内使用更低的温度目标。',
+  sleepActive: '运行中 • 目标 {sp} °C • {a}–{b}', sleepWaiting: '等待 • {a}–{b} • {sp} °C',
+  sleepOnToast: '睡眠模式开启', sleepOffToast: '睡眠模式关闭', sleepSaved: '睡眠设置已保存',
+  sleepInvalid: '请输入有效的睡眠目标',
+  effSleep: '当前目标：{sp} °C（睡眠模式）', effNormal: '当前目标：{sp} °C',
+  fsHintHold: '若 5 分钟无法联系室内单元，继电器保持最后请求（可能保持开启）。',
+  fsHintClose: '若 5 分钟无法联系室内单元，继电器断开（安全）。',
+  fsHoldToast: '连接中断时继电器保持最后请求', fsCloseToast: '连接中断时继电器断开',
+  noRecords: '记录还不够', loading: '加载中…', points: '{n} 个点', refreshed: '图表已刷新',
+  histError: '无法加载历史', sampleSaved: '已记录', sampleError: '无法保存',
+  confirmClear: '删除全部温度历史？', histCleared: '历史已删除',
+  cfgNone: '未配置', running: '运行中', waiting: '等待', connected: '已连接 • 主题：{t}',
+  netSaved: '连接设置已保存', confirmDelNet: '删除 MQTT 和 Telegram 设置？',
+  netDeleted: '连接设置已删除',
+  settingsSaved: '设置已保存', invalidValue: '请输入有效值',
+  scanning: '搜索中…', scanBusy: '正在搜索附近网络，可能需要几秒钟。',
+  scanFound: '找到 {n} 个网络，点击选择。', scanNone: '未找到网络，可手动输入 SSID。',
+  scanFail: '搜索失败，可手动输入 SSID。', scanFailToast: '网络搜索失败',
+  wifiClearConfirm: '删除家庭网络信息并仅以热点模式运行？',
+  wifiSaved: '已保存，设备正在重启…',
+  restarting: '正在重启', rebootConfirm: '重启设备？', rebootToast: '正在重启…',
+  saveError: '无法保存', saved: '已保存', notConnected: '未连接', apMode: '热点模式',
+  synced: '已同步', pending: '等待中', recs: '{n} 条', unitD: '天', unitH: '小时', unitM: '分钟'
+};
+
+initLangOptions();
+applyLang(guessLang());
 poll();
 </script>
 </body>

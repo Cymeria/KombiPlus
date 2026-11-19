@@ -21,6 +21,8 @@ web arayüzüne sahip oda ünitesi.
 - **Mobil uyumlu web arayüzü:** hedef sıcaklık, mod, boost, uyku modu, röle
   davranışı, MQTT/Telegram, sıcaklık geçmişi grafiği, histerezis, kalibrasyon,
   don koruması, Wi‑Fi ayarları, sistem bilgisi
+- **Çoklu dil (8):** en, tr, ru, es, pt, ja, ko, zh — ilk açılışta OLED ve web
+  arayüzünde dil seçimi; seçim `/config.txt` içinde `lang=` olarak saklanır
 - **Uyku modu:** belirlenen saat aralığında farklı hedef sıcaklık (NTP saati)
 - **MQTT:** durum yayını + `anahtar=değer` komutları
 - **Telegram botu:** durum ve uzaktan kontrol (yalnızca tanımlı sohbet)
@@ -200,7 +202,18 @@ Yön ters geliyorsa koddaki `ENCODER_REVERSE` değerini `1` yapın.
   chat ID; durum göstergeleri
 - **Wi‑Fi:** ev ağı SSID/şifre; boş SSID = yalnızca AP
 - **Sistem:** IP, sinyal, boş bellek, sürüm, saat, geçmiş, LittleFS doluluk,
-  yeniden başlatma
+  yeniden başlatma, **dil seçimi** (`lang=en|tr|ru|es|pt|ja|ko|zh`)
+
+**Dil seçimi:** İlk açılışta (ayar dosyasında `lang` yokken) OLED dil seçimi ekranı
+ gelir: encoder ile diller arasında dolaşın, kısa basışla onaylayın. Aynı anda web
+ arayüzü de tam ekran bir dil seçici açar. Seçim kalıcıdır; sonradan web
+ arayüzündeki **Dil** kartından veya `/api/set?lang=tr` ile değiştirilebilir.
+
+OLED'in gömülü fontu yalnızca ASCII bastığı için ekran metinleri **en/tr/es/pt**
+olduğu gibi yerelleşir (Türkçe karakterler ASCII karşılıklarıyla: `ISITIYOR`,
+`BAGLI`). Rusça, Japonca, Korece ve Çince seçildiğinde web arayüzü tam çevrilidir,
+OLED ise İngilizce etiket kullanır — 128×64 ekranda CJK glifleri için yer yoktur.
+Telegram komutları Türkçe kalır.
 
 ### OLED sayfaları
 

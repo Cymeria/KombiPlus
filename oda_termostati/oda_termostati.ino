@@ -156,6 +156,8 @@ struct PersistedConfig {
 String wifiSsid = "";
 String wifiPass = "";
 String themeId = "klasik";   // aktif OLED temasi (/themes/<id>.txt)
+String uiLang = "";          // arayuz dili: en/tr/ru/es/pt/ja/ko/zh (bos = secilmedi)
+uint8_t langCursor = 0;      // ilk acilista OLED dil secimi imleci
 bool fsReady = false;
 
 // ---- MQTT ----
@@ -408,6 +410,33 @@ uint16_t parseHHMM(const String &s, uint16_t def) {
   return (uint16_t)(h * 60 + m);
 }
 
+// ---- Arayuz dilleri -------------------------------------------------------
+// Web arayuzu 8 dili destekler. OLED'in gomulu fontu yalnizca ASCII bastigi
+// icin ekran metinleri en/tr/es/pt olarak yerellesir; diger dillerde Ingilizce.
+#define LANG_COUNT 8
+
+static const char *const LANG_CODES[LANG_COUNT] = {
+  "en", "tr", "ru", "es", "pt", "ja", "ko", "zh"
+};
+
+static const char *const LANG_NAMES[LANG_COUNT] = {
+  "ENGLISH", "TURKCE", "RUSSIAN", "ESPANOL", "PORTUGUES", "JAPANESE", "KOREAN", "CHINESE"
+};
+
+uint8_t langIndex(const String &code) {
+  String c = code;
+  c.trim();
+  c.toLowerCase();
+  for (uint8_t i = 0; i < LANG_COUNT; i++) {
+    if (c == LANG_CODES[i]) return i;
+  }
+  return 0xFF;
+}
+
+bool langChosen() {
+  return uiLang.length() > 0;
+}
+
 void defaultSettings() {
   cfg.setpoint    = 21.0f;
   cfg.hysteresis  = 0.3f;
@@ -447,6 +476,9 @@ void sanitizeSettings() {
   if (mqttPort == 0) mqttPort = 1883;
   if (mqttPrefix.length() == 0) mqttPrefix = "kombi";
   mqttPrefix.replace("/", "");
+  uiLang.trim();
+  uiLang.toLowerCase();
+  if (uiLang.length() && langIndex(uiLang) == 0xFF) uiLang = "";
 }
 
 void applyConfigKV(const String &key, const String &val) {
@@ -461,6 +493,7 @@ void applyConfigKV(const String &key, const String &val) {
   else if (key == "sleepsp")    cfg.sleepSetpoint = val.toFloat();
   else if (key == "failsafe")   cfg.relayFailSafeOn = val.toInt() ? 1 : 0;
   else if (key == "theme")      themeId = val;
+  else if (key == "lang")       uiLang = val;
   else if (key == "wifissid")   wifiSsid = val;
   else if (key == "wifipass")   wifiPass = val;
   else if (key == "mqtthost")   mqttHost = val;
@@ -554,6 +587,7 @@ void saveSettings() {
   s += "sleepsp=" + String(cfg.sleepSetpoint, 1) + "\n";
   s += "failsafe=" + String(cfg.relayFailSafeOn) + "\n";
   s += "theme=" + themeId + "\n";
+  s += "lang=" + uiLang + "\n";
   s += "wifissid=" + wifiSsid + "\n";
   s += "wifipass=" + wifiPass + "\n";
   s += "mqtthost=" + mqttHost + "\n";
@@ -868,6 +902,16 @@ bool applySetting(const String &key, String val) {
     if (v != cfg.relayFailSafeOn) { cfg.relayFailSafeOn = v; ch = true; }
   } else if (key == "theme") {
     if (setThemeById(val)) ch = true;
+  } else if (key == "lang") {
+    if (val.length() == 0) {
+      if (uiLang.length()) { uiLang = ""; ch = true; }
+    } else if (langIndex(val) != 0xFF) {
+      String v = val;
+      v.trim();
+      v.toLowerCase();
+      if (v != uiLang) { uiLang = v; ch = true; }
+    }
+    Serial.printf("Dil: %s\n", uiLang.length() ? uiLang.c_str() : "secili degil");
   }
 
   if (ch) {
@@ -1021,6 +1065,14 @@ void handleEncoder() {
 
   static int16_t accum = 0;
   accum += delta;
+
+  // Ilk acilis: dil secimi ekrani (encoder cevirerek secilir)
+  if (!langChosen()) {
+    while (accum >= 4) { accum -= 4; langCursor = (uint8_t)((langCursor + 1) % LANG_COUNT); }
+    while (accum <= -4) { accum += 4; langCursor = (uint8_t)((langCursor + LANG_COUNT - 1) % LANG_COUNT); }
+    return;
+  }
+
   while (accum >= 4) {
     accum -= 4;
     if (oledPage == OLED_PAGE_THEME) themeStep(1);
@@ -1061,7 +1113,15 @@ void handleEncoderButton() {
       pressStartMs = now;
     } else {
       unsigned long dur = now - pressStartMs;
-      if (dur >= 1200UL) {
+      if (!langChosen()) {
+        // Dil secimi: kisa basista onayla, kalici olarak kaydet
+        if (dur >= 40UL) {
+          uiLang = LANG_CODES[langCursor];
+          markSettingsDirty();
+          oledPage = 0;
+          Serial.printf("Dil secildi: %s\n", uiLang.c_str());
+        }
+      } else if (dur >= 1200UL) {
         toggleMode();
       } else if (dur >= 40UL) {
         oledPage = (oledPage + 1) % OLED_PAGE_COUNT;
@@ -1547,6 +1607,7 @@ void handleApiStatus() {
   j.reserve(1150);
   j = "{";
   j += "\"fw\":\"" FW_VERSION "\",";
+  j += "\"lang\":\"" + uiLang + "\",";
   j += "\"theme\":\"" + String(themeStore.active().id) + "\",";
   j += "\"temp\":";    j += sensorOk ? String(currentTemp, 1) : String("null"); j += ",";
   j += "\"hum\":";     j += (sensorOk && !isnan(currentHum)) ? String(currentHum, 0) : String("null"); j += ",";
@@ -1902,21 +1963,95 @@ void setupWeb() {
 
 // ============================ OLED EKRAN ===================================
 
+// ---- Ekran metinleri: en / tr / es / pt (ASCII, gomulu font) --------------
+enum {
+  L_MAIN, L_NET, L_INFO, L_SLEEP, L_THEME, L_LANG,
+  L_SLEEP_TAG, L_TARGET, L_TARGET_SHORT,
+  L_HEATING, L_WAITING, L_OFF, L_SENSOR_ERR, L_NO_BOILER,
+  L_HUM, L_WATER, L_BOOST, L_MIN,
+  L_BOILER, L_LINKED, L_NO, L_RELAY_IP, L_SIGNAL, L_AP_MODE,
+  L_HYST, L_CAL, L_FROST, L_NONE, L_UPTIME,
+  L_STATE, L_ACTIVE, L_RANGE, L_SLEEP_TARGET, L_NORMAL_TARGET,
+  L_CLOCK, L_RELAY_FS, L_FS_HOLD, L_FS_CLOSE,
+  L_NAME, L_ID, L_HEADER, L_STATUS, L_ENC_THEME,
+  L_DAY, L_HOUR, L_MINUTE,
+  L_TXT_COUNT
+};
+
+static const char *const OLED_TXT[4][L_TXT_COUNT] = {
+  // en
+  {"TERMOSTAT", "NETWORK", "INFO", "SLEEP", "THEME", "LANGUAGE",
+   "SLEEP", "TARGET", "HD",
+   "HEATING", "WAITING", "OFF/FROST", "SENSOR ERROR", "NO BOILER",
+   "Hum", "Water", "BST", "min",
+   "Boiler", "LINKED", "NO", "Relay IP", "Signal", "AP mode",
+   "Hysteresis", "Calibration", "Frost", "none", "Uptime",
+   "State", "ACTIVE", "Range", "Sleep target", "Normal target",
+   "Clock", "Relay FS", "stays ON", "closes",
+   "Name", "Id", "Header", "Status", "Turn: theme",
+   "d", "h", "m"},
+  // tr
+  {"TERMOSTAT", "AG BILGISI", "BILGI", "UYKU MODU", "TEMA", "DIL SEC",
+   "UYKU", "HEDEF", "HD",
+   "ISITIYOR", "BEKLIYOR", "KAPALI/DON KOR.", "SENSOR HATASI", "KOMBI BAGLI DEGIL",
+   "Nem", "Su", "BST", "dk",
+   "Kombi", "BAGLI", "YOK", "Role IP", "Sinyal", "AP modu",
+   "Histerezis", "Kalibrasyon", "Don koruma", "yok", "Calisma",
+   "Durum", "AKTIF", "Aralik", "Uyku hedefi", "Normal hedef",
+   "Saat", "Role FS", "ACIK kalir", "kapanir",
+   "Ad", "Kimlik", "Ust", "Durum", "Enkoder: tema",
+   "g", "s", "d"},
+  // es
+  {"TERMOSTATO", "RED", "INFO", "SUENO", "TEMA", "IDIOMA",
+   "SUENO", "OBJETIVO", "OBJ",
+   "CALENTANDO", "ESPERANDO", "APAG./ANTIHIELO", "FALLO SENSOR", "SIN CALDERA",
+   "Hum", "Agua", "BST", "min",
+   "Caldera", "CONECT.", "NO", "IP rele", "Senal", "modo AP",
+   "Histeresis", "Calibracion", "Antihielo", "nada", "Encendido",
+   "Estado", "ACTIVO", "Horario", "Obj. sueno", "Obj. normal",
+   "Reloj", "FS rele", "queda ON", "cierra",
+   "Nombre", "Id", "Cabecera", "Estado", "Giro: tema",
+   "d", "h", "m"},
+  // pt
+  {"TERMOSTATO", "REDE", "INFO", "DORMIR", "TEMA", "IDIOMA",
+   "DORMIR", "ALVO", "ALV",
+   "AQUECENDO", "AGUARDANDO", "DESL./ANTIGELO", "ERRO SENSOR", "SEM CALDEIRA",
+   "Umid", "Agua", "BST", "min",
+   "Caldeira", "CONECT.", "NAO", "IP rele", "Sinal", "modo AP",
+   "Histerese", "Calibracao", "Antigelo", "nada", "Ativo",
+   "Estado", "ATIVO", "Horario", "Alvo dormir", "Alvo normal",
+   "Relogio", "FS rele", "fica ON", "fecha",
+   "Nome", "Id", "Cabecalho", "Status", "Giro: tema",
+   "d", "h", "m"}
+};
+
+uint8_t oledLang() {
+  uint8_t i = langIndex(uiLang);
+  if (i == 1) return 1;   // tr
+  if (i == 3) return 2;   // es
+  if (i == 4) return 3;   // pt
+  return 0;               // en (ru/ja/ko/zh icin de)
+}
+
+const char *OT(uint8_t id) {
+  return OLED_TXT[oledLang()][id];
+}
+
 void oledHeader(const __FlashStringHelper *title) {
   oledThemeHeader(display, themeStore.active(), title, oledPage, OLED_PAGE_COUNT);
 }
 
 const __FlashStringHelper *mainStatusText() {
-  if (!sensorOk) return F("SENSOR HATASI");
-  if (!boilerLinked()) return F("KOMBI BAGLI DEGIL");
-  if (!cfg.mode) return F("KAPALI/DON KOR.");
-  if (demand) return F("ISITIYOR");
-  return F("BEKLIYOR");
+  if (!sensorOk) return FPSTR(OT(L_SENSOR_ERR));
+  if (!boilerLinked()) return FPSTR(OT(L_NO_BOILER));
+  if (!cfg.mode) return FPSTR(OT(L_OFF));
+  if (demand) return FPSTR(OT(L_HEATING));
+  return FPSTR(OT(L_WAITING));
 }
 
 void drawMainPage() {
   const OledTheme &th = themeStore.active();
-  oledHeader(F("TERMOSTAT"));
+  oledHeader(FPSTR(OT(L_MAIN)));
 
   int base  = oledThemeHeaderHeight(th) + 2;
   int tempY = base + (th.tempSize == 3 ? 0 : 2);
@@ -1926,7 +2061,7 @@ void drawMainPage() {
 
   if (sleepActive && th.header) {
     display.setCursor(72, 0);
-    display.print(F("UYKU"));
+    display.print(OT(L_SLEEP_TAG));
   }
 
   // Sicaklik metni sabit tamponda tutulur: 4 Hz yenilemede String
@@ -1950,7 +2085,7 @@ void drawMainPage() {
     if (th.tempCenter) {
       // Sicaklik ortada: hedef icin serbest kolon yok, iki satir korunur.
       display.setCursor(84, tempY + 1);
-      display.print(th.labels ? F("HEDEF") : F("HD"));
+      display.print(OT(th.labels ? L_TARGET : L_TARGET_SHORT));
       display.setCursor(84, tempY + 11);
       display.print(cfg.setpoint, 1);
       display.print(F("C"));
@@ -1981,33 +2116,36 @@ void drawMainPage() {
   if (th.showHum) {
     display.setCursor(0, footY);
     if (sensorOk && !isnan(currentHum)) {
-      display.print(F("Nem %"));
+      display.print(OT(L_HUM));
+      display.print(F(" %"));
       display.print((int)roundf(currentHum));
     } else {
-      display.print(F("Nem --"));
+      display.print(OT(L_HUM));
+      display.print(F(" --"));
     }
   }
 
   if (th.showBoost && boostActive) {
     display.setCursor(68, footY);
-    display.print(F("BST "));
+    display.print(OT(L_BOOST));
+    display.print(' ');
     display.print((boostRemainSec() + 59) / 60);
-    display.print(F("dk"));
+    display.print(OT(L_MIN));
   } else if (th.showWater && boilerFlow > -100.0f) {
-    char f[16];
-    snprintf(f, sizeof(f), "Su %.1fC", boilerFlow);
+    char f[20];
+    snprintf(f, sizeof(f), "%s %.1fC", OT(L_WATER), boilerFlow);
     display.setCursor(128 - (int)strlen(f) * 6, footY);
     display.print(f);
   } else if (!th.setpointCol && th.labels) {
-    char sp[16];
-    snprintf(sp, sizeof(sp), "Hd %.1f", cfg.setpoint);
+    char sp[20];
+    snprintf(sp, sizeof(sp), "%s %.1f", OT(L_TARGET_SHORT), cfg.setpoint);
     display.setCursor(128 - (int)strlen(sp) * 6, footY);
     display.print(sp);
   }
 }
 
 void drawNetPage() {
-  oledHeader(F("AG BILGISI"));
+  oledHeader(FPSTR(OT(L_NET)));
   display.setTextSize(1);
   display.setCursor(0, 12);
   display.print(F("AP: "));  display.print(WiFi.softAPIP());
@@ -2021,52 +2159,62 @@ void drawNetPage() {
   display.print(F("STA: ")); display.print(ssid);
 
   display.setCursor(0, 39);
-  display.print(F("Kombi: "));
-  display.print(boilerLinked() ? F("BAGLI") : F("YOK"));
+  display.print(OT(L_BOILER));
+  display.print(F(": "));
+  display.print(OT(boilerLinked() ? L_LINKED : L_NO));
   if (boilerClient && boilerClient.connected()) {
     display.setCursor(0, 48);
-    display.print(F("Role IP: "));
+    display.print(OT(L_RELAY_IP));
+    display.print(F(": "));
     display.print(boilerClient.remoteIP());
   }
 
   display.setCursor(0, 56);
   if (WiFi.status() == WL_CONNECTED) {
-    display.print(F("Sinyal: "));
+    display.print(OT(L_SIGNAL));
+    display.print(F(": "));
     display.print(WiFi.RSSI());
     display.print(F(" dBm"));
   } else {
-    display.print(F("Sinyal: AP modu"));
+    display.print(OT(L_SIGNAL));
+    display.print(F(": "));
+    display.print(OT(L_AP_MODE));
   }
 }
 
 void drawInfoPage() {
-  oledHeader(F("BILGI"));
+  oledHeader(FPSTR(OT(L_INFO)));
 
   display.setTextSize(1);
   // Sabit tamponlar: 4 Hz yenilemede String ayirmasi yapilmaz.
   display.setCursor(0, 12);
-  display.print(F("Histerezis: "));
+  display.print(OT(L_HYST));
+  display.print(F(": "));
   display.print(cfg.hysteresis, 1);
   display.print(F("C"));
 
   display.setCursor(0, 21);
-  display.print(F("Kalibrasyon: "));
+  display.print(OT(L_CAL));
+  display.print(F(": "));
   if (cfg.calibration >= 0) display.print(F("+"));
   display.print(cfg.calibration, 1);
   display.print(F("C"));
 
   display.setCursor(0, 30);
-  display.print(F("Don koruma: "));
+  display.print(OT(L_FROST));
+  display.print(F(": "));
   display.print(cfg.frost, 1);
   display.print(F("C"));
 
   display.setCursor(0, 39);
-  display.print(F("Boost: "));
+  display.print(OT(L_BOOST));
+  display.print(F(": "));
   if (boostActive) {
     display.print((boostRemainSec() + 59) / 60);
-    display.print(F(" dk"));
+    display.print(' ');
+    display.print(OT(L_MIN));
   } else {
-    display.print(F("yok"));
+    display.print(OT(L_NONE));
   }
 
   unsigned long up = millis() / 1000UL;
@@ -2074,12 +2222,14 @@ void drawInfoPage() {
   unsigned long h = (up % 86400UL) / 3600UL;
   unsigned long m = (up % 3600UL) / 60UL;
   display.setCursor(0, 48);
-  display.print(F("Calisma: "));
-  if (d > 0) { display.print(d); display.print(F("g ")); }
+  display.print(OT(L_UPTIME));
+  display.print(F(": "));
+  if (d > 0) { display.print(d); display.print(OT(L_DAY)); display.print(' '); }
   display.print(h);
-  display.print(F("s "));
+  display.print(OT(L_HOUR));
+  display.print(' ');
   display.print(m);
-  display.print(F("d"));
+  display.print(OT(L_MINUTE));
 
   display.setCursor(0, 56);
   display.print(F("FW " FW_VERSION "  Heap:"));
@@ -2088,17 +2238,18 @@ void drawInfoPage() {
 }
 
 void drawSleepPage() {
-  oledHeader(F("UYKU MODU"));
+  oledHeader(FPSTR(OT(L_SLEEP)));
 
   display.setTextSize(1);
   display.setCursor(0, 12);
-  display.print(F("Durum: "));
+  display.print(OT(L_STATE));
+  display.print(F(": "));
   if (!cfg.sleepEnabled) {
-    display.print(F("kapali"));
+    display.print(OT(L_OFF));
   } else if (sleepActive) {
-    display.print(F("AKTIF"));
+    display.print(OT(L_ACTIVE));
   } else {
-    display.print(F("bekliyor"));
+    display.print(OT(L_WAITING));
   }
 
   char hmA[6], hmB[6];
@@ -2108,24 +2259,29 @@ void drawSleepPage() {
            (unsigned)((cfg.sleepEndMin / 60) % 24), (unsigned)(cfg.sleepEndMin % 60));
 
   display.setCursor(0, 21);
-  display.print(F("Aralik: "));
+  display.print(OT(L_RANGE));
+  display.print(F(": "));
   display.print(hmA);
   display.print(F(" - "));
   display.print(hmB);
 
   display.setCursor(0, 30);
-  display.print(F("Uyku hedefi: "));
+  display.print(OT(L_SLEEP_TARGET));
+  display.print(F(": "));
   display.print(cfg.sleepSetpoint, 1);
   display.print(F("C"));
 
   display.setCursor(0, 39);
-  display.print(F("Normal hedef: "));
+  display.print(OT(L_NORMAL_TARGET));
+  display.print(F(": "));
   display.print(cfg.setpoint, 1);
   display.print(F("C"));
 
   display.setCursor(0, 48);
-  display.print(F("Saat: "));
-  display.print(timeReady() ? F("NTP OK") : F("yok"));
+  display.print(OT(L_CLOCK));
+  display.print(F(": "));
+  if (timeReady()) display.print(F("NTP OK"));
+  else             display.print(OT(L_NONE));
   if (timeReady()) {
     time_t t = time(nullptr);
     struct tm tmv;
@@ -2136,17 +2292,19 @@ void drawSleepPage() {
   }
 
   display.setCursor(0, 56);
-  display.print(F("Role FS: "));
-  display.print(cfg.relayFailSafeOn ? F("ACIK kalir") : F("kapanir"));
+  display.print(OT(L_RELAY_FS));
+  display.print(F(": "));
+  display.print(OT(cfg.relayFailSafeOn ? L_FS_HOLD : L_FS_CLOSE));
 }
 
 void drawThemePage() {
   const OledTheme &th = themeStore.active();
-  oledHeader(F("TEMA"));
+  oledHeader(FPSTR(OT(L_THEME)));
 
   display.setTextSize(1);
   display.setCursor(0, 12);
-  display.print(F("Tema: "));
+  display.print(OT(L_THEME));
+  display.print(F(": "));
   display.print(themeStore.index() + 1);
   display.print('/');
   display.print(OLED_THEME_COUNT);
@@ -2154,23 +2312,51 @@ void drawThemePage() {
   if (th.dim)    display.print(F(" DIM"));
 
   display.setCursor(0, 21);
-  display.print(F("Ad: "));
+  display.print(OT(L_NAME));
+  display.print(F(": "));
   display.print(th.name);
 
   display.setCursor(0, 30);
-  display.print(F("Kimlik: "));
+  display.print(OT(L_ID));
+  display.print(F(": "));
   display.print(th.id);
 
   display.setCursor(0, 39);
-  display.print(F("Ust: "));
+  display.print(OT(L_HEADER));
+  display.print(F(": "));
   display.print(oledThemeHeaderName(th.header));
 
   display.setCursor(0, 48);
-  display.print(F("Durum: "));
+  display.print(OT(L_STATUS));
+  display.print(F(": "));
   display.print(oledThemeStatusName(th.statusStyle));
 
   display.setCursor(0, 56);
-  display.print(F("Enkoder: tema sec"));
+  display.print(OT(L_ENC_THEME));
+}
+
+// Ilk acilis dil secimi ekrani: encoder cevir -> dil, kisa bas -> kaydet.
+void drawLangPage() {
+  oledHeader(FPSTR(OT(L_LANG)));
+  display.setTextSize(1);
+
+  display.setCursor(0, 12);
+  display.print(F("SELECT LANGUAGE"));
+
+  char line[26];
+  snprintf(line, sizeof(line), "%u/%u  %s", (unsigned)(langCursor + 1),
+           (unsigned)LANG_COUNT, LANG_NAMES[langCursor]);
+  int w = (int)strlen(line) * 6;
+  display.setCursor(w < 128 ? (128 - w) / 2 : 0, 23);
+  display.print(line);
+
+  display.setCursor(0, 36);
+  display.print(F("TURN: SELECT"));
+  display.setCursor(0, 46);
+  display.print(F("PRESS: SET"));
+
+  display.setCursor(0, 57);
+  display.print(F("WEB 192.168.4.1"));
 }
 
 void drawOled() {
@@ -2184,12 +2370,16 @@ void drawOled() {
   display.clearDisplay();
   display.setTextColor(SSD1306_WHITE);
 
-  switch (oledPage) {
-    case 1:  drawNetPage();   break;
-    case 2:  drawInfoPage();  break;
-    case 3:  drawSleepPage(); break;
-    case 4:  drawThemePage(); break;
-    default: drawMainPage();  break;
+  if (!langChosen()) {
+    drawLangPage();
+  } else {
+    switch (oledPage) {
+      case 1:  drawNetPage();   break;
+      case 2:  drawInfoPage();  break;
+      case 3:  drawSleepPage(); break;
+      case 4:  drawThemePage(); break;
+      default: drawMainPage();  break;
+    }
   }
 
   static uint8_t appliedInvert = 0xFF;
