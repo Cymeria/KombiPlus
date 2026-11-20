@@ -1211,25 +1211,164 @@ String stateLabel() {
   return "BEKLIYOR";
 }
 
+// ---- Telegram: dile bagli komut adlari ve yanit metinleri -----------------
+// Komutlar cihazda secilen dilde calisir; Ingilizce ve eski Turkce adlar her
+// zaman kabul edilir (geriye uyumluluk).
+enum {
+  TG_C_STATUS, TG_C_TEMP, TG_C_MODE, TG_C_BOOST,
+  TG_C_SLEEP, TG_C_SLEEPTIME, TG_C_SLEEPTEMP, TG_C_HELP, TG_C_COUNT
+};
+
+// Satir: komut, sutun: LANG_CODES sirasi (en, tr, ru, es, pt, ja, ko, zh)
+static const char *const TG_CMD[LANG_COUNT][TG_C_COUNT] = {
+  {"status",   "temp",      "mode",  "boost", "sleep",  "sleeptime", "sleeptemp",  "help"},
+  {"durum",    "sicaklik",  "mod",   "boost", "uyku",   "uykusaat",  "uykusicaklik", "yardim"},
+  {"статус",   "температура", "режим", "буст", "сон",   "время",     "сонтемп",    "помощь"},
+  {"estado",   "temperatura", "modo", "boost", "sueno", "horario",   "suenotemp",  "ayuda"},
+  {"estado",   "temperatura", "modo", "boost", "dormir", "horario",  "dormirtemp", "ajuda"},
+  {"状態",     "温度",       "モード", "ブースト", "睡眠", "睡眠時間",   "睡眠温度",   "ヘルプ"},
+  {"상태",     "온도",       "모드",  "부스트", "수면",   "수면시간",   "수면온도",   "도움말"},
+  {"状态",     "温度",       "模式",  "加热",   "睡眠",   "睡眠时间",   "睡眠温度",   "帮助"}
+};
+
+static const char *const TG_ON_W[LANG_COUNT]  = {"on",  "ac", "вкл", "encender", "ligar",  "オン", "켜기", "开"};
+static const char *const TG_OFF_W[LANG_COUNT] = {"off", "kapat", "выкл", "apagar", "desligar", "オフ", "끄기", "关"};
+
+enum {
+  TG_T_ROOM, TG_T_HUM, TG_T_TARGET, TG_T_STATE, TG_T_RELAY, TG_T_LINK,
+  TG_T_MODE, TG_T_SLEEP, TG_T_FS,
+  TG_T_YES, TG_T_NO, TG_T_ON, TG_T_OFF, TG_T_ACTIVE, TG_T_WAITING,
+  TG_T_HEATING, TG_T_ST_WAITING, TG_T_ST_OFF, TG_T_ST_SENSOR, TG_T_ST_NOLINK,
+  TG_T_KEEP_ON, TG_T_OPENS, TG_T_MIN,
+  TG_T_USAGE, TG_T_UNCHANGED, TG_T_MODE_ON, TG_T_MODE_OFF,
+  TG_T_SLEEP_ON, TG_T_SLEEP_OFF, TG_T_SLEEP_TIME, TG_T_SLEEP_TARGET,
+  TG_T_BOOST_ON, TG_T_BOOST_OFF, TG_T_UNKNOWN, TG_T_COMMANDS,
+  TG_T_COUNT
+};
+
+static const char *const TG_TXT[LANG_COUNT][TG_T_COUNT] = {
+  // en
+  {"Room", "Hum", "Target", "State", "Relay", "Link", "Mode", "Sleep", "Relay FS",
+   "yes", "no", "ON", "OFF", "ACTIVE", "waiting",
+   "Heating", "Waiting", "Off", "Sensor error", "Boiler offline",
+   "keeps ON", "opens", "min",
+   "Usage", "Target unchanged.", "Mode ON.", "Mode OFF (frost protection active).",
+   "Sleep mode on.", "Sleep mode off.", "Sleep time:", "Sleep target:",
+   "Boost started", "Boost cancelled.", "Unknown command.", "Commands"},
+  // tr
+  {"Oda", "Nem", "Hedef", "Durum", "Role", "Baglanti", "Mod", "Uyku", "Role FS",
+   "VAR", "YOK", "ACIK", "KAPALI", "AKTIF", "bekliyor",
+   "Isitiyor", "Bekliyor", "Kapali", "Sensor hatasi", "Kombi yok",
+   "ACIK kalir", "kapanir", "dk",
+   "Kullanim", "Hedef degismedi.", "Mod ACIK.", "Mod KAPALI (don korumasi devrede).",
+   "Uyku modu acildi.", "Uyku modu kapatildi.", "Uyku saati:", "Uyku hedefi:",
+   "Boost baslatildi", "Boost iptal edildi.", "Bilinmeyen komut.", "Komutlar"},
+  // ru
+  {"Комната", "Влажность", "Цель", "Состояние", "Реле", "Связь", "Режим", "Сон", "Реле FS",
+   "да", "нет", "ВКЛ", "ВЫКЛ", "АКТИВЕН", "ожидание",
+   "Нагрев", "Ожидание", "Выключено", "Ошибка датчика", "Котёл не на связи",
+   "остаётся ВКЛ", "открывается", "мин",
+   "Использование", "Цель не изменилась.", "Режим ВКЛ.", "Режим ВЫКЛ (защита от замерзания).",
+   "Ночной режим включён.", "Ночной режим выключен.", "Время сна:", "Цель ночью:",
+   "Boost запущен", "Boost отменён.", "Неизвестная команда.", "Команды"},
+  // es
+  {"Ambiente", "Humedad", "Objetivo", "Estado", "Rele", "Enlace", "Modo", "Sueno", "FS rele",
+   "si", "no", "ON", "OFF", "ACTIVO", "esperando",
+   "Calentando", "Esperando", "Apagado", "Fallo del sensor", "Sin caldera",
+   "queda ON", "cierra", "min",
+   "Uso", "Objetivo sin cambios.", "Modo ON.", "Modo OFF (proteccion antihielo activa).",
+   "Modo sueno activado.", "Modo sueno desactivado.", "Horario sueno:", "Objetivo sueno:",
+   "Boost iniciado", "Boost cancelado.", "Comando desconocido.", "Comandos"},
+  // pt
+  {"Ambiente", "Umidade", "Alvo", "Estado", "Rele", "Conexao", "Modo", "Dormir", "FS rele",
+   "sim", "nao", "ON", "OFF", "ATIVO", "aguardando",
+   "Aquecendo", "Aguardando", "Desligado", "Erro no sensor", "Sem caldeira",
+   "fica ON", "fecha", "min",
+   "Uso", "Alvo sem alteracao.", "Modo ON.", "Modo OFF (protecao antigelo ativa).",
+   "Modo dormir ativado.", "Modo dormir desativado.", "Horario dormir:", "Alvo dormir:",
+   "Boost iniciado", "Boost cancelado.", "Comando desconhecido.", "Comandos"},
+  // ja
+  {"室温", "湿度", "目標", "状態", "リレー", "接続", "モード", "おやすみ", "リレーFS",
+   "あり", "なし", "ON", "OFF", "実行中", "待機中",
+   "加熱中", "待機中", "停止", "センサー異常", "ボイラー未接続",
+   "ON のまま", "開く", "分",
+   "使い方", "目標は変更されていません。", "モード ON。", "モード OFF（凍結防止のみ）。",
+   "おやすみモード ON。", "おやすみモード OFF。", "おやすみ時間:", "おやすみ目標:",
+   "ブースト開始", "ブースト解除。", "不明なコマンド。", "コマンド"},
+  // ko
+  {"실내", "습도", "목표", "상태", "릴레이", "연결", "모드", "취침", "릴레이 FS",
+   "예", "아니오", "ON", "OFF", "실행 중", "대기 중",
+   "가열 중", "대기 중", "정지", "센서 오류", "보일러 연결 안 됨",
+   "ON 유지", "열림", "분",
+   "사용법", "목표가 변경되지 않았습니다.", "모드 ON.", "모드 OFF(동파 방지만 동작).",
+   "취침 모드 ON.", "취침 모드 OFF.", "취침 시간:", "취침 목표:",
+   "부스트 시작", "부스트 해제.", "알 수 없는 명령.", "명령어"},
+  // zh
+  {"房间", "湿度", "目标", "状态", "继电器", "连接", "模式", "睡眠", "继电器 FS",
+   "是", "否", "开", "关", "运行中", "等待中",
+   "加热中", "等待中", "关闭", "传感器故障", "锅炉未连接",
+   "保持开启", "断开", "分钟",
+   "用法", "目标未改变。", "模式开启。", "模式关闭（仅防冻保护）。",
+   "睡眠模式开启。", "睡眠模式关闭。", "睡眠时间:", "睡眠目标:",
+   "加热已开始", "加热已取消。", "未知命令。", "命令"}
+};
+
+uint8_t tgLang() {
+  uint8_t i = langIndex(uiLang);
+  return (i == 0xFF) ? 0 : i;   // dil secilmemis: Ingilizce
+}
+
+const char *TT(uint8_t id) {
+  return TG_TXT[tgLang()][id];
+}
+
+// Komut adi eslesmesi: secili dil + Ingilizce + eski Turkce adlar
+bool tgCmdIs(const String &body, uint8_t cmd) {
+  uint8_t li = tgLang();
+  if (body.startsWith(TG_CMD[li][cmd])) return true;
+  if (li != 0 && body.startsWith(TG_CMD[0][cmd])) return true;
+  if (li != 1 && body.startsWith(TG_CMD[1][cmd])) return true;
+  return false;
+}
+
+// "ac/kapat" karsiliklari; secili dil + Ingilizce + eski Turkce
+int8_t tgOnOff(const String &low) {
+  uint8_t li = tgLang();
+  if (low.indexOf(TG_OFF_W[li]) >= 0) return 0;
+  if (low.indexOf(TG_ON_W[li]) >= 0)  return 1;
+  if (low.indexOf("kapat") >= 0 || low.indexOf("off") >= 0) return 0;
+  if (low.indexOf("ac") >= 0 || low.indexOf("on") >= 0) return 1;
+  return -1;
+}
+
+const char *tgStateLabel() {
+  if (!sensorOk) return TT(TG_T_ST_SENSOR);
+  if (!boilerLinked()) return TT(TG_T_ST_NOLINK);
+  if (!cfg.mode) return TT(TG_T_ST_OFF);
+  if (demand) return TT(TG_T_HEATING);
+  return TT(TG_T_ST_WAITING);
+}
+
 String statusSummary() {
   String s;
-  s.reserve(340);
+  s.reserve(380);
   s  = "Kombi Termostat\n";
-  s += "Oda: " + (sensorOk ? String(currentTemp, 1) : String("--.-")) + "C";
-  if (sensorOk && !isnan(currentHum)) s += "  Nem: %" + String((int)roundf(currentHum));
-  s += "\nHedef: " + String(effectiveSetpoint(), 1) + "C";
+  s += String(TT(TG_T_ROOM)) + ": " + (sensorOk ? String(currentTemp, 1) : String("--.-")) + "C";
+  if (sensorOk && !isnan(currentHum))
+    s += "  " + String(TT(TG_T_HUM)) + ": %" + String((int)roundf(currentHum));
+  s += "\n" + String(TT(TG_T_TARGET)) + ": " + String(effectiveSetpoint(), 1) + "C";
   s += "  (" + String(cfg.setpoint, 1) + "C)";
-  s += "\nDurum: " + stateLabel();
-  s += "\nRole: " + String(boilerRelay ? "ACIK" : "KAPALI");
-  s += "  Baglanti: " + String(boilerLinked() ? "VAR" : "YOK");
-  s += "\nMod: " + String(cfg.mode ? "ACIK" : "KAPALI");
-  s += "  Boost: " + (boostActive ? String((boostRemainSec() + 59) / 60) + "dk" : String("yok"));
-  s += "\nUyku: ";
-  if (!cfg.sleepEnabled) s += "kapali";
-  else s += String(sleepActive ? "AKTIF" : "bekliyor") + " " +
+  s += "\n" + String(TT(TG_T_STATE)) + ": " + tgStateLabel();
+  s += "\n" + String(TT(TG_T_RELAY)) + ": " + String(boilerRelay ? TT(TG_T_ON) : TT(TG_T_OFF));
+  s += "  " + String(TT(TG_T_LINK)) + ": " + String(boilerLinked() ? TT(TG_T_YES) : TT(TG_T_NO));
+  s += "\n" + String(TT(TG_T_MODE)) + ": " + String(cfg.mode ? TT(TG_T_ON) : TT(TG_T_OFF));
+  s += "  Boost: " + (boostActive ? String((boostRemainSec() + 59) / 60) + TT(TG_T_MIN) : String(TT(TG_T_NO)));
+  s += "\n" + String(TT(TG_T_SLEEP)) + ": ";
+  if (!cfg.sleepEnabled) s += TT(TG_T_OFF);
+  else s += String(sleepActive ? TT(TG_T_ACTIVE) : TT(TG_T_WAITING)) + " " +
             fmtHHMM(cfg.sleepStartMin) + "-" + fmtHHMM(cfg.sleepEndMin) +
             " " + String(cfg.sleepSetpoint, 1) + "C";
-  s += "\nRole FS: " + String(cfg.relayFailSafeOn ? "ACIK kalir" : "kapanir");
+  s += "\n" + String(TT(TG_T_FS)) + ": " + String(cfg.relayFailSafeOn ? TT(TG_T_KEEP_ON) : TT(TG_T_OPENS));
   return s;
 }
 
@@ -1404,59 +1543,89 @@ String tgRequest(const String &path) {
 #endif
 }
 
+String tgUsage(uint8_t cmd, const String &args) {
+  return String(TT(TG_T_USAGE)) + ": /" + String(TG_CMD[tgLang()][cmd]) + " " + args;
+}
+
+String tgOnOffWords() {
+  return String(TG_ON_W[tgLang()]) + "|" + String(TG_OFF_W[tgLang()]);
+}
+
 String tgHandleCommand(const String &raw) {
   String text = raw;
   text.trim();
   String low = text;
   low.toLowerCase();
+  String body = low;
+  if (body.startsWith("/")) body = body.substring(1);
+  body.trim();
 
-  if (low.startsWith("/durum") || low.startsWith("/status")) {
-    return statusSummary();
-  }
-  if (low.startsWith("/sicaklik") || low.startsWith("/sp")) {
+  if (tgCmdIs(body, TG_C_STATUS)) return statusSummary();
+
+  if (tgCmdIs(body, TG_C_TEMP) || body.startsWith("sp")) {
     int sp = text.indexOf(' ');
-    if (sp < 0) return "Kullanim: /sicaklik 22.5";
-    if (!applySetting("sp", text.substring(sp + 1))) return "Hedef degismedi.";
-    return "Hedef: " + String(cfg.setpoint, 1) + "C";
+    if (sp < 0) return tgUsage(TG_C_TEMP, "22.5");
+    if (!applySetting("sp", text.substring(sp + 1))) return String(TT(TG_T_UNCHANGED));
+    return String(TT(TG_T_TARGET)) + ": " + String(cfg.setpoint, 1) + "C";
   }
-  if (low.startsWith("/mod")) {
-    if (low.indexOf("kapat") >= 0) { applySetting("mode", "0"); return "Mod KAPALI (don korumasi devrede)."; }
-    if (low.indexOf("ac") >= 0)    { applySetting("mode", "1"); return "Mod ACIK."; }
-    return "Kullanim: /mod ac | /mod kapat";
+
+  if (tgCmdIs(body, TG_C_MODE)) {
+    int8_t v = tgOnOff(low);
+    if (v == 0) { applySetting("mode", "0"); return String(TT(TG_T_MODE_OFF)); }
+    if (v == 1) { applySetting("mode", "1"); return String(TT(TG_T_MODE_ON)); }
+    return tgUsage(TG_C_MODE, tgOnOffWords());
   }
-  if (low.startsWith("/boost")) {
+
+  if (tgCmdIs(body, TG_C_BOOST)) {
     int sp = text.indexOf(' ');
     int m = (sp < 0) ? 30 : text.substring(sp + 1).toInt();
     applySetting("boost", String(m));
-    return m > 0 ? ("Boost " + String(m) + " dk baslatildi.") : "Boost iptal edildi.";
+    if (m <= 0) return String(TT(TG_T_BOOST_OFF));
+    return String(TT(TG_T_BOOST_ON)) + " (" + String(m) + " " + String(TT(TG_T_MIN)) + ")";
   }
-  if (low.startsWith("/uykusicaklik")) {
+
+  // Once /uykusicaklik ve /uykusaat: /uyku oneki ile karismasin
+  if (tgCmdIs(body, TG_C_SLEEPTEMP)) {
     int sp = text.indexOf(' ');
-    if (sp < 0) return "Kullanim: /uykusicaklik 18";
+    if (sp < 0) return tgUsage(TG_C_SLEEPTEMP, "18");
     applySetting("sleepsp", text.substring(sp + 1));
-    return "Uyku hedefi: " + String(cfg.sleepSetpoint, 1) + "C";
+    return String(TT(TG_T_SLEEP_TARGET)) + " " + String(cfg.sleepSetpoint, 1) + "C";
   }
-  if (low.startsWith("/uykusaat")) {
+
+  if (tgCmdIs(body, TG_C_SLEEPTIME)) {
     int sp = text.indexOf(' ');
-    if (sp < 0) return "Kullanim: /uykusaat 23:00 07:00";
+    if (sp < 0) return tgUsage(TG_C_SLEEPTIME, "23:00 07:00");
     String rest = text.substring(sp + 1);
     rest.trim();
     int sp2 = rest.indexOf(' ');
-    if (sp2 < 0) return "Kullanim: /uykusaat 23:00 07:00";
+    if (sp2 < 0) return tgUsage(TG_C_SLEEPTIME, "23:00 07:00");
     applySetting("sleepstart", rest.substring(0, sp2));
     applySetting("sleepend", rest.substring(sp2 + 1));
-    return "Uyku saati: " + fmtHHMM(cfg.sleepStartMin) + " - " + fmtHHMM(cfg.sleepEndMin);
+    return String(TT(TG_T_SLEEP_TIME)) + " " + fmtHHMM(cfg.sleepStartMin) +
+           " - " + fmtHHMM(cfg.sleepEndMin);
   }
-  if (low.startsWith("/uyku")) {
-    if (low.indexOf("kapat") >= 0) { applySetting("sleep", "0"); return "Uyku modu kapatildi."; }
-    if (low.indexOf("ac") >= 0)    { applySetting("sleep", "1"); return "Uyku modu acildi."; }
-    return "Kullanim: /uyku ac | /uyku kapat";
+
+  if (tgCmdIs(body, TG_C_SLEEP)) {
+    int8_t v = tgOnOff(low);
+    if (v == 0) { applySetting("sleep", "0"); return String(TT(TG_T_SLEEP_OFF)); }
+    if (v == 1) { applySetting("sleep", "1"); return String(TT(TG_T_SLEEP_ON)); }
+    return tgUsage(TG_C_SLEEP, tgOnOffWords());
   }
-  if (low.startsWith("/yardim") || low.startsWith("/start") || low.startsWith("/help")) {
-    return "Komutlar:\n/durum\n/sicaklik 22.5\n/mod ac|kapat\n/boost 30\n"
-           "/uyku ac|kapat\n/uykusaat 23:00 07:00\n/uykusicaklik 18";
+
+  if (tgCmdIs(body, TG_C_HELP) || body.startsWith("start")) {
+    uint8_t li = tgLang();
+    String h = String(TT(TG_T_COMMANDS)) + ":\n";
+    h += "/" + String(TG_CMD[li][TG_C_STATUS]) + "\n";
+    h += "/" + String(TG_CMD[li][TG_C_TEMP]) + " 22.5\n";
+    h += "/" + String(TG_CMD[li][TG_C_MODE]) + " " + tgOnOffWords() + "\n";
+    h += "/" + String(TG_CMD[li][TG_C_BOOST]) + " 30\n";
+    h += "/" + String(TG_CMD[li][TG_C_SLEEP]) + " " + tgOnOffWords() + "\n";
+    h += "/" + String(TG_CMD[li][TG_C_SLEEPTIME]) + " 23:00 07:00\n";
+    h += "/" + String(TG_CMD[li][TG_C_SLEEPTEMP]) + " 18";
+    return h;
   }
-  return "Bilinmeyen komut. /yardim yazin.";
+
+  return String(TT(TG_T_UNKNOWN)) + " /" + String(TG_CMD[tgLang()][TG_C_HELP]);
 }
 
 void tgSend(const String &text) {

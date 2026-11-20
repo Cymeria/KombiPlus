@@ -347,8 +347,10 @@ fsUsed, fsTotal, uptime, ip, apip, ssid, sta, rssi, heap, client`.
 - `kombi/set` — `sp=22.5`, `mode=1`, `sleepsp=18`, `sleepstart=23:00&sleepend=07:00`, `failsafe=1`
 - `kombi/result` — `ok` / hata
 
-**Telegram**: `/durum`, `/sicaklik 22.5`, `/mod ac|kapat`, `/boost 30`, `/uyku ac|kapat`,
-`/uykusaat 23:00 07:00`, `/uykusicaklik 18`, `/yardim`. Yalnızca tanımlı sohbet yanıt alır.
+**Telegram**: komutlar arayüz dilini izler — Türkçe `/durum`, `/sicaklik 22.5`, `/mod ac|kapat`,
+`/boost 30`, `/uyku ac|kapat`, `/uykusaat 23:00 07:00`, `/uykusicaklik 18`, `/yardim`; seçilen dilin
+karşılıkları da çalışır (İngilizce her zaman geçerlidir). Yanıtlar ve `/yardim` listesi seçilen dilde
+gelir. Yalnızca tanımlı sohbet yanıt alır.
 
 ---
 

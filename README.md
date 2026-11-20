@@ -353,8 +353,10 @@ fsUsed, fsTotal, uptime, ip, apip, ssid, sta, rssi, heap, client`.
 - `kombi/set` — `sp=22.5`, `mode=1`, `sleepsp=18`, `sleepstart=23:00&sleepend=07:00`, `failsafe=1`
 - `kombi/result` — `ok` / error
 
-**Telegram**: `/durum`, `/sicaklik 22.5`, `/mod ac|kapat`, `/boost 30`, `/uyku ac|kapat`,
-`/uykusaat 23:00 07:00`, `/uykusicaklik 18`, `/yardim`. Only the configured chat ID is served.
+**Telegram**: commands follow the interface language — `/durum`, `/sicaklik 22.5`,
+`/mod ac|kapat`, `/boost 30`, `/uyku ac|kapat`, `/uykusaat 23:00 07:00`, `/uykusicaklik 18`,
+`/yardim` in Turkish, with the equivalents of the selected language (English always works too).
+Replies and the `/help` list come in the selected language. Only the configured chat ID is served.
 
 ---
 

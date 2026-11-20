@@ -31,6 +31,9 @@ First stable release. Both devices report `FW 1.0.0`.
   next to `lang=`, so a unit updating from an earlier firmware keeps its settings, boots into
   English without a prompt and can pick a language later in the *Language* card. A board with no
   `/config.txt` is asked again on every boot until a language is chosen.
+- **Telegram in the selected language** — command names and bot replies follow the UI language
+  (`/статус`, `/温度 22.5`, `/睡眠温度 18` …), while English and the original Turkish commands stay
+  valid as aliases, and `/help` lists the command set of the active language.
 - **Wi-Fi settings** — home network SSID/password; the access point stays up for the relay unit.
 - **Boost** — +1.5 °C for 5 / 15 / 30 minutes.
 - **Sleep mode** — alternative setpoint inside an NTP-based time window.

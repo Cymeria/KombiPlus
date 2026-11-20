@@ -219,7 +219,9 @@ OLED'in gömülü fontu yalnızca ASCII bastığı için ekran metinleri **en/tr
 olduğu gibi yerelleşir (Türkçe karakterler ASCII karşılıklarıyla: `ISITIYOR`,
 `BAGLI`). Rusça, Japonca, Korece ve Çince seçildiğinde web arayüzü tam çevrilidir,
 OLED ise İngilizce etiket kullanır — 128×64 ekranda CJK glifleri için yer yoktur.
-Telegram komutları Türkçe kalır.
+Telegram komutları ve yanıtları seçilen dili izler (CJK dilleri dahil): komut adları o
+dilde çalışır, İngilizce ve eski Türkçe adlar her zaman kabul edilir; `/yardim` listesi de
+seçilen dilde gelir.
 
 ### OLED sayfaları
 
