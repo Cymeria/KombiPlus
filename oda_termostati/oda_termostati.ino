@@ -158,6 +158,8 @@ String wifiPass = "";
 String themeId = "klasik";   // aktif OLED temasi (/themes/<id>.txt)
 String uiLang = "";          // arayuz dili: en/tr/ru/es/pt/ja/ko/zh (bos = secilmedi)
 uint8_t langCursor = 0;      // ilk acilista OLED dil secimi imleci
+bool langPrompt = false;     // dil secimi sorulsun mu (yalnizca yeni cihazda)
+int8_t langMarker = -1;      // config'teki langset= degeri (-1: anahtar yok = eski kurulum)
 bool fsReady = false;
 
 // ---- MQTT ----
@@ -433,8 +435,11 @@ uint8_t langIndex(const String &code) {
   return 0xFF;
 }
 
+// Dil secimi yalnizca yeni cihazda (ayar dosyasi hic yokken) bir kez sorulur.
+// Guncelleme alan cihazlarin ayarlari korunur; dil sorulmaz, arayuz Ingilizce
+// baslar ve dil web arayuzundeki Dil kartindan degistirilebilir.
 bool langChosen() {
-  return uiLang.length() > 0;
+  return !langPrompt;
 }
 
 void defaultSettings() {
@@ -494,6 +499,7 @@ void applyConfigKV(const String &key, const String &val) {
   else if (key == "failsafe")   cfg.relayFailSafeOn = val.toInt() ? 1 : 0;
   else if (key == "theme")      themeId = val;
   else if (key == "lang")       uiLang = val;
+  else if (key == "langset")    langMarker = val.toInt() ? 1 : 0;
   else if (key == "wifissid")   wifiSsid = val;
   else if (key == "wifipass")   wifiPass = val;
   else if (key == "mqtthost")   mqttHost = val;
@@ -510,6 +516,7 @@ bool loadConfigFromFs() {
   File f = LittleFS.open(CFG_FILE, "r");
   if (!f) return false;
 
+  uint16_t keys = 0;
   while (f.available()) {
     String line = f.readStringUntil('\n');
     line.trim();
@@ -522,9 +529,10 @@ bool loadConfigFromFs() {
     v.trim();
     if (k == "ver") continue;
     applyConfigKV(k, v);
+    keys++;
   }
   f.close();
-  return true;
+  return keys > 0;   // bos dosya "ayar yok" sayilir
 }
 
 bool loadLegacyEeprom() {
@@ -551,8 +559,10 @@ void loadSettings() {
   defaultSettings();
 
   bool loaded = loadConfigFromFs();
+  bool freshDevice = !loaded;            // ayar dosyasi yok/bos => yeni cihaz
   if (!loaded) {
     if (loadLegacyEeprom()) {
+      freshDevice = false;               // eski kurulum EEPROM'dan tasindi
       Serial.println(F("Ayar EEPROM'dan LittleFS'ye tasindi."));
     } else {
       Serial.println(F("Ayar dosyasi yok, varsayilanlar kullaniliyor."));
@@ -561,6 +571,11 @@ void loadSettings() {
     saveSettings();
   }
   sanitizeSettings();
+
+  // Yeni cihazda bir kez sorulur. Guncelleme alan cihazlarda (langset anahtari
+  // yok) sorulmaz, secim yapilmis sayilir ve mevcut dil korunur.
+  langPrompt = freshDevice || langMarker == 0;
+  if (!langPrompt) langMarker = 1;
 
   Serial.printf("Ayar: sp=%.1f hyst=%.1f cal=%.1f frost=%.1f mode=%u\n",
                 cfg.setpoint, cfg.hysteresis, cfg.calibration, cfg.frost, cfg.mode);
@@ -588,6 +603,7 @@ void saveSettings() {
   s += "failsafe=" + String(cfg.relayFailSafeOn) + "\n";
   s += "theme=" + themeId + "\n";
   s += "lang=" + uiLang + "\n";
+  s += "langset=" + String(langPrompt ? 0 : 1) + "\n";
   s += "wifissid=" + wifiSsid + "\n";
   s += "wifipass=" + wifiPass + "\n";
   s += "mqtthost=" + mqttHost + "\n";
@@ -905,11 +921,15 @@ bool applySetting(const String &key, String val) {
   } else if (key == "lang") {
     if (val.length() == 0) {
       if (uiLang.length()) { uiLang = ""; ch = true; }
+      langPrompt = true;             // dil temizlendi: secim ekrani yeniden gelir
+      langMarker = 0;
     } else if (langIndex(val) != 0xFF) {
       String v = val;
       v.trim();
       v.toLowerCase();
       if (v != uiLang) { uiLang = v; ch = true; }
+      langPrompt = false;            // dil artik secili
+      langMarker = 1;
     }
     Serial.printf("Dil: %s\n", uiLang.length() ? uiLang.c_str() : "secili degil");
   }
@@ -1117,6 +1137,8 @@ void handleEncoderButton() {
         // Dil secimi: kisa basista onayla, kalici olarak kaydet
         if (dur >= 40UL) {
           uiLang = LANG_CODES[langCursor];
+          langPrompt = false;
+          langMarker = 1;
           markSettingsDirty();
           oledPage = 0;
           Serial.printf("Dil secildi: %s\n", uiLang.c_str());
@@ -1608,6 +1630,7 @@ void handleApiStatus() {
   j = "{";
   j += "\"fw\":\"" FW_VERSION "\",";
   j += "\"lang\":\"" + uiLang + "\",";
+  j += "\"ask\":";   j += String(langPrompt ? 1 : 0); j += ",";
   j += "\"theme\":\"" + String(themeStore.active().id) + "\",";
   j += "\"temp\":";    j += sensorOk ? String(currentTemp, 1) : String("null"); j += ",";
   j += "\"hum\":";     j += (sensorOk && !isnan(currentHum)) ? String(currentHum, 0) : String("null"); j += ",";

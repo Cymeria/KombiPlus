@@ -204,10 +204,16 @@ Yön ters geliyorsa koddaki `ENCODER_REVERSE` değerini `1` yapın.
 - **Sistem:** IP, sinyal, boş bellek, sürüm, saat, geçmiş, LittleFS doluluk,
   yeniden başlatma, **dil seçimi** (`lang=en|tr|ru|es|pt|ja|ko|zh`)
 
-**Dil seçimi:** İlk açılışta (ayar dosyasında `lang` yokken) OLED dil seçimi ekranı
- gelir: encoder ile diller arasında dolaşın, kısa basışla onaylayın. Aynı anda web
- arayüzü de tam ekran bir dil seçici açar. Seçim kalıcıdır; sonradan web
- arayüzündeki **Dil** kartından veya `/api/set?lang=tr` ile değiştirilebilir.
+**Dil seçimi:** Yalnızca **yeni cihazda** (LittleFS'de `/config.txt` yokken) OLED dil
+seçimi ekranı gelir: encoder ile diller arasında dolaşın, kısa basışla onaylayın. Aynı
+anda web arayüzü de tam ekran bir dil seçici açar. Seçim `lang=` ve `langset=1`
+olarak kalıcıdır; sonradan web arayüzündeki **Dil** kartından veya
+`/api/set?lang=tr` ile değiştirilebilir.
+
+Daha eski bir sürümden güncellenen cihazlarda ayar dosyası zaten bulunduğu için dil
+sorulmaz: ayarlar korunur, arayüz İngilizce açılır ve web arayüzü siz Dil kartından
+seçim yapana kadar tarayıcı dilini kullanır (`/api/status` içindeki `ask` alanı `0`
+olur). Yeni cihazda seçim yapılmazsa soru sonraki açılışlarda tekrarlanır.
 
 OLED'in gömülü fontu yalnızca ASCII bastığı için ekran metinleri **en/tr/es/pt**
 olduğu gibi yerelleşir (Türkçe karakterler ASCII karşılıklarıyla: `ISITIYOR`,

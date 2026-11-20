@@ -97,6 +97,11 @@ dosyasına çift tıklamak yeterlidir. Demo, tarayıcı içinde sahte bir API ç
   İlk açılışta oda ünitesi dil sorar (OLED: çevir–seç, bas–onayla; web: tam ekran seçim) ve `lang=`
   olarak saklar; sonradan **Dil** kartından değiştirilir. OLED etiketleri gömülü font ASCII
   olduğu için en/tr/es/pt kapsar, diğer dillerde ekran İngilizceye düşer.
+
+  Dil seçimi **yalnızca yeni cihazlarda** çıkar: `/config.txt` dosyası olmayan kart sorar (dil
+  seçilene kadar her açılışta), eski sürümden güncellenen cihaz ise ayarlarını korur ve soru
+  sormadan İngilizce açılır — web arayüzü siz **Dil** kartından seçim yapana kadar tarayıcı dilini
+  kullanır. Cevap `lang=` yanına `langset=1` olarak yazılır, böylece güncellemede tekrar sorulmaz.
 - **Uyku modu:** saat aralığında farklı hedef (NTP saati)
 - **MQTT:** retained durum JSON'u + `anahtar=değer` komutları
 - **Telegram botu:** durum ve kontrol, yalnızca tanımlı sohbet

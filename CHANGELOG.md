@@ -27,6 +27,10 @@ First stable release. Both devices report `FW 1.0.0`.
   `lang=` in `/config.txt`; it is also exposed by `/api/set?lang=xx` and `/api/status`. OLED
   labels are localized for en/tr/es/pt because the built-in font is ASCII-only; other languages
   fall back to English on the display.
+- **First-boot picker only on new devices** — the language question is tied to a `langset=` marker
+  next to `lang=`, so a unit updating from an earlier firmware keeps its settings, boots into
+  English without a prompt and can pick a language later in the *Language* card. A board with no
+  `/config.txt` is asked again on every boot until a language is chosen.
 - **Wi-Fi settings** — home network SSID/password; the access point stays up for the relay unit.
 - **Boost** — +1.5 °C for 5 / 15 / 30 minutes.
 - **Sleep mode** — alternative setpoint inside an NTP-based time window.

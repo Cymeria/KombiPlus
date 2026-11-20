@@ -101,6 +101,12 @@ by double-clicking it. It runs a mock API inside the browser, so nothing is inst
   web UI: full-screen picker) and keeps it as `lang=`; change it any time from the *Language*
   card. OLED labels cover en/tr/es/pt — the built-in font is ASCII-only, so other languages fall
   back to English on the display.
+
+  The picker is for **new devices only**: a board with no `/config.txt` yet asks (and keeps asking
+  until a language is chosen), while a unit updating from an earlier firmware keeps its existing
+  settings and boots straight into English without a prompt — the web UI then follows the browser
+  language until a language is picked in the *Language* card. The answer is recorded as
+  `langset=1` next to `lang=` so an upgrade never re-asks.
 - **Sleep mode** — a different setpoint inside a time window (NTP clock)
 - **MQTT** — retained status JSON + `key=value` commands
 - **Telegram bot** — status and control, restricted to one chat ID

@@ -552,7 +552,7 @@ async function poll(){
       let local = '';
       try{ local = localStorage.getItem('kombiLang') || ''; }catch(e){}
       applyLang(S.lang || local || guessLang());
-      if(!S.lang) showLangModal();
+      if(S.ask) showLangModal();
     }
     render();
   }catch(e){
@@ -658,7 +658,7 @@ async function saveWifi(){
     toast(t('wifiSaved'));
     setPill('warn', t('restarting'));
     setTimeout(() => { location.reload(); }, 9000);
-  }catch(e){ toast('Kaydedilemedi', true); }
+  }catch(e){ toast(t('saveError'), true); }
 }
 
 async function reboot(){
@@ -908,7 +908,7 @@ function applyLang(code){
 async function pickLang(code){
   applyLang(code);
   hideLangModal();
-  if(S) S.lang = code;
+  if(S) { S.lang = code; S.ask = 0; }
   try{
     await api('/api/set?lang=' + encodeURIComponent(code));
     toast(t('saved'));

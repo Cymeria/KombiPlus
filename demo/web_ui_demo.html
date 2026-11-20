@@ -408,7 +408,7 @@ select:focus{border-color:var(--acc)}
     demand: true, relay: true, boost: 0,
     ip: '192.168.1.57', apip: '192.168.4.1', ssid: 'EvWifi',
     rssi: -58, client: '192.168.4.2', uptime: 8040, heap: 38200,
-    fw: '1.0.0', lang: '', hyst: 0.3, cal: 0, frost: 5.0,
+    fw: '1.0.0', lang: '', ask: 1, hyst: 0.3, cal: 0, frost: 5.0,
     sleepEn: 1, sleep: 1, sleepStart: '23:00', sleepEnd: '07:00', sleepSp: 18.0,
     failsafe: 0, mqtt: 1, mqttCfg: '192.168.1.10', mqttPort: 1883, mqttPrefix: 'kombi',
     tg: 1, tgOk: 12, tgErr: '', tgChat: '123456789',
@@ -491,7 +491,7 @@ select:focus{border-color:var(--acc)}
       if (q.has('sleepend')) MOCK.sleepEnd = q.get('sleepend');
       if (q.has('sleepsp')) MOCK.sleepSp = Number(q.get('sleepsp'));
       if (q.has('failsafe')) MOCK.failsafe = Number(q.get('failsafe')) ? 1 : 0;
-      if (q.has('lang')) MOCK.lang = q.get('lang');
+      if (q.has('lang')) { MOCK.lang = q.get('lang'); MOCK.ask = 0; }
       tick();
       return ok(MOCK);
     }
@@ -700,7 +700,7 @@ async function poll(){
       let local = '';
       try{ local = localStorage.getItem('kombiLang') || ''; }catch(e){}
       applyLang(S.lang || local || guessLang());
-      if(!S.lang) showLangModal();
+      if(S.ask) showLangModal();
     }
     render();
   }catch(e){
@@ -806,7 +806,7 @@ async function saveWifi(){
     toast(t('wifiSaved'));
     setPill('warn', t('restarting'));
     setTimeout(() => { location.reload(); }, 9000);
-  }catch(e){ toast('Kaydedilemedi', true); }
+  }catch(e){ toast(t('saveError'), true); }
 }
 
 async function reboot(){
@@ -1056,7 +1056,7 @@ function applyLang(code){
 async function pickLang(code){
   applyLang(code);
   hideLangModal();
-  if(S) S.lang = code;
+  if(S) { S.lang = code; S.ask = 0; }
   try{
     await api('/api/set?lang=' + encodeURIComponent(code));
     toast(t('saved'));
