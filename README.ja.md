@@ -1,8 +1,8 @@
 <div align="center">
-  <img src="docs/images/banner.svg" alt="Kombi Termostat v1.0.0 — ESP8266 2 台構成の Wi-Fi ルームサーモスタット" width="100%">
+  <img src="docs/images/banner.svg" alt="KombiPlus v1.0.0 — ESP8266 2 台構成の Wi-Fi ルームサーモスタット" width="100%">
 </div>
 
-<h1 align="center">Kombi Termostat</h1>
+<h1 align="center">KombiPlus</h1>
 
 <p align="center">
   <strong>ガス給湯暖房機（コンビボイラー）向け、2 台構成の Wi-Fi ルームサーモスタット。</strong><br>
@@ -38,7 +38,7 @@
 ## 動作の仕組み
 
 ```
-┌─────────────────────────┐        Wi-Fi AP (TERMOSTAT-AP)        ┌──────────────────────┐
+┌─────────────────────────┐        Wi-Fi AP (KombiPlus)        ┌──────────────────────┐
 │  室内ユニット            │◄─────────────────────────────────────►│  ボイラーリレーユニット │
 │  NodeMCU v3             │   TCP 8266: SET heat=0/1 sp=...      │  NodeMCU v3 + リレー  │
 │  DHT11/22 または DS18B20 │◄──────────────────────────────────────│  オプション DS18B20   │
@@ -143,11 +143,11 @@
 
 | 室内ユニット | GPIO | 接続先 |
 |--------------|------|--------|
-| D1 | GPIO5 | OLED SCL |
-| D2 | GPIO4 | OLED SDA |
+| D5 | GPIO14 | OLED SCL |
+| D6 | GPIO12 | OLED SDA |
 | D4 | GPIO2 | センサー DATA（DHT または DS18B20） |
-| D5 | GPIO14 | エンコーダ CLK |
-| D6 | GPIO12 | エンコーダ DT |
+| D1 | GPIO5 | エンコーダ CLK |
+| D2 | GPIO4 | エンコーダ DT |
 | D7 | GPIO13 | エンコーダ SW（ボタン） |
 
 | リレーユニット | GPIO | 接続先 |
@@ -216,12 +216,12 @@ kombi/
 
 ```cpp
 // oda_termostati.ino
-#define AP_SSID  "TERMOSTAT-AP"
-#define AP_PASS  "termostat123"
+#define AP_SSID  "KombiPlus"
+#define AP_PASS  "Ck.073214"
 
 // kombi_rolesi.ino
-#define TERMOSTAT_AP_SSID  "TERMOSTAT-AP"
-#define TERMOSTAT_AP_PASS  "termostat123"
+#define TERMOSTAT_AP_SSID  "KombiPlus"
+#define TERMOSTAT_AP_PASS  "Ck.073214"
 ```
 
 室内ユニットのセンサーを選択:
@@ -240,7 +240,7 @@ kombi/
 
 1. まず**リレーユニット**を書き込みます（ボイラーへの接点接続はまだ行わない）。
 2. 次に**室内ユニット**を書き込みます。
-3. `TERMOSTAT-AP`（パスワード `termostat123`）に接続し、`http://192.168.4.1` を開きます。
+3. `KombiPlus`（パスワード `Ck.073214`）に接続し、`http://192.168.4.1` を開きます。
 4. リレーのシリアルログに `Oda unitesine baglandi.`、Web UI に **Kombi bağlı** が出れば OK。
 5. テスト後、リレー接点のボイラー接続は**有資格の技術者**に依頼してください。
 

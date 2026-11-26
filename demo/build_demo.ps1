@@ -26,7 +26,7 @@ $stub = @'
     demand: true, relay: true, boost: 0,
     ip: '192.168.1.57', apip: '192.168.4.1', ssid: 'EvWifi',
     rssi: -58, client: '192.168.4.2', uptime: 8040, heap: 38200,
-    fw: '1.0.0', lang: '', ask: 1, hyst: 0.3, cal: 0, frost: 5.0,
+    fw: '1.0.0', lang: '', ask: 1, setup: 1, hyst: 0.3, cal: 0, frost: 5.0,
     sleepEn: 1, sleep: 1, sleepStart: '23:00', sleepEnd: '07:00', sleepSp: 18.0,
     failsafe: 0, mqtt: 1, mqttCfg: '192.168.1.10', mqttPort: 1883, mqttPrefix: 'kombi',
     tg: 1, tgOk: 12, tgErr: '', tgChat: '123456789',
@@ -164,7 +164,12 @@ $stub = @'
         { s: 'TP-LINK_9F2C', r: -88, e: 1 }
       ] });
     }
-    if (path === '/api/wifi' || path === '/api/reboot') return ok({ ok: true });
+    if (path === '/api/wifi') {
+      MOCK.ssid = body.get('ssid') || '';
+      MOCK.setup = MOCK.ssid ? 0 : 1;
+      return ok({ ok: true, reboot: true });
+    }
+    if (path === '/api/reboot') return ok({ ok: true });
     return ok(MOCK);
   };
 

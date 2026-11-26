@@ -1,8 +1,8 @@
 <div align="center">
-  <img src="docs/images/banner.svg" alt="Kombi Termostat v1.0.0 — termostato de habitación Wi-Fi de dos módulos ESP8266" width="100%">
+  <img src="docs/images/banner.svg" alt="KombiPlus v1.0.0 — termostato de habitación Wi-Fi de dos módulos ESP8266" width="100%">
 </div>
 
-<h1 align="center">Kombi Termostat</h1>
+<h1 align="center">KombiPlus</h1>
 
 <p align="center">
   <strong>Termostato de habitación Wi-Fi de dos módulos para calderas de gas.</strong><br>
@@ -38,7 +38,7 @@
 ## Cómo funciona
 
 ```
-┌─────────────────────────┐        Wi-Fi AP (TERMOSTAT-AP)        ┌──────────────────────┐
+┌─────────────────────────┐        Wi-Fi AP (KombiPlus)        ┌──────────────────────┐
 │  UNIDAD DE HABITACIÓN   │◄─────────────────────────────────────►│  UNIDAD DE RELÉ      │
 │  NodeMCU v3             │   TCP 8266: SET heat=0/1 sp=...      │  NodeMCU v3 + relé   │
 │  DHT11/22 o DS18B20     │◄──────────────────────────────────────│  DS18B20 opcional    │
@@ -148,11 +148,11 @@ con doble clic. La demo ejecuta una API simulada dentro del navegador.
 
 | Unidad de habitación | GPIO | Conexión |
 |----------------------|------|----------|
-| D1 | GPIO5 | OLED SCL |
-| D2 | GPIO4 | OLED SDA |
+| D5 | GPIO14 | OLED SCL |
+| D6 | GPIO12 | OLED SDA |
 | D4 | GPIO2 | DATA del sensor (DHT o DS18B20) |
-| D5 | GPIO14 | Encoder CLK |
-| D6 | GPIO12 | Encoder DT |
+| D1 | GPIO5 | Encoder CLK |
+| D2 | GPIO4 | Encoder DT |
 | D7 | GPIO13 | Encoder SW (pulsador) |
 
 | Unidad de relé | GPIO | Conexión |
@@ -221,12 +221,12 @@ kombi/
 
 ```cpp
 // oda_termostati.ino
-#define AP_SSID  "TERMOSTAT-AP"
-#define AP_PASS  "termostat123"
+#define AP_SSID  "KombiPlus"
+#define AP_PASS  "Ck.073214"
 
 // kombi_rolesi.ino
-#define TERMOSTAT_AP_SSID  "TERMOSTAT-AP"
-#define TERMOSTAT_AP_PASS  "termostat123"
+#define TERMOSTAT_AP_SSID  "KombiPlus"
+#define TERMOSTAT_AP_PASS  "Ck.073214"
 ```
 
 Elige el sensor en la unidad de habitación:
@@ -245,7 +245,7 @@ Módulo de relé activo alto:
 
 1. Flashea primero la **unidad de relé** (sin conectar el contacto a la caldera).
 2. Flashea la **unidad de habitación**.
-3. Conéctate a `TERMOSTAT-AP` (contraseña `termostat123`) y abre `http://192.168.4.1`.
+3. Conéctate a `KombiPlus` (contraseña `Ck.073214`) y abre `http://192.168.4.1`.
 4. El registro del relé mostrará `Oda unitesine baglandi.` y la web **Kombi bağlı**.
 5. Solo después de probar, pide a un **técnico autorizado** que conecte el contacto del relé
    a la bornera del termostato de la caldera.

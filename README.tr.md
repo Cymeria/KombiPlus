@@ -1,8 +1,8 @@
 <div align="center">
-  <img src="docs/images/banner.svg" alt="Kombi Termostat v1.0.0 — iki cihazlı ESP8266 oda termostatı" width="100%">
+  <img src="docs/images/banner.svg" alt="KombiPlus v1.0.0 — iki cihazlı ESP8266 oda termostatı" width="100%">
 </div>
 
-<h1 align="center">Kombi Termostat</h1>
+<h1 align="center">KombiPlus</h1>
 
 <p align="center">
   <strong>Doğalgaz kombileri için iki cihazlı, Wi‑Fi tabanlı oda termostatı.</strong><br>
@@ -38,7 +38,7 @@
 ## Nasıl çalışır?
 
 ```
-┌─────────────────────────┐        Wi-Fi AP (TERMOSTAT-AP)        ┌──────────────────────┐
+┌─────────────────────────┐        Wi-Fi AP (KombiPlus)        ┌──────────────────────┐
 │  ODA ÜNİTESİ            │◄─────────────────────────────────────►│  KOMBİ RÖLE ÜNİTESİ  │
 │  NodeMCU v3             │   TCP 8266: SET heat=0/1 sp=...      │  NodeMCU v3 + röle   │
 │  DHT11/22 veya DS18B20  │◄──────────────────────────────────────│  ops. DS18B20        │
@@ -51,6 +51,11 @@
 
 - Oda ünitesi **her zaman** kendi Wi‑Fi ağını (AP) yayınlar. Telefonla bu ağa bağlanıp
   `192.168.4.1` adresinden kontrol edilir; uygulama, bulut veya hesap gerekmez.
+- **Captive portal:** bu ağa bağlanan cihazda arayüz kendiliğinden açılır. Tüm DNS sorguları
+  cihaza çözülür, işletim sisteminin kontrol adresleri (`/generate_204`, `/hotspot-detect.html`,
+  `/ncsi.txt`, …) arayüze yönlendirilir.
+- **Web'den ilk kurulum:** yeni cihazda aynı sayfa bir kurulum kartı açar; dil ve ev ağı
+  tarayıcıdan ayarlanır. Encoder/buton kullanmak zorunlu değildir.
 - İstenirse oda ünitesi ev ağına da (STA) bağlanır. AP kapanmaz, çünkü röle ünitesi ona bağlıdır.
 - Oda ünitesi sıcaklık + hedef + histerezise göre ısı talebini hesaplar ve her 2 saniyede
   röle ünitesine gönderir.
@@ -150,11 +155,11 @@ dosyasına çift tıklamak yeterlidir. Demo, tarayıcı içinde sahte bir API ç
 
 | Oda ünitesi | GPIO | Bağlantı |
 |-------------|------|----------|
-| D1 | GPIO5 | OLED SCL |
-| D2 | GPIO4 | OLED SDA |
+| D5 | GPIO14 | OLED SCL |
+| D6 | GPIO12 | OLED SDA |
 | D4 | GPIO2 | Sensör DATA (DHT veya DS18B20) |
-| D5 | GPIO14 | Encoder CLK |
-| D6 | GPIO12 | Encoder DT |
+| D1 | GPIO5 | Encoder CLK |
+| D2 | GPIO4 | Encoder DT |
 | D7 | GPIO13 | Encoder SW (buton) |
 
 | Röle ünitesi | GPIO | Bağlantı |
@@ -224,12 +229,12 @@ kombi/
 
 ```cpp
 // oda_termostati.ino
-#define AP_SSID  "TERMOSTAT-AP"
-#define AP_PASS  "termostat123"
+#define AP_SSID  "KombiPlus"
+#define AP_PASS  "Ck.073214"
 
 // kombi_rolesi.ino
-#define TERMOSTAT_AP_SSID  "TERMOSTAT-AP"
-#define TERMOSTAT_AP_PASS  "termostat123"
+#define TERMOSTAT_AP_SSID  "KombiPlus"
+#define TERMOSTAT_AP_PASS  "Ck.073214"
 ```
 
 Oda ünitesinde sensörü seçin:
@@ -248,7 +253,7 @@ Aktif‑high röle kartı:
 
 1. Önce **röle ünitesini** yükleyin (kontağı kombiye bağlamayın).
 2. Sonra **oda ünitesini** yükleyin.
-3. `TERMOSTAT-AP` ağına bağlanın (şifre `termostat123`), `http://192.168.4.1` adresini açın.
+3. `KombiPlus` ağına bağlanın (şifre `Ck.073214`), `http://192.168.4.1` adresini açın.
 4. Röle seri logunda `Oda unitesine baglandi.` yazmalı; arayüzde **Kombi bağlı** görünür.
 5. Testten sonra röle kontağını kombinin termostat klemensine **yetkili servise** bağlatın.
 

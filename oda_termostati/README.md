@@ -17,7 +17,11 @@ web arayüzüne sahip oda ünitesi.
 - **0.96" SSD1306 OLED** (128×64, I²C): sıcaklık, hedef, durum, ağ ve bilgi sayfaları
 - **Rotary encoder (KY‑040):** döndürerek hedef sıcaklık, kısa basış sayfa değiştirme,
   uzun basış mod aç/kapat
-- **AP + STA birlikte:** her zaman `TERMOSTAT-AP` yayını; istenirse ev ağına da bağlanır
+- **AP + STA birlikte:** her zaman `KombiPlus` yayını; istenirse ev ağına da bağlanır
+- **Captive portal:** AP'ye bağlanan telefon/PC'de web arayüzü kendiliğinden açılır
+  (tüm DNS sorguları cihaza çözülür, işletim sistemi kontrol adresleri 302 ile yönlendirilir)
+- **Web'den ilk kurulum:** dil ve ev ağı bilgileri tarayıcıdan girilir; encoder/buton
+  kullanmak zorunlu değildir (yeni cihazda kurulum kartı otomatik açılır)
 - **Mobil uyumlu web arayüzü:** hedef sıcaklık, mod, boost, uyku modu, röle
   davranışı, MQTT/Telegram, sıcaklık geçmişi grafiği, histerezis, kalibrasyon,
   don koruması, Wi‑Fi ayarları, sistem bilgisi
@@ -58,15 +62,18 @@ web arayüzüne sahip oda ünitesi.
 
 | NodeMCU | GPIO | Bağlantı | Not |
 |---------|------|----------|-----|
-| D1 | GPIO5 | OLED **SCL** | I²C saat |
-| D2 | GPIO4 | OLED **SDA** | I²C veri |
+| D5 | GPIO14 | OLED **SCL** | I²C saat |
+| D6 | GPIO12 | OLED **SDA** | I²C veri |
 | D4 | GPIO2 | Sensör **DATA** | DHT data veya DS18B20 data |
 | 3V3 | — | OLED VCC, encoder +, sensör VCC | 3.3 V |
 | GND | — | Ortak GND | Tüm modüller |
-| D5 | GPIO14 | Encoder **CLK** | Interrupt |
-| D6 | GPIO12 | Encoder **DT** | Interrupt |
+| D1 | GPIO5 | Encoder **CLK** | Interrupt |
+| D2 | GPIO4 | Encoder **DT** | Interrupt |
 | D7 | GPIO13 | Encoder **SW** | Buton, dahili pull‑up |
 | VIN/USB | — | 5 V besleme | Kart üzerinden |
+
+OLED varsayılan pinleri **SDA = D5**, **SCL = D6**'dır; farklı kablolama için
+`oda_termostati.ino` başındaki `PIN_SDA` / `PIN_SCL` satırlarını değiştirin.
 
 **DS18B20** kullanıyorsanız DATA–3V3 arasına **4.7 kΩ** pull‑up direnç takın.
 DHT11/DHT22 modülleri genelde pull‑up dahil gelir; çıplak sensörde 10 kΩ gerekir.
@@ -83,15 +90,15 @@ DHT11/DHT22 modülleri genelde pull‑up dahil gelir; çıplak sensörde 10 kΩ 
    OLED      |                      |      DHT22 / DS18B20
   GND  ------| GND                  |           VCC ---- 3V3
   VCC  ------| 3V3                  |           DATA --- D4
-  SCL  ------| D1  (GPIO5)          |           GND ---- GND
-  SDA  ------| D2  (GPIO4)          |
+  SCL  ------| D5  (GPIO14)         |           GND ---- GND
+  SDA  ------| D6  (GPIO12)         |
              |      NodeMCU v3      |
   Encoder    |                      |
   GND  ------| GND                  |
   +    ------| 3V3                  |
   SW   ------| D7  (GPIO13)         |
-  DT   ------| D6  (GPIO12)         |
-  CLK  ------| D5  (GPIO14)         |
+  DT   ------| D2  (GPIO4)          |
+  CLK  ------| D1  (GPIO5)          |
              +----------+-----------+
                         |
                     micro-USB 5V
@@ -158,8 +165,8 @@ otomatik derler; ayrıca Library Manager'dan kurmak gerekmez.
 ## 6. İlk Çalıştırma ve Wi‑Fi
 
 1. Kodu yükleyin, seri portu **115200** ile açın.
-2. Telefon/PC ile `TERMOSTAT-AP` ağına bağlanın.
-   - Şifre: `termostat123`
+2. Telefon/PC ile `KombiPlus` ağına bağlanın.
+   - Şifre: `Ck.073214`
 3. Tarayıcıda **http://192.168.4.1** adresini açın.
 4. OLED'de sıcaklık görünmeye başlar (sensör okuma ~3 sn).
 5. Ev ağına bağlamak için **Wi‑Fi Ayarları** bölümünü kullanın.
@@ -241,6 +248,13 @@ belirleyen küçük bir veri yapısıdır. Hedef kolonu olan temalarda hedef
 sıcaklık, üstünde `HEDEF` etiketi olmadan çerçeve içinde 2× boyutta gösterilir;
 durum satırı (`ISITIYOR` / `BEKLIYOR`) her temada yatay ortalanır.
 
+**Sarı üst bant:** 0.96" iki renkli SSD1306 modüllerinin üst **16 pikseli** her
+zaman sarı, alt kısmı mavidir. Bu nedenle temalar, hangi `header` stili seçilirse
+seçilsin sayfa başlığını bu bantta (y=0–15) tutar; sıcaklık ve diğer satırlar
+16. pikselin altında başlar. Sadece tek renkli (beyaz) panelde de aynı yerleşim
+geçerlidir, sadece renk ayrımı görünmez. Tüm sayfaların gövde satırları
+`OLED_BAND_H` (16) sabitinden türetilir.
+
 İlk açılışta (veya dosya silinmişse) `LittleFS` üzerinde şunlar oluşturulur:
 
 ```
@@ -253,7 +267,7 @@ durum satırı (`ISITIYOR` / `BEKLIYOR`) her temada yatay ortalanır.
 | Tema | Karakter |
 |------|----------|
 | `klasik` | Özgün yerleşim: çizgi başlık, 2× sıcaklık, talep barı |
-| `minimal` | Başlıksız, ortada 3× sıcaklık, sade durum metni |
+| `minimal` | Çizgisiz başlık, ortada 3× sıcaklık, sade durum metni |
 | `ters` | Negatif ekran, dolu başlık şeridi, ters durum şeridi |
 | `kutu` | Kutu başlık, çift ayırıcı, çerçeveli durum |
 | `genis` | 3× sıcaklık, çift ayırıcı, etiketsiz |
@@ -261,14 +275,14 @@ durum satırı (`ISITIYOR` / `BEKLIYOR`) her temada yatay ortalanır.
 | `retro` | Çift çizgi, noktalı ayırıcı, çerçeveli durum |
 | `durum` | Durum şeridi odaklı, hedef kolonu yok |
 | `kompakt` | Dolu başlık şeridi, kısa etiketler (`HD`) |
-| `dev` | Yalnızca dev sıcaklık + durum, sade |
+| `dev` | Sade başlık, dev sıcaklık + durum |
 
 Dosya biçimi `anahtar=değer` (web'de `/fs` üzerinden düzenlenebilir):
 
 ```ini
 id=klasik
 adi=Klasik
-header=1        # 0 yok, 1 tek çizgi, 2 çift çizgi, 3 kutu, 4 dolu şerit
+header=1        # 0 sade, 1 tek çizgi, 2 çift çizgi, 3 kutu, 4 dolu şerit (hepsi üst 16 px bantta)
 tempsize=2      # 2 veya 3 (yazı boyutu)
 tempcenter=0    # 1 = ortala
 setpointcol=1   # sağda çerçeveli büyük hedef (tempcenter=0 iken)

@@ -1,8 +1,8 @@
 <div align="center">
-  <img src="docs/images/banner.svg" alt="Kombi Termostat v1.0.0 — 双节点 ESP8266 Wi-Fi 室内温控器" width="100%">
+  <img src="docs/images/banner.svg" alt="KombiPlus v1.0.0 — 双节点 ESP8266 Wi-Fi 室内温控器" width="100%">
 </div>
 
-<h1 align="center">Kombi Termostat</h1>
+<h1 align="center">KombiPlus</h1>
 
 <p align="center">
   <strong>面向燃气壁挂炉的双节点 Wi-Fi 室内温控器。</strong><br>
@@ -38,7 +38,7 @@
 ## 工作原理
 
 ```
-┌─────────────────────────┐        Wi-Fi AP (TERMOSTAT-AP)        ┌──────────────────────┐
+┌─────────────────────────┐        Wi-Fi AP (KombiPlus)        ┌──────────────────────┐
 │  室内单元                │◄─────────────────────────────────────►│  锅炉继电器单元        │
 │  NodeMCU v3             │   TCP 8266: SET heat=0/1 sp=...      │  NodeMCU v3 + 继电器  │
 │  DHT11/22 或 DS18B20    │◄──────────────────────────────────────│  可选 DS18B20        │
@@ -142,11 +142,11 @@
 
 | 室内单元 | GPIO | 连接 |
 |----------|------|------|
-| D1 | GPIO5 | OLED SCL |
-| D2 | GPIO4 | OLED SDA |
+| D5 | GPIO14 | OLED SCL |
+| D6 | GPIO12 | OLED SDA |
 | D4 | GPIO2 | 传感器 DATA（DHT 或 DS18B20） |
-| D5 | GPIO14 | 编码器 CLK |
-| D6 | GPIO12 | 编码器 DT |
+| D1 | GPIO5 | 编码器 CLK |
+| D2 | GPIO4 | 编码器 DT |
 | D7 | GPIO13 | 编码器 SW（按键） |
 
 | 继电器单元 | GPIO | 连接 |
@@ -215,12 +215,12 @@ kombi/
 
 ```cpp
 // oda_termostati.ino
-#define AP_SSID  "TERMOSTAT-AP"
-#define AP_PASS  "termostat123"
+#define AP_SSID  "KombiPlus"
+#define AP_PASS  "Ck.073214"
 
 // kombi_rolesi.ino
-#define TERMOSTAT_AP_SSID  "TERMOSTAT-AP"
-#define TERMOSTAT_AP_PASS  "termostat123"
+#define TERMOSTAT_AP_SSID  "KombiPlus"
+#define TERMOSTAT_AP_PASS  "Ck.073214"
 ```
 
 在室内单元选择传感器：
@@ -239,7 +239,7 @@ kombi/
 
 1. 先烧录**继电器单元**（暂不接锅炉接点）。
 2. 再烧录**室内单元**。
-3. 连接 `TERMOSTAT-AP`（密码 `termostat123`），打开 `http://192.168.4.1`。
+3. 连接 `KombiPlus`（密码 `Ck.073214`），打开 `http://192.168.4.1`。
 4. 继电器串口应输出 `Oda unitesine baglandi.`，网页显示 **Kombi bağlı**。
 5. 测试完成后，请**持证技师**把继电器接点接到锅炉温控端子。
 

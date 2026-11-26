@@ -1,10 +1,10 @@
 /*
  * ============================================================================
- *  KOMBI TERMOSTATI - KOMBI ROLE UNITESI
+ *  KOMBIPLUS - KOMBI ROLE UNITESI
  *  NodeMCU v3 (ESP8266) + role modulu (+ opsiyonel DS18B20 su sensoru)
  *
  *  Bu cihaz:
- *    - Oda unitesinin AP'sine (TERMOSTAT-AP) baglanir
+ *    - Oda unitesinin AP'sine (KombiPlus) baglanir
  *    - TCP 8266 uzerinden gelen isi talebine gore kombi kontagini acar/kapatir
  *    - 5 dk boyunca komut gelmezse secilen fail-safe davranisi uygulanir
  *      (role kapanir veya son talep korunur; tercih EEPROM'da saklanir)
@@ -34,12 +34,12 @@
 #define LED_ACTIVE_LOW     1
 
 // Opsiyonel kombi su sensoru (waterproof DS18B20)
-#define FLOW_SENSOR_ENABLED 1
+#define FLOW_SENSOR_ENABLED 0
 #define FLOW_PIN            D2        // GPIO4, 4.7k pull-up 3V3'e
 
 // Oda unitesi AP bilgileri (oda kodu ile AYNI olmali!)
-#define TERMOSTAT_AP_SSID  "TERMOSTAT-AP"
-#define TERMOSTAT_AP_PASS  "termostat123"
+#define TERMOSTAT_AP_SSID  "KombiPlus"
+#define TERMOSTAT_AP_PASS  "Ck.073214"
 
 // Oda unitesinin AP uzerindeki sabit adresi
 #define SERVER_HOST        "192.168.4.1"
@@ -302,7 +302,7 @@ void setup() {
   Serial.begin(115200);
   delay(150);
   Serial.println();
-  Serial.println(F("=== Kombi Termostati - Role Unitesi ==="));
+  Serial.println(F("=== KombiPlusi - Role Unitesi ==="));
   Serial.println(F("FW " FW_VERSION));
 
   pinMode(RELAY_PIN, OUTPUT);

@@ -1,8 +1,8 @@
 <div align="center">
-  <img src="docs/images/banner.svg" alt="Kombi Termostat v1.0.0 — two-node ESP8266 room thermostat" width="100%">
+  <img src="docs/images/banner.svg" alt="KombiPlus v1.0.0 — two-node ESP8266 room thermostat" width="100%">
 </div>
 
-<h1 align="center">Kombi Termostat</h1>
+<h1 align="center">KombiPlus</h1>
 
 <p align="center">
   <strong>A two-node, Wi-Fi room thermostat for gas combi boilers.</strong><br>
@@ -39,7 +39,7 @@
 ## How it works
 
 ```
-┌─────────────────────────┐        Wi-Fi AP (TERMOSTAT-AP)        ┌──────────────────────┐
+┌─────────────────────────┐        Wi-Fi AP (KombiPlus)        ┌──────────────────────┐
 │  ROOM UNIT              │◄─────────────────────────────────────►│  BOILER RELAY UNIT   │
 │  NodeMCU v3             │   TCP 8266: SET heat=0/1 sp=...      │  NodeMCU v3 + relay  │
 │  DHT11/22 or DS18B20    │◄──────────────────────────────────────│  optional DS18B20    │
@@ -52,6 +52,11 @@
 
 - The room unit **always** broadcasts its own Wi-Fi access point. Connect a phone to it
   and open `192.168.4.1` — no app, no cloud, no account.
+- **Captive portal:** joining that access point opens the interface automatically. Every DNS
+  query resolves to the device and the operating system's connectivity probes
+  (`/generate_204`, `/hotspot-detect.html`, `/ncsi.txt`, …) are redirected to the UI.
+- **Web-based first setup:** the same page shows a setup card on a new device, so the language
+  and the home Wi-Fi can be configured from the browser — the encoder is optional.
 - Optionally it also joins the home network (STA). The access point never turns off,
   because the relay unit depends on it.
 - The room unit computes heat demand from temperature, setpoint and hysteresis and
@@ -155,11 +160,11 @@ by double-clicking it. It runs a mock API inside the browser, so nothing is inst
 
 | Room unit | GPIO | Connects to |
 |-----------|------|-------------|
-| D1 | GPIO5 | OLED SCL |
-| D2 | GPIO4 | OLED SDA |
+| D5 | GPIO14 | OLED SCL |
+| D6 | GPIO12 | OLED SDA |
 | D4 | GPIO2 | Sensor DATA (DHT or DS18B20) |
-| D5 | GPIO14 | Encoder CLK |
-| D6 | GPIO12 | Encoder DT |
+| D1 | GPIO5 | Encoder CLK |
+| D2 | GPIO4 | Encoder DT |
 | D7 | GPIO13 | Encoder SW (button) |
 
 | Relay unit | GPIO | Connects to |
@@ -229,12 +234,12 @@ Use the **same access point credentials in both sketches**:
 
 ```cpp
 // oda_termostati.ino
-#define AP_SSID  "TERMOSTAT-AP"
-#define AP_PASS  "termostat123"
+#define AP_SSID  "KombiPlus"
+#define AP_PASS  "Ck.073214"
 
 // kombi_rolesi.ino
-#define TERMOSTAT_AP_SSID  "TERMOSTAT-AP"
-#define TERMOSTAT_AP_PASS  "termostat123"
+#define TERMOSTAT_AP_SSID  "KombiPlus"
+#define TERMOSTAT_AP_PASS  "Ck.073214"
 ```
 
 Pick the sensor in the room unit:
@@ -253,7 +258,7 @@ Active-high relay boards:
 
 1. Flash the **relay unit** first (leave the boiler contact disconnected).
 2. Flash the **room unit**.
-3. Join `TERMOSTAT-AP` (password `termostat123`) and open `http://192.168.4.1`.
+3. Join `KombiPlus` (password `Ck.073214`) and open `http://192.168.4.1`.
 4. The relay serial log should print `Oda unitesine baglandi.` and the web UI shows **Boiler linked**.
 5. Only after testing, have a **qualified technician** connect the relay contact to the
    boiler thermostat terminal.

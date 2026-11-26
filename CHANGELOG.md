@@ -4,6 +4,32 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- **Captive portal** — the room unit resolves every DNS name to itself while the access point is
+  up (`DNSServer`) and answers the Windows/Android/iOS/macOS connectivity probes with a 302, so a
+  phone or laptop that joins `KombiPlus` opens the web UI by itself.
+- **Web-based first setup** — `/api/status` now reports `setup` (1 when no home network is
+  configured) and the web UI opens a setup card with a Wi-Fi scan, SSID and password fields.
+  Language and network can be configured entirely from the browser; the encoder is optional.
+- **CI:** `.github/workflows/build.yml` compiles both sketches with arduino-cli
+  (ESP8266 core 3.1.2) on every push.
+
+### Changed
+
+- **OLED themes: yellow top band** — two-colour SSD1306 modules paint the first 16 px yellow,
+  so every theme now keeps the page header inside `0..15` (`OLED_BAND_H`) and starts the body at
+  y=16. `header=0` means a plain title instead of no header; the filled bar, box and lines are
+  drawn at the bottom of the band. Info pages were re-laid out on an 8 px grid inside the band
+  limit. Theme files/comments and the theme table in `oda_termostati/README.md` updated.
+- **Web UI scan helper** — the first-setup card and the Wi-Fi card now share one `scanInto()`
+  helper instead of duplicating the `/api/scan` list rendering.
+- The product is named **KombiPlus** in the firmware banner, web UI, READMEs and banner image.
+- Room-unit wiring documentation now matches the firmware defaults: **OLED SDA = D5, SCL = D6**
+  and the encoder on **D1/D2** (CLK/DT). Pin comments corrected (D5 = GPIO14, D6 = GPIO12).
+
 ## [1.0.0] — 2026-11-19
 
 First stable release. Both devices report `FW 1.0.0`.

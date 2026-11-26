@@ -1,8 +1,8 @@
 <div align="center">
-  <img src="docs/images/banner.svg" alt="Kombi Termostat v1.0.0 — ESP8266 2개 구성 Wi-Fi 실내 온도조절기" width="100%">
+  <img src="docs/images/banner.svg" alt="KombiPlus v1.0.0 — ESP8266 2개 구성 Wi-Fi 실내 온도조절기" width="100%">
 </div>
 
-<h1 align="center">Kombi Termostat</h1>
+<h1 align="center">KombiPlus</h1>
 
 <p align="center">
   <strong>가스 보일러용 2개 구성 Wi-Fi 실내 온도조절기.</strong><br>
@@ -38,7 +38,7 @@
 ## 동작 방식
 
 ```
-┌─────────────────────────┐        Wi-Fi AP (TERMOSTAT-AP)        ┌──────────────────────┐
+┌─────────────────────────┐        Wi-Fi AP (KombiPlus)        ┌──────────────────────┐
 │  실내 유닛               │◄─────────────────────────────────────►│  보일러 릴레이 유닛    │
 │  NodeMCU v3             │   TCP 8266: SET heat=0/1 sp=...      │  NodeMCU v3 + 릴레이  │
 │  DHT11/22 또는 DS18B20   │◄──────────────────────────────────────│  선택 DS18B20        │
@@ -143,11 +143,11 @@
 
 | 실내 유닛 | GPIO | 연결 |
 |-----------|------|------|
-| D1 | GPIO5 | OLED SCL |
-| D2 | GPIO4 | OLED SDA |
+| D5 | GPIO14 | OLED SCL |
+| D6 | GPIO12 | OLED SDA |
 | D4 | GPIO2 | 센서 DATA (DHT 또는 DS18B20) |
-| D5 | GPIO14 | 엔코더 CLK |
-| D6 | GPIO12 | 엔코더 DT |
+| D1 | GPIO5 | 엔코더 CLK |
+| D2 | GPIO4 | 엔코더 DT |
 | D7 | GPIO13 | 엔코더 SW (버튼) |
 
 | 릴레이 유닛 | GPIO | 연결 |
@@ -216,12 +216,12 @@ kombi/
 
 ```cpp
 // oda_termostati.ino
-#define AP_SSID  "TERMOSTAT-AP"
-#define AP_PASS  "termostat123"
+#define AP_SSID  "KombiPlus"
+#define AP_PASS  "Ck.073214"
 
 // kombi_rolesi.ino
-#define TERMOSTAT_AP_SSID  "TERMOSTAT-AP"
-#define TERMOSTAT_AP_PASS  "termostat123"
+#define TERMOSTAT_AP_SSID  "KombiPlus"
+#define TERMOSTAT_AP_PASS  "Ck.073214"
 ```
 
 실내 유닛 센서 선택:
@@ -240,7 +240,7 @@ kombi/
 
 1. 먼저 **릴레이 유닛**을 업로드합니다(보일러 접점은 아직 연결하지 않음).
 2. 다음으로 **실내 유닛**을 업로드합니다.
-3. `TERMOSTAT-AP`(비밀번호 `termostat123`)에 접속해 `http://192.168.4.1`을 엽니다.
+3. `KombiPlus`(비밀번호 `Ck.073214`)에 접속해 `http://192.168.4.1`을 엽니다.
 4. 릴레이 로그에 `Oda unitesine baglandi.`, 웹 UI에 **Kombi bağlı**가 표시되어야 합니다.
 5. 테스트 후 릴레이 접점의 보일러 연결은 **자격을 갖춘 기술자**에게 맡기세요.
 

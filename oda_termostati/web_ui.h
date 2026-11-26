@@ -10,7 +10,7 @@ static const char INDEX_HTML[] PROGMEM = R"HTML(<!DOCTYPE html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0b1220">
-<title>Kombi Termostat</title>
+<title>KombiPlus</title>
 <style>
 :root{
   --bg:#0b1220; --bg2:#0e1729; --card:#141e33; --card2:#18243d;
@@ -193,7 +193,7 @@ select:focus{border-color:var(--acc)}
     <div class="brand">
       <div class="logo">&#9832;</div>
       <div>
-        <h1>Kombi Termostat</h1>
+        <h1>KombiPlus</h1>
         <p id="net">Oda ünitesi</p>
       </div>
     </div>
@@ -393,7 +393,7 @@ select:focus{border-color:var(--acc)}
     <button class="danger" onclick="reboot()" data-t="reboot">Yeniden Başlat</button>
   </section>
 
-  <p class="foot">Kombi Termostat • NodeMCU v3 • AP: 192.168.4.1</p>
+  <p class="foot">KombiPlus • NodeMCU v3 • AP: 192.168.4.1</p>
 </div>
 <div class="langmask" id="langMask" hidden>
   <div class="langbox">
@@ -401,6 +401,28 @@ select:focus{border-color:var(--acc)}
     <h2 data-t="chooseLang">Dil seçin</h2>
     <p data-t="chooseLangHint">Arayüz dili cihaza kaydedilir; sonra Ayarlar bölümünden değiştirebilirsiniz.</p>
     <div class="langgrid" id="langGrid"></div>
+  </div>
+</div>
+<div class="langmask" id="setupMask" hidden>
+  <div class="langbox">
+    <div class="logo">&#9881;</div>
+    <h2 data-t="setupTitle">İlk kurulum</h2>
+    <p data-t="setupHint">Oda ünitesini ev ağınıza bağlayın. Şimdi atlarsanız Wi-Fi ayarlarından sonra da yapabilirsiniz; AP her zaman açık kalır.</p>
+    <div class="netrow">
+      <button class="ghost" id="suScan" onclick="setupScan()" data-t="scan">Ağları Tara</button>
+      <span class="hint" id="suHint" data-t="scanHint">Çevredeki ağları tarayıp listeden seçebilirsiniz.</span>
+    </div>
+    <div class="netlist" id="suList"></div>
+    <div class="form" style="text-align:left">
+      <label><span data-t="homeSsid">Ev Ağı SSID</span>
+        <input id="suSsid" type="text" maxlength="32" autocapitalize="none" autocomplete="off">
+      </label>
+      <label><span data-t="pass">Şifre</span>
+        <input id="suPass" type="password" maxlength="64" autocomplete="new-password">
+      </label>
+    </div>
+    <button class="primary" onclick="setupSave()" data-t="setupSave">Kaydet ve Yeniden Başlat</button>
+    <button class="ghost" style="width:100%;margin-top:8px" onclick="setupSkip()" data-t="setupSkip">Şimdi değil</button>
   </div>
 </div>
 <div class="toast" id="toast"></div>
@@ -555,6 +577,7 @@ async function poll(){
       if(S.ask) showLangModal();
     }
     render();
+    if(S.setup && !suShown && $('langMask').hidden){ suShown = true; showSetup(); }
   }catch(e){
     setPill('bad', t('stNoLink'));
   }
@@ -602,11 +625,11 @@ function saveSettings(){
   sendSet({hyst:hyst, cal:cal, frost:frost}, t('settingsSaved'));
 }
 
+// Ag taramasi: normal Wi-Fi karti ve ilk kurulum karti ayni yardimciyi kullanir.
 let scanning = false;
-async function scanWifi(){
+async function scanInto(btn, list, hint, ssidInput, passInput){
   if(scanning) return;
   scanning = true;
-  const btn = $('scanBtn'), list = $('netList'), hint = $('scanHint');
   btn.disabled = true;
   btn.textContent = t('scanning');
   hint.textContent = t('scanBusy');
@@ -630,10 +653,10 @@ async function scanWifi(){
         b.appendChild(nm);
         b.appendChild(meta);
         b.onclick = () => {
-          $('wifiSsid').value = n.s;
+          ssidInput.value = n.s;
           Array.prototype.forEach.call(list.children, c => c.classList.remove('sel'));
           b.classList.add('sel');
-          if(n.e) $('wifiPass').focus();
+          if(n.e) passInput.focus();
         };
         list.appendChild(b);
       });
@@ -647,6 +670,10 @@ async function scanWifi(){
   scanning = false;
 }
 
+function scanWifi(){
+  scanInto($('scanBtn'), $('netList'), $('scanHint'), $('wifiSsid'), $('wifiPass'));
+}
+
 async function saveWifi(){
   const ssid = $('wifiSsid').value.trim();
   const pass = $('wifiPass').value;
@@ -655,6 +682,29 @@ async function saveWifi(){
   }
   try{
     await api('/api/wifi', {method:'POST', body:new URLSearchParams({ssid:ssid, pass:pass})});
+    toast(t('wifiSaved'));
+    setPill('warn', t('restarting'));
+    setTimeout(() => { location.reload(); }, 9000);
+  }catch(e){ toast(t('saveError'), true); }
+}
+
+// ---------------- Ilk kurulum (web uzerinden, tuslara gerek yok) ----------------
+let suShown = false;
+function showSetup(){
+  $('setupMask').hidden = false;
+  if(S && S.ssid) $('suSsid').value = S.ssid;
+}
+function setupSkip(){ $('setupMask').hidden = true; }
+
+function setupScan(){
+  scanInto($('suScan'), $('suList'), $('suHint'), $('suSsid'), $('suPass'));
+}
+
+async function setupSave(){
+  const ssid = $('suSsid').value.trim();
+  if(!ssid){ toast(t('invalidValue'), true); return; }
+  try{
+    await api('/api/wifi', {method:'POST', body:new URLSearchParams({ssid:ssid, pass:$('suPass').value})});
     toast(t('wifiSaved'));
     setPill('warn', t('restarting'));
     setTimeout(() => { location.reload(); }, 9000);
@@ -955,7 +1005,7 @@ function initLangOptions(){
 }
 
 TX.en = {
-  title: 'Kombi Termostat', unitSub: 'Room unit', connecting: 'Connecting', linked: 'Boiler linked', notLinked: 'Boiler offline',
+  title: 'KombiPlus', unitSub: 'Room unit', connecting: 'Connecting', linked: 'Boiler linked', notLinked: 'Boiler offline',
   roomTemp: 'Room temperature', targetTemp: 'Target temperature', hum: 'Humidity', flow: 'Boiler water',
   state: 'State', boiler: 'Boiler', boost: 'Boost', workMode: 'Operating mode',
   quickBoost: 'Quick heat (Boost)', min5: '5 min', min15: '15 min', min30: '30 min', cancel: 'Cancel',
@@ -979,6 +1029,8 @@ TX.en = {
   language: 'Language', languageHint: 'Web interface and message language',
   chooseLang: 'Choose your language',
   chooseLangHint: 'The language is stored on the device; you can change it later in the Settings section.',
+  setupTitle: 'First setup', setupHint: 'Connect the room unit to your home Wi-Fi. You can skip this and do it later in the Wi-Fi settings; the access point always stays on.',
+  setupSave: 'Save and restart', setupSkip: 'Not now',
   system: 'System', ipAddr: 'IP address', apAddr: 'AP address', homeNet: 'Home network', signal: 'Signal',
   boilerLink: 'Boiler link', uptime: 'Uptime', heap: 'Free memory', version: 'Version', clock: 'Clock (NTP)',
   histCount: 'History records', reboot: 'Restart',
@@ -1010,7 +1062,7 @@ TX.en = {
 };
 
 TX.tr = {
-  title: 'Kombi Termostat', unitSub: 'Oda ünitesi', connecting: 'Bağlanıyor', linked: 'Kombi bağlı', notLinked: 'Kombi bağlı değil',
+  title: 'KombiPlus', unitSub: 'Oda ünitesi', connecting: 'Bağlanıyor', linked: 'Kombi bağlı', notLinked: 'Kombi bağlı değil',
   roomTemp: 'Oda Sıcaklığı', targetTemp: 'Hedef Sıcaklık', hum: 'Nem', flow: 'Kombi suyu',
   state: 'Durum', boiler: 'Kombi', boost: 'Boost', workMode: 'Çalışma Modu',
   quickBoost: 'Hızlı Isıtma (Boost)', min5: '5 dk', min15: '15 dk', min30: '30 dk', cancel: 'İptal',
@@ -1034,6 +1086,8 @@ TX.tr = {
   language: 'Dil', languageHint: 'Web arayüzü ve bildirim dili',
   chooseLang: 'Dil seçin',
   chooseLangHint: 'Arayüz dili cihaza kaydedilir; sonra Ayarlar bölümünden değiştirebilirsiniz.',
+  setupTitle: 'İlk kurulum', setupHint: 'Oda ünitesini ev ağınıza bağlayın. Şimdi atlarsanız Wi-Fi ayarlarından sonra da yapabilirsiniz; AP her zaman açık kalır.',
+  setupSave: 'Kaydet ve Yeniden Başlat', setupSkip: 'Şimdi değil',
   system: 'Sistem', ipAddr: 'IP adresi', apAddr: 'AP adresi', homeNet: 'Ev ağı', signal: 'Sinyal',
   boilerLink: 'Kombi bağlantısı', uptime: 'Çalışma süresi', heap: 'Boş bellek', version: 'Sürüm', clock: 'Saat (NTP)',
   histCount: 'Geçmiş kayıt', reboot: 'Yeniden Başlat',
@@ -1067,7 +1121,7 @@ TX.tr = {
 };
 
 TX.es = {
-  title: 'Kombi Termostat', unitSub: 'Unidad de ambiente', connecting: 'Conectando', linked: 'Caldera conectada', notLinked: 'Caldera sin conexión',
+  title: 'KombiPlus', unitSub: 'Unidad de ambiente', connecting: 'Conectando', linked: 'Caldera conectada', notLinked: 'Caldera sin conexión',
   roomTemp: 'Temperatura ambiente', targetTemp: 'Temperatura objetivo', hum: 'Humedad', flow: 'Agua de caldera',
   state: 'Estado', boiler: 'Caldera', boost: 'Boost', workMode: 'Modo de trabajo',
   quickBoost: 'Calentamiento rápido (Boost)', min5: '5 min', min15: '15 min', min30: '30 min', cancel: 'Cancelar',
@@ -1091,6 +1145,8 @@ TX.es = {
   language: 'Idioma', languageHint: 'Idioma de la interfaz y de los avisos',
   chooseLang: 'Elija su idioma',
   chooseLangHint: 'El idioma se guarda en el dispositivo; puede cambiarlo después en Ajustes.',
+  setupTitle: 'Configuración inicial', setupHint: 'Conecte la unidad de ambiente a su Wi-Fi. Puede omitirlo y hacerlo luego en los ajustes de Wi-Fi; el punto de acceso siempre permanece activo.',
+  setupSave: 'Guardar y reiniciar', setupSkip: 'Ahora no',
   system: 'Sistema', ipAddr: 'Dirección IP', apAddr: 'Dirección AP', homeNet: 'Red doméstica', signal: 'Señal',
   boilerLink: 'Conexión caldera', uptime: 'Tiempo activo', heap: 'Memoria libre', version: 'Versión', clock: 'Reloj (NTP)',
   histCount: 'Registros', reboot: 'Reiniciar',
@@ -1125,7 +1181,7 @@ TX.es = {
 };
 
 TX.pt = {
-  title: 'Kombi Termostat', unitSub: 'Unidade de ambiente', connecting: 'Conectando', linked: 'Caldeira conectada', notLinked: 'Caldeira sem conexão',
+  title: 'KombiPlus', unitSub: 'Unidade de ambiente', connecting: 'Conectando', linked: 'Caldeira conectada', notLinked: 'Caldeira sem conexão',
   roomTemp: 'Temperatura ambiente', targetTemp: 'Temperatura alvo', hum: 'Umidade', flow: 'Água da caldeira',
   state: 'Estado', boiler: 'Caldeira', boost: 'Boost', workMode: 'Modo de operação',
   quickBoost: 'Aquecimento rápido (Boost)', min5: '5 min', min15: '15 min', min30: '30 min', cancel: 'Cancelar',
@@ -1149,6 +1205,8 @@ TX.pt = {
   language: 'Idioma', languageHint: 'Idioma da interface e dos avisos',
   chooseLang: 'Escolha seu idioma',
   chooseLangHint: 'O idioma é salvo no dispositivo; você pode alterá-lo depois em Ajustes.',
+  setupTitle: 'Configuração inicial', setupHint: 'Conecte a unidade de ambiente ao Wi-Fi de casa. Você pode pular e fazer isso depois nas configurações de Wi-Fi; o ponto de acesso fica sempre ativo.',
+  setupSave: 'Salvar e reiniciar', setupSkip: 'Agora não',
   system: 'Sistema', ipAddr: 'Endereço IP', apAddr: 'Endereço AP', homeNet: 'Rede de casa', signal: 'Sinal',
   boilerLink: 'Conexão da caldeira', uptime: 'Tempo ligado', heap: 'Memória livre', version: 'Versão', clock: 'Relógio (NTP)',
   histCount: 'Registros', reboot: 'Reiniciar',
@@ -1182,7 +1240,7 @@ TX.pt = {
 };
 
 TX.ru = {
-  title: 'Kombi Termostat', unitSub: 'Комнатный блок', connecting: 'Подключение', linked: 'Котёл на связи', notLinked: 'Котёл не на связи',
+  title: 'KombiPlus', unitSub: 'Комнатный блок', connecting: 'Подключение', linked: 'Котёл на связи', notLinked: 'Котёл не на связи',
   roomTemp: 'Температура в комнате', targetTemp: 'Целевая температура', hum: 'Влажность', flow: 'Вода в котле',
   state: 'Состояние', boiler: 'Котёл', boost: 'Boost', workMode: 'Режим работы',
   quickBoost: 'Быстрый нагрев (Boost)', min5: '5 мин', min15: '15 мин', min30: '30 мин', cancel: 'Отмена',
@@ -1206,6 +1264,8 @@ TX.ru = {
   language: 'Язык', languageHint: 'Язык интерфейса и сообщений',
   chooseLang: 'Выберите язык',
   chooseLangHint: 'Язык сохраняется в устройстве; позже его можно изменить в разделе «Настройки».',
+  setupTitle: 'Первая настройка', setupHint: 'Подключите комнатный блок к домашней сети Wi-Fi. Можно пропустить и сделать это позже в настройках Wi-Fi; точка доступа всегда включена.',
+  setupSave: 'Сохранить и перезагрузить', setupSkip: 'Не сейчас',
   system: 'Система', ipAddr: 'IP-адрес', apAddr: 'Адрес AP', homeNet: 'Домашняя сеть', signal: 'Сигнал',
   boilerLink: 'Связь с котлом', uptime: 'Время работы', heap: 'Свободная память', version: 'Версия', clock: 'Часы (NTP)',
   histCount: 'Записей истории', reboot: 'Перезагрузить',
@@ -1239,7 +1299,7 @@ TX.ru = {
 };
 
 TX.ja = {
-  title: 'Kombi Termostat', unitSub: '室内ユニット', connecting: '接続中', linked: 'ボイラー接続済み', notLinked: 'ボイラー未接続',
+  title: 'KombiPlus', unitSub: '室内ユニット', connecting: '接続中', linked: 'ボイラー接続済み', notLinked: 'ボイラー未接続',
   roomTemp: '室温', targetTemp: '目標温度', hum: '湿度', flow: 'ボイラー水温',
   state: '状態', boiler: 'ボイラー', boost: 'ブースト', workMode: '運転モード',
   quickBoost: '急速暖房（ブースト）', min5: '5分', min15: '15分', min30: '30分', cancel: 'キャンセル',
@@ -1263,6 +1323,8 @@ TX.ja = {
   language: '言語', languageHint: 'Web 画面と通知の言語',
   chooseLang: '言語を選択',
   chooseLangHint: '選択した言語は本体に保存されます。後で「設定」から変更できます。',
+  setupTitle: '初期設定', setupHint: '室内ユニットを自宅の Wi-Fi に接続します。今はスキップして Wi-Fi 設定から後で行うこともできます。アクセスポイントは常に有効です。',
+  setupSave: '保存して再起動', setupSkip: '後で',
   system: 'システム', ipAddr: 'IP アドレス', apAddr: 'AP アドレス', homeNet: '自宅ネットワーク', signal: '電波',
   boilerLink: 'ボイラー接続', uptime: '稼働時間', heap: '空きメモリ', version: 'バージョン', clock: '時計（NTP）',
   histCount: '履歴件数', reboot: '再起動',
@@ -1296,7 +1358,7 @@ TX.ja = {
 };
 
 TX.ko = {
-  title: 'Kombi Termostat', unitSub: '실내 유닛', connecting: '연결 중', linked: '보일러 연결됨', notLinked: '보일러 연결 안 됨',
+  title: 'KombiPlus', unitSub: '실내 유닛', connecting: '연결 중', linked: '보일러 연결됨', notLinked: '보일러 연결 안 됨',
   roomTemp: '실내 온도', targetTemp: '설정 온도', hum: '습도', flow: '보일러 수온',
   state: '상태', boiler: '보일러', boost: '부스트', workMode: '운전 모드',
   quickBoost: '빠른 난방 (부스트)', min5: '5분', min15: '15분', min30: '30분', cancel: '취소',
@@ -1320,6 +1382,8 @@ TX.ko = {
   language: '언어', languageHint: '웹 화면과 알림 언어',
   chooseLang: '언어 선택',
   chooseLangHint: '선택한 언어는 기기에 저장되며 나중에 설정에서 변경할 수 있습니다.',
+  setupTitle: '초기 설정', setupHint: '실내 유닛을 집 Wi-Fi에 연결합니다. 지금 건너뛰고 Wi-Fi 설정에서 나중에 할 수도 있습니다. AP는 항상 켜져 있습니다.',
+  setupSave: '저장 후 재시작', setupSkip: '나중에',
   system: '시스템', ipAddr: 'IP 주소', apAddr: 'AP 주소', homeNet: '집 네트워크', signal: '신호',
   boilerLink: '보일러 연결', uptime: '가동 시간', heap: '여유 메모리', version: '버전', clock: '시계 (NTP)',
   histCount: '기록 수', reboot: '재시작',
@@ -1354,7 +1418,7 @@ TX.ko = {
 };
 
 TX.zh = {
-  title: 'Kombi Termostat', unitSub: '室内单元', connecting: '连接中', linked: '锅炉已连接', notLinked: '锅炉未连接',
+  title: 'KombiPlus', unitSub: '室内单元', connecting: '连接中', linked: '锅炉已连接', notLinked: '锅炉未连接',
   roomTemp: '室内温度', targetTemp: '目标温度', hum: '湿度', flow: '锅炉水温',
   state: '状态', boiler: '锅炉', boost: 'Boost', workMode: '运行模式',
   quickBoost: '快速加热（Boost）', min5: '5 分钟', min15: '15 分钟', min30: '30 分钟', cancel: '取消',
@@ -1378,6 +1442,8 @@ TX.zh = {
   language: '语言', languageHint: '网页界面与提示语言',
   chooseLang: '选择语言',
   chooseLangHint: '语言会保存到设备，之后可在“设置”中更改。',
+  setupTitle: '初始设置', setupHint: '将室内单元连接到家庭 Wi-Fi。也可以跳过后在 Wi-Fi 设置中完成；热点始终保持开启。',
+  setupSave: '保存并重启', setupSkip: '以后再说',
   system: '系统', ipAddr: 'IP 地址', apAddr: 'AP 地址', homeNet: '家庭网络', signal: '信号',
   boilerLink: '锅炉连接', uptime: '运行时间', heap: '可用内存', version: '版本', clock: '时钟（NTP）',
   histCount: '历史记录', reboot: '重启',

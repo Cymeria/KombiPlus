@@ -84,7 +84,7 @@
 
   <!-- Combi terminal -->
   <rect class="dev" x="760" y="430" width="330" height="170" rx="12"/>
-  <text x="782" y="462" class="devtitle">Kombi Termostat Girişi</text>
+  <text x="782" y="462" class="devtitle">KombiPlus Girişi</text>
   <text x="782" y="480" class="devsub">kuru kontak • düşük gerilim</text>
   <circle cx="850" cy="430" r="7" fill="#f8fafc" stroke="#475569" stroke-width="2"/>
   <circle cx="930" cy="430" r="7" fill="#f8fafc" stroke="#475569" stroke-width="2"/>

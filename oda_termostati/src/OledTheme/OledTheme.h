@@ -19,10 +19,14 @@
 #define OLED_THEME_DIR     "/themes"
 #define OLED_THEME_ACTIVE  "/themes/active.txt"
 
+// Iki renkli (sari/mavi) SSD1306 modullerinde ust 16 piksel her zaman saridir.
+// Bu yuzden her temada baslik bu bantta tutulur, gövde 16. pikselin altinda baslar.
+#define OLED_BAND_H        16
+
 struct OledTheme {
   char id[16];
   char name[20];
-  uint8_t header;       // 0 yok | 1 tek cizgi | 2 cift cizgi | 3 kutu | 4 dolu serit
+  uint8_t header;       // 0 sade | 1 tek cizgi | 2 cift cizgi | 3 kutu | 4 dolu serit
   uint8_t tempSize;     // 2 | 3
   uint8_t tempCenter;   // 0 sol | 1 orta
   uint8_t setpointCol;  // sagda hedef kolonu

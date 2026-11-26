@@ -1,6 +1,6 @@
 /*
  * ============================================================================
- *  KOMBI TERMOSTATI - ODA UNITESI
+ *  KOMBIPLUS - ODA UNITESI
  *  NodeMCU v3 (ESP8266) + 0.96" SSD1306 OLED + Rotary Encoder
  *  Sensor: DHT11 / DHT22 / DS18B20 (asagidaki SENSOR_TYPE ile secilir)
  *
@@ -8,6 +8,8 @@
  *    - Oda sicakligini okur, hedefe gore isi talebini hesaplar
  *    - Talebi Wi-Fi (TCP 8266) uzerinden Kombi Role Unitesine gonderir
  *    - AP + STA modunda mobil uyumlu web arayuzu sunar
+ *    - Captive portal: AP'ye baglanan telefon/PC arayuzu otomatik acar
+ *    - Ilk kurulum (dil, Wi-Fi, ayarlar) web arayuzunden yapilabilir
  *    - OLED uzerinde durum, ayar ve ag bilgilerini gosterir
  *    - MQTT ile durum yayinlar, komut kabul eder
  *    - Telegram botu ile uzaktan kontrol edilebilir
@@ -22,6 +24,7 @@
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
 #include <ESP8266mDNS.h>
+#include <DNSServer.h>
 #include <ArduinoOTA.h>
 #include <Wire.h>
 #include <Adafruit_GFX.h>
@@ -61,17 +64,19 @@
 #define SENSOR_TYPE     SENSOR_DHT22      // <<<<< BURAYI DEGISTIRIN
 
 // ---- AP (Kombi role unitesi bu aga baglanir) ----
-#define AP_SSID         "TERMOSTAT-AP"
-#define AP_PASS         "termostat123"     // en az 8 karakter
-#define OTA_PASS        "termo1234"
-#define MDNS_NAME       "termostat"
+#define AP_SSID         "KombiPlus"
+#define AP_PASS         "Ck.073214"     // en az 8 karakter
+#define OTA_PASS        "1881"
+#define MDNS_NAME       "KombiPlus"
 
 // ---- Pinler (NodeMCU v3 kart uzerindeki D etiketleri) ----
-const uint8_t PIN_SDA      = D2;   // GPIO4  OLED SDA
-const uint8_t PIN_SCL      = D1;   // GPIO5  OLED SCL
+// OLED varsayilan pinleri: SDA = D5, SCL = D6.
+// Farkli bir kablolama kullanacaksaniz asagidaki degerleri degistirin.
+const uint8_t PIN_SDA      = D5;   // GPIO14 OLED SDA (varsayilan)
+const uint8_t PIN_SCL      = D6;   // GPIO12 OLED SCL (varsayilan)
 const uint8_t PIN_SENSOR   = D4;   // GPIO2  DHT / DS18B20 data
-const uint8_t PIN_ENC_A    = D5;   // GPIO14 Encoder CLK
-const uint8_t PIN_ENC_B    = D6;   // GPIO12 Encoder DT
+const uint8_t PIN_ENC_A    = D1;   // GPIO5  Encoder CLK
+const uint8_t PIN_ENC_B    = D2;   // GPIO4  Encoder DT
 const uint8_t PIN_ENC_SW   = D7;   // GPIO13 Encoder butonu
 
 // ---- Zaman / davranis ----
@@ -114,6 +119,7 @@ const uint16_t OTA_PORT = 3232;
 
 Adafruit_SSD1306 display(128, 64, &Wire, -1);
 ESP8266WebServer webServer(80);
+DNSServer dnsServer;                 // captive portal DNS (AP modu)
 WiFiServer boilerServer(TCP_PORT);
 WiFiClient boilerClient;
 
@@ -273,7 +279,7 @@ void setup() {
   Serial.begin(115200);
   delay(150);
   Serial.println();
-  Serial.println(F("=== Kombi Termostati - Oda Unitesi ==="));
+  Serial.println(F("=== KombiPlus - Oda Unitesi ==="));
   Serial.println(F("FW " FW_VERSION));
 
   pinMode(PIN_ENC_SW, INPUT_PULLUP);
@@ -314,7 +320,7 @@ void setup() {
     display.setTextColor(SSD1306_WHITE);
     display.setTextSize(1);
     display.setCursor(0, 8);
-    display.println(F("Kombi Termostati"));
+    display.println(F("KombiPlus"));
     display.setCursor(0, 24);
     display.println(F("Baslatiliyor..."));
     display.display();
@@ -358,6 +364,7 @@ void loop() {
   unsigned long now = millis();
 
   webServer.handleClient();
+  dnsServer.processNextRequest();
   MDNS.update();
   if (otaStarted) ArduinoOTA.handle();
 
@@ -589,7 +596,7 @@ void saveSettings() {
 
   String s;
   s.reserve(800);
-  s  = "# Kombi Termostat ayarlari\n";
+  s  = "# KombiPlus ayarlari\n";
   s += "ver=2\n";
   s += "sp=" + String(cfg.setpoint, 1) + "\n";
   s += "hyst=" + String(cfg.hysteresis, 1) + "\n";
@@ -1167,6 +1174,11 @@ void setupWiFi() {
     Serial.print(F("AP hazir: ")); Serial.println(AP_SSID);
   }
 
+  // Captive portal: AP'ye baglanan telefon/PC'nin tum DNS sorgulari bu
+  // cihaza yonlendirilir; boylece arayuz kendiliginden acilir.
+  dnsServer.start(53, "*", WiFi.softAPIP());
+  Serial.print(F("Captive DNS: ")); Serial.println(WiFi.softAPIP());
+
   if (wifiSsid.length() > 0) {
     Serial.print(F("STA baglaniyor: ")); Serial.println(wifiSsid);
     WiFi.begin(wifiSsid.c_str(), wifiPass.c_str());
@@ -1352,7 +1364,7 @@ const char *tgStateLabel() {
 String statusSummary() {
   String s;
   s.reserve(380);
-  s  = "Kombi Termostat\n";
+  s  = "KombiPlus\n";
   s += String(TT(TG_T_ROOM)) + ": " + (sensorOk ? String(currentTemp, 1) : String("--.-")) + "C";
   if (sensorOk && !isnan(currentHum))
     s += "  " + String(TT(TG_T_HUM)) + ": %" + String((int)roundf(currentHum));
@@ -1845,6 +1857,7 @@ void handleApiStatus() {
   j += "\"ip\":\"" + jsonEscape(currentIp()) + "\",";
   j += "\"apip\":\"" + WiFi.softAPIP().toString() + "\",";
   j += "\"ssid\":\"" + jsonEscape(wifiSsid) + "\",";
+  j += "\"setup\":";   j += String(wifiSsid.length() ? 0 : 1); j += ",";   // 1 = ev agi tanimli degil (ilk kurulum)
   j += "\"sta\":";     j += String(WiFi.status() == WL_CONNECTED ? 1 : 0); j += ",";
   j += "\"rssi\":";    j += String(WiFi.status() == WL_CONNECTED ? WiFi.RSSI() : 0); j += ",";
   j += "\"heap\":";    j += String(ESP.getFreeHeap()); j += ",";
@@ -2121,6 +2134,47 @@ void handleApiTheme() {
   webServer.send(200, "application/json", j);
 }
 
+// ============================ CAPTIVE PORTAL ================================
+
+// AP'ye baglanan cihazlarin (telefon, tablet, PC) web arayuzunu kendiliginden
+// acmasi icin: tum alan adlari bu cihaza cozulur ve bilinmeyen adresler buraya
+// yonlendirilir (klasik captive portal davranisi).
+String portalUrl() {
+  return String("http://") + WiFi.softAPIP().toString() + "/";
+}
+
+void sendPortalRedirect() {
+  String url = portalUrl();
+  String body;
+  body.reserve(240);
+  body  = F("<!DOCTYPE html><html><head><meta charset='utf-8'>");
+  body += F("<meta http-equiv='refresh' content='0;url=");
+  body += url;
+  body += F("'></head><body><a href='");
+  body += url;
+  body += F("'>KombiPlus</a></body></html>");
+
+  webServer.sendHeader("Location", url, true);
+  webServer.sendHeader("Cache-Control", "no-store");
+  webServer.send(302, "text/html; charset=utf-8", body);
+}
+
+// Windows / Android / iOS / macOS'un "agda oturum acin" kontrol adresleri.
+// 204 veya beklenen govde yerine 302 donmek portal penceresini tetikler.
+static const char *const CAPTIVE_PATHS[] = {
+  "/generate_204", "/gen_204", "/hotspot-detect.html",
+  "/library/test/success.html", "/success.txt", "/ncsi.txt",
+  "/connecttest.txt", "/redirect", "/canonical.html", "/portal"
+};
+
+String hostOnly(String host) {
+  host.trim();
+  int c = host.indexOf(':');
+  if (c > 0) host = host.substring(0, c);
+  host.toLowerCase();
+  return host;
+}
+
 void setupWeb() {
   webServer.on("/", HTTP_GET, []() {
     webServer.sendHeader("Cache-Control", "no-store");
@@ -2147,7 +2201,18 @@ void setupWeb() {
   // LittleFS dosya yoneticisi: http://<ip>/fs
   fsExplorer.begin(&webServer, "/fs");
 
+  for (uint8_t i = 0; i < sizeof(CAPTIVE_PATHS) / sizeof(CAPTIVE_PATHS[0]); i++) {
+    webServer.on(CAPTIVE_PATHS[i], HTTP_GET, sendPortalRedirect);
+  }
+
   webServer.onNotFound([]() {
+    String host = hostOnly(webServer.hostHeader());
+    String apIp = WiFi.softAPIP().toString();
+    String staIp = WiFi.localIP().toString();
+    if (host.length() == 0 || (host != apIp && host != staIp)) {
+      sendPortalRedirect();     // captive portal yakalama
+      return;
+    }
     webServer.send(404, "text/plain; charset=utf-8", "Bulunamadi");
   });
   webServer.begin();
@@ -2245,14 +2310,14 @@ void drawMainPage() {
   const OledTheme &th = themeStore.active();
   oledHeader(FPSTR(OT(L_MAIN)));
 
-  int base  = oledThemeHeaderHeight(th) + 2;
+  int base  = oledThemeHeaderHeight(th);          // sari bantin hemen alti
   int tempY = base + (th.tempSize == 3 ? 0 : 2);
   int sepY  = tempY + (th.tempSize == 3 ? 25 : 19);
   int statY = (th.separator ? sepY + 3 : sepY + 1);
-  int footY = th.header ? 54 : ((statY + 14 < 55) ? statY + 14 : 55);
+  int footY = OLED_BAND_H + 40;                   // 56: en alt satir
 
   if (sleepActive && th.header) {
-    display.setCursor(72, 0);
+    display.setCursor(72, 3);
     display.print(OT(L_SLEEP_TAG));
   }
 
@@ -2339,29 +2404,29 @@ void drawMainPage() {
 void drawNetPage() {
   oledHeader(FPSTR(OT(L_NET)));
   display.setTextSize(1);
-  display.setCursor(0, 12);
+  display.setCursor(0, OLED_BAND_H);
   display.print(F("AP: "));  display.print(WiFi.softAPIP());
 
-  display.setCursor(0, 21);
+  display.setCursor(0, OLED_BAND_H + 8);
   display.print(F("IP: "));  display.print(currentIp());
 
   String ssid = wifiSsid.length() ? wifiSsid : String("-");
   if (ssid.length() > 19) ssid = ssid.substring(0, 19);
-  display.setCursor(0, 30);
+  display.setCursor(0, OLED_BAND_H + 16);
   display.print(F("STA: ")); display.print(ssid);
 
-  display.setCursor(0, 39);
+  display.setCursor(0, OLED_BAND_H + 24);
   display.print(OT(L_BOILER));
   display.print(F(": "));
   display.print(OT(boilerLinked() ? L_LINKED : L_NO));
   if (boilerClient && boilerClient.connected()) {
-    display.setCursor(0, 48);
+    display.setCursor(0, OLED_BAND_H + 32);
     display.print(OT(L_RELAY_IP));
     display.print(F(": "));
     display.print(boilerClient.remoteIP());
   }
 
-  display.setCursor(0, 56);
+  display.setCursor(0, OLED_BAND_H + 40);
   if (WiFi.status() == WL_CONNECTED) {
     display.print(OT(L_SIGNAL));
     display.print(F(": "));
@@ -2379,26 +2444,26 @@ void drawInfoPage() {
 
   display.setTextSize(1);
   // Sabit tamponlar: 4 Hz yenilemede String ayirmasi yapilmaz.
-  display.setCursor(0, 12);
+  display.setCursor(0, OLED_BAND_H);
   display.print(OT(L_HYST));
   display.print(F(": "));
   display.print(cfg.hysteresis, 1);
   display.print(F("C"));
 
-  display.setCursor(0, 21);
+  display.setCursor(0, OLED_BAND_H + 8);
   display.print(OT(L_CAL));
   display.print(F(": "));
   if (cfg.calibration >= 0) display.print(F("+"));
   display.print(cfg.calibration, 1);
   display.print(F("C"));
 
-  display.setCursor(0, 30);
+  display.setCursor(0, OLED_BAND_H + 16);
   display.print(OT(L_FROST));
   display.print(F(": "));
   display.print(cfg.frost, 1);
   display.print(F("C"));
 
-  display.setCursor(0, 39);
+  display.setCursor(0, OLED_BAND_H + 24);
   display.print(OT(L_BOOST));
   display.print(F(": "));
   if (boostActive) {
@@ -2413,7 +2478,7 @@ void drawInfoPage() {
   unsigned long d = up / 86400UL;
   unsigned long h = (up % 86400UL) / 3600UL;
   unsigned long m = (up % 3600UL) / 60UL;
-  display.setCursor(0, 48);
+  display.setCursor(0, OLED_BAND_H + 32);
   display.print(OT(L_UPTIME));
   display.print(F(": "));
   if (d > 0) { display.print(d); display.print(OT(L_DAY)); display.print(' '); }
@@ -2423,7 +2488,7 @@ void drawInfoPage() {
   display.print(m);
   display.print(OT(L_MINUTE));
 
-  display.setCursor(0, 56);
+  display.setCursor(0, OLED_BAND_H + 40);
   display.print(F("FW " FW_VERSION "  Heap:"));
   display.print(ESP.getFreeHeap() / 1024);
   display.print(F("k"));
@@ -2433,7 +2498,7 @@ void drawSleepPage() {
   oledHeader(FPSTR(OT(L_SLEEP)));
 
   display.setTextSize(1);
-  display.setCursor(0, 12);
+  display.setCursor(0, OLED_BAND_H);
   display.print(OT(L_STATE));
   display.print(F(": "));
   if (!cfg.sleepEnabled) {
@@ -2450,26 +2515,26 @@ void drawSleepPage() {
   snprintf(hmB, sizeof(hmB), "%02u:%02u",
            (unsigned)((cfg.sleepEndMin / 60) % 24), (unsigned)(cfg.sleepEndMin % 60));
 
-  display.setCursor(0, 21);
+  display.setCursor(0, OLED_BAND_H + 8);
   display.print(OT(L_RANGE));
   display.print(F(": "));
   display.print(hmA);
   display.print(F(" - "));
   display.print(hmB);
 
-  display.setCursor(0, 30);
+  display.setCursor(0, OLED_BAND_H + 16);
   display.print(OT(L_SLEEP_TARGET));
   display.print(F(": "));
   display.print(cfg.sleepSetpoint, 1);
   display.print(F("C"));
 
-  display.setCursor(0, 39);
+  display.setCursor(0, OLED_BAND_H + 24);
   display.print(OT(L_NORMAL_TARGET));
   display.print(F(": "));
   display.print(cfg.setpoint, 1);
   display.print(F("C"));
 
-  display.setCursor(0, 48);
+  display.setCursor(0, OLED_BAND_H + 32);
   display.print(OT(L_CLOCK));
   display.print(F(": "));
   if (timeReady()) display.print(F("NTP OK"));
@@ -2483,7 +2548,7 @@ void drawSleepPage() {
     display.print(b);
   }
 
-  display.setCursor(0, 56);
+  display.setCursor(0, OLED_BAND_H + 40);
   display.print(OT(L_RELAY_FS));
   display.print(F(": "));
   display.print(OT(cfg.relayFailSafeOn ? L_FS_HOLD : L_FS_CLOSE));
@@ -2494,7 +2559,7 @@ void drawThemePage() {
   oledHeader(FPSTR(OT(L_THEME)));
 
   display.setTextSize(1);
-  display.setCursor(0, 12);
+  display.setCursor(0, OLED_BAND_H);
   display.print(OT(L_THEME));
   display.print(F(": "));
   display.print(themeStore.index() + 1);
@@ -2503,27 +2568,27 @@ void drawThemePage() {
   if (th.invert) display.print(F(" NEG"));
   if (th.dim)    display.print(F(" DIM"));
 
-  display.setCursor(0, 21);
+  display.setCursor(0, OLED_BAND_H + 8);
   display.print(OT(L_NAME));
   display.print(F(": "));
   display.print(th.name);
 
-  display.setCursor(0, 30);
+  display.setCursor(0, OLED_BAND_H + 16);
   display.print(OT(L_ID));
   display.print(F(": "));
   display.print(th.id);
 
-  display.setCursor(0, 39);
+  display.setCursor(0, OLED_BAND_H + 24);
   display.print(OT(L_HEADER));
   display.print(F(": "));
   display.print(oledThemeHeaderName(th.header));
 
-  display.setCursor(0, 48);
+  display.setCursor(0, OLED_BAND_H + 32);
   display.print(OT(L_STATUS));
   display.print(F(": "));
   display.print(oledThemeStatusName(th.statusStyle));
 
-  display.setCursor(0, 56);
+  display.setCursor(0, OLED_BAND_H + 40);
   display.print(OT(L_ENC_THEME));
 }
 
@@ -2532,19 +2597,19 @@ void drawLangPage() {
   oledHeader(FPSTR(OT(L_LANG)));
   display.setTextSize(1);
 
-  display.setCursor(0, 12);
+  display.setCursor(0, OLED_BAND_H);
   display.print(F("SELECT LANGUAGE"));
 
   char line[26];
   snprintf(line, sizeof(line), "%u/%u  %s", (unsigned)(langCursor + 1),
            (unsigned)LANG_COUNT, LANG_NAMES[langCursor]);
   int w = (int)strlen(line) * 6;
-  display.setCursor(w < 128 ? (128 - w) / 2 : 0, 23);
+  display.setCursor(w < 128 ? (128 - w) / 2 : 0, 27);
   display.print(line);
 
-  display.setCursor(0, 36);
+  display.setCursor(0, 38);
   display.print(F("TURN: SELECT"));
-  display.setCursor(0, 46);
+  display.setCursor(0, 48);
   display.print(F("PRESS: SET"));
 
   display.setCursor(0, 57);

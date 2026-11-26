@@ -27,7 +27,7 @@ bağlantı koptuğunda röleyi **otomatik olarak kapatan** güvenli röle ünite
 
 ## 1. Özellikler
 
-- Oda ünitesinin `TERMOSTAT-AP` ağına otomatik bağlanır (STA)
+- Oda ünitesinin `KombiPlus` ağına otomatik bağlanır (STA)
 - TCP `8266` üzerinden `SET heat=0/1 ...` komutlarını alır
 - Röle çıkışında **aktif‑low / aktif‑high** seçimi
 - **Fail‑safe:** 5 dk boyunca komut gelmezse seçilen davranış uygulanır
@@ -124,8 +124,8 @@ bağlantı koptuğunda röleyi **otomatik olarak kapatan** güvenli röle ünite
 #define FLOW_SENSOR_ENABLED 1     // DS18B20 yoksa 0 yapın
 #define FLOW_PIN            D2
 
-#define TERMOSTAT_AP_SSID  "TERMOSTAT-AP"
-#define TERMOSTAT_AP_PASS  "termostat123"
+#define TERMOSTAT_AP_SSID  "KombiPlus"
+#define TERMOSTAT_AP_PASS  "Ck.073214"
 
 #define SERVER_HOST        "192.168.4.1"
 #define TCP_PORT           8266
@@ -140,12 +140,12 @@ bağlantı koptuğunda röleyi **otomatik olarak kapatan** güvenli röle ünite
 
 ## 5. İlk Çalıştırma
 
-1. Oda ünitesini çalıştırın (`TERMOSTAT-AP` yayınlanıyor olmalı).
+1. Oda ünitesini çalıştırın (`KombiPlus` yayınlanıyor olmalı).
 2. Röle ünitesine kodu yükleyin.
 3. Seri portu 115200 ile izleyin:
    ```
-   === Kombi Termostati - Role Unitesi ===
-   Wi-Fi baglaniyor: TERMOSTAT-AP
+   === KombiPlusi - Role Unitesi ===
+   Wi-Fi baglaniyor: KombiPlus
    Wi-Fi OK. IP: 192.168.4.2
    TCP baglaniyor: 192.168.4.1:8266
    Oda unitesine baglandi.

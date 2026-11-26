@@ -76,9 +76,9 @@ bool oledThemeParse(OledTheme &t, const String &rawKey, const String &rawVal) {
 String oledThemeToFile(const OledTheme &t) {
   String s;
   s.reserve(420);
-  s  = "# Kombi Termostat OLED temasi\n";
+  s  = "# KombiPlus OLED temasi\n";
   s += "# Degerleri degistirip cihazi yeniden baslatin (veya /api/theme?reload=1).\n";
-  s += "# header: 0 yok, 1 tek cizgi, 2 cift cizgi, 3 kutu, 4 dolu serit\n";
+  s += "# header: 0 sade, 1 tek cizgi, 2 cift cizgi, 3 kutu, 4 dolu serit\n";
   s += "# status: 0 metin, 1 talep bar, 2 cerceve, 3 ters serit\n";
   s += "# separator: 0 yok, 1 tek, 2 cift, 3 noktali\n";
   s += "id=" + String(t.id) + "\n";
@@ -255,18 +255,14 @@ bool OledThemeStore::reload() {
 
 // ============================ CIZIM ========================================
 
+// Baslik her temada ust (sari) bantta durur; gövde OLED_BAND_H'den sonra baslar.
 int oledThemeHeaderHeight(const OledTheme &t) {
-  switch (t.header) {
-    case 0:  return 0;
-    case 2:  return 11;
-    default: return 10;
-  }
+  (void)t;
+  return OLED_BAND_H;
 }
 
 void oledThemeHeader(Adafruit_GFX &d, const OledTheme &t,
                      const __FlashStringHelper *title, int page, int pageCount) {
-  if (!t.header) return;
-
   d.setTextSize(1);
   d.setTextColor(SSD1306_WHITE);
 
@@ -278,34 +274,28 @@ void oledThemeHeader(Adafruit_GFX &d, const OledTheme &t,
     pgW = (int)strlen(pg) * 6;
   }
 
-  int ty = (t.header == 3) ? 1 : 0;
+  // Sari bant (0..15): baslik her temada burada, gövde 16'nin altinda.
   if (t.header == 4) {
-    d.fillRect(0, 0, 128, 9, SSD1306_WHITE);
+    d.fillRect(0, 0, 128, OLED_BAND_H, SSD1306_WHITE);
     d.setTextColor(SSD1306_BLACK);
-    d.setCursor(2, 1);
-    d.print(title);
-    if (pgW > 0) {
-      d.setCursor(128 - pgW - 2, 1);
-      d.print(pg);
-    }
-    d.setTextColor(SSD1306_WHITE);
-  } else {
-    d.setCursor(0, ty);
-    d.print(title);
-    if (pgW > 0) {
-      d.setCursor(128 - pgW, ty);
-      d.print(pg);
-    }
   }
 
+  d.setCursor(2, 3);
+  d.print(title);
+  if (pgW > 0) {
+    d.setCursor(126 - pgW, 3);
+    d.print(pg);
+  }
+  d.setTextColor(SSD1306_WHITE);
+
   switch (t.header) {
-    case 1: d.drawFastHLine(0, 9, 128, SSD1306_WHITE); break;
+    case 1: d.drawFastHLine(0, OLED_BAND_H - 1, 128, SSD1306_WHITE); break;
     case 2:
-      d.drawFastHLine(0, 8, 128, SSD1306_WHITE);
-      d.drawFastHLine(0, 10, 128, SSD1306_WHITE);
+      d.drawFastHLine(0, OLED_BAND_H - 2, 128, SSD1306_WHITE);
+      d.drawFastHLine(0, OLED_BAND_H - 1, 128, SSD1306_WHITE);
       break;
-    case 3: d.drawRect(0, 0, 128, 10, SSD1306_WHITE); break;
-    default: break;   // 4: serit zaten dolu
+    case 3: d.drawRect(0, 2, 128, OLED_BAND_H - 3, SSD1306_WHITE); break;
+    default: break;   // 0: sade baslik, 4: bant zaten dolu
   }
 }
 
@@ -374,7 +364,7 @@ void oledThemeStatus(Adafruit_GFX &d, const OledTheme &t, int y,
 
 const __FlashStringHelper *oledThemeHeaderName(uint8_t header) {
   switch (header) {
-    case 0:  return F("yok");
+    case 0:  return F("sade");
     case 1:  return F("cizgi");
     case 2:  return F("cift");
     case 3:  return F("kutu");

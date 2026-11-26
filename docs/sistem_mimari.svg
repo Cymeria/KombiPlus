@@ -71,7 +71,7 @@
   <!-- Link room <-> boiler -->
   <line x1="400" y1="232" x2="706" y2="232" class="flow" marker-end="url(#arr)"/>
   <line x1="730" y1="300" x2="424" y2="300" class="flow2" marker-end="url(#arr2)"/>
-  <text class="lbl" x="565" y="220" text-anchor="middle">Wi-Fi AP: TERMOSTAT-AP • TCP 8266</text>
+  <text class="lbl" x="565" y="220" text-anchor="middle">Wi-Fi AP: KombiPlus • TCP 8266</text>
   <text class="code" x="565" y="252" text-anchor="middle">SET heat=0/1 sp=21.0 hyst=0.3 mode=1</text>
   <text class="code" x="565" y="320" text-anchor="middle">STATUS relay=1 flow=42.5 rssi=-58 up=123</text>
   <text class="m" x="565" y="338" text-anchor="middle">her 2 saniyede bir</text>

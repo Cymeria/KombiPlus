@@ -1,8 +1,8 @@
 <div align="center">
-  <img src="docs/images/banner.svg" alt="Kombi Termostat v1.0.0 — двухмодульный Wi-Fi комнатный термостат на ESP8266" width="100%">
+  <img src="docs/images/banner.svg" alt="KombiPlus v1.0.0 — двухмодульный Wi-Fi комнатный термостат на ESP8266" width="100%">
 </div>
 
-<h1 align="center">Kombi Termostat</h1>
+<h1 align="center">KombiPlus</h1>
 
 <p align="center">
   <strong>Двухмодульный Wi-Fi комнатный термостат для газовых котлов.</strong><br>
@@ -38,7 +38,7 @@
 ## Принцип работы
 
 ```
-┌─────────────────────────┐        Wi-Fi AP (TERMOSTAT-AP)        ┌──────────────────────┐
+┌─────────────────────────┐        Wi-Fi AP (KombiPlus)        ┌──────────────────────┐
 │  КОМНАТНЫЙ БЛОК         │◄─────────────────────────────────────►│  БЛОК РЕЛЕ КОТЛА     │
 │  NodeMCU v3             │   TCP 8266: SET heat=0/1 sp=...      │  NodeMCU v3 + реле   │
 │  DHT11/22 или DS18B20   │◄──────────────────────────────────────│  опц. DS18B20        │
@@ -149,11 +149,11 @@
 
 | Комнатный блок | GPIO | Подключение |
 |----------------|------|-------------|
-| D1 | GPIO5 | OLED SCL |
-| D2 | GPIO4 | OLED SDA |
+| D5 | GPIO14 | OLED SCL |
+| D6 | GPIO12 | OLED SDA |
 | D4 | GPIO2 | DATA датчика (DHT или DS18B20) |
-| D5 | GPIO14 | Энкодер CLK |
-| D6 | GPIO12 | Энкодер DT |
+| D1 | GPIO5 | Энкодер CLK |
+| D2 | GPIO4 | Энкодер DT |
 | D7 | GPIO13 | Энкодер SW (кнопка) |
 
 | Блок реле | GPIO | Подключение |
@@ -222,12 +222,12 @@ kombi/
 
 ```cpp
 // oda_termostati.ino
-#define AP_SSID  "TERMOSTAT-AP"
-#define AP_PASS  "termostat123"
+#define AP_SSID  "KombiPlus"
+#define AP_PASS  "Ck.073214"
 
 // kombi_rolesi.ino
-#define TERMOSTAT_AP_SSID  "TERMOSTAT-AP"
-#define TERMOSTAT_AP_PASS  "termostat123"
+#define TERMOSTAT_AP_SSID  "KombiPlus"
+#define TERMOSTAT_AP_PASS  "Ck.073214"
 ```
 
 Выбор датчика в комнатном блоке:
@@ -246,7 +246,7 @@ kombi/
 
 1. Сначала прошейте **блок реле** (контакт котла пока не подключайте).
 2. Затем **комнатный блок**.
-3. Подключитесь к `TERMOSTAT-AP` (пароль `termostat123`) и откройте `http://192.168.4.1`.
+3. Подключитесь к `KombiPlus` (пароль `Ck.073214`) и откройте `http://192.168.4.1`.
 4. В логе реле появится `Oda unitesine baglandi.`, в интерфейсе — **Kombi bağlı**.
 5. Только после тестов поручите **квалифицированному специалисту** подключить контакт
    реле к клемме термостата котла.
