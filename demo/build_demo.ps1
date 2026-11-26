@@ -155,7 +155,7 @@ $stub = @'
       return ok({ ok: true });
     }
     if (path === '/api/scan') {
-      return ok({ ok: 1, nets: [
+      return ok({ ok: 1, busy: 0, state: 1, nets: [
         { s: 'EvWifi', r: -58, e: 1 },
         { s: 'EvWifi-5G', r: -64, e: 1 },
         { s: 'KOMSU_2.4G', r: -71, e: 1 },
@@ -165,9 +165,10 @@ $stub = @'
       ] });
     }
     if (path === '/api/wifi') {
+      if (q.has('skip')) { MOCK.setup = 0; return ok({ ok: 1, reboot: 0 }); }
       MOCK.ssid = body.get('ssid') || '';
       MOCK.setup = MOCK.ssid ? 0 : 1;
-      return ok({ ok: true, reboot: true });
+      return ok({ ok: 1, reboot: 1, ssid: MOCK.ssid });
     }
     if (path === '/api/reboot') return ok({ ok: true });
     return ok(MOCK);

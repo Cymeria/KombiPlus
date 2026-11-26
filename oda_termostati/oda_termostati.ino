@@ -166,6 +166,7 @@ String uiLang = "";          // arayuz dili: en/tr/ru/es/pt/ja/ko/zh (bos = seci
 uint8_t langCursor = 0;      // ilk acilista OLED dil secimi imleci
 bool langPrompt = false;     // dil secimi sorulsun mu (yalnizca yeni cihazda)
 int8_t langMarker = -1;      // config'teki langset= degeri (-1: anahtar yok = eski kurulum)
+bool setupDone = false;      // ilk kurulum (web karti) tamamlandi mi
 bool fsReady = false;
 
 // ---- MQTT ----
@@ -463,6 +464,7 @@ void defaultSettings() {
 
   wifiSsid = "";
   wifiPass = "";
+  setupDone = false;
 
   mqttHost = "";
   mqttPort = 1883;
@@ -507,6 +509,7 @@ void applyConfigKV(const String &key, const String &val) {
   else if (key == "theme")      themeId = val;
   else if (key == "lang")       uiLang = val;
   else if (key == "langset")    langMarker = val.toInt() ? 1 : 0;
+  else if (key == "setupdone")  setupDone = val.toInt() ? 1 : 0;
   else if (key == "wifissid")   wifiSsid = val;
   else if (key == "wifipass")   wifiPass = val;
   else if (key == "mqtthost")   mqttHost = val;
@@ -611,6 +614,7 @@ void saveSettings() {
   s += "theme=" + themeId + "\n";
   s += "lang=" + uiLang + "\n";
   s += "langset=" + String(langPrompt ? 0 : 1) + "\n";
+  s += "setupdone=" + String(setupDone ? 1 : 0) + "\n";
   s += "wifissid=" + wifiSsid + "\n";
   s += "wifipass=" + wifiPass + "\n";
   s += "mqtthost=" + mqttHost + "\n";
@@ -628,6 +632,16 @@ void saveSettings() {
   }
   f.print(s);
   f.close();
+}
+
+// Ilk kurulum karti: ayar dosyasinda setupdone yoksa ve cihaz eve bagli
+// degilse web arayuzunde kurulum karti acilir. Ag baglaninca ya da kullanici
+// "Simdi degil" derse bir daha sorulmaz.
+bool setupNeeded() {
+  if (setupDone) return false;
+  if (WiFi.status() == WL_CONNECTED) return false;
+  if (millis() < 15000UL) return false;    // acilista STA baglantisini bekle
+  return true;
 }
 
 void markSettingsDirty() {
@@ -1194,6 +1208,11 @@ void updateWiFi() {
   static unsigned long lastRetryMs = 0;
 
   if (WiFi.status() == WL_CONNECTED) {
+    if (!setupDone) {
+      setupDone = true;               // kurulum gercekten tamamlandi
+      saveSettings();
+      Serial.println(F("Ilk kurulum tamamlandi (ag bagli)."));
+    }
     if (!otaStarted) {
       ArduinoOTA.setPort(OTA_PORT);
       ArduinoOTA.setHostname(MDNS_NAME);
@@ -1857,7 +1876,7 @@ void handleApiStatus() {
   j += "\"ip\":\"" + jsonEscape(currentIp()) + "\",";
   j += "\"apip\":\"" + WiFi.softAPIP().toString() + "\",";
   j += "\"ssid\":\"" + jsonEscape(wifiSsid) + "\",";
-  j += "\"setup\":";   j += String(wifiSsid.length() ? 0 : 1); j += ",";   // 1 = ev agi tanimli degil (ilk kurulum)
+  j += "\"setup\":";   j += String(setupNeeded() ? 1 : 0); j += ",";   // 1 = ilk kurulum karti gosterilsin
   j += "\"sta\":";     j += String(WiFi.status() == WL_CONNECTED ? 1 : 0); j += ",";
   j += "\"rssi\":";    j += String(WiFi.status() == WL_CONNECTED ? WiFi.RSSI() : 0); j += ",";
   j += "\"heap\":";    j += String(ESP.getFreeHeap()); j += ",";
@@ -2027,6 +2046,22 @@ void handleApiHistoryClear() {
 }
 
 void handleApiWifi() {
+  // "Simdi degil": kurulum karti bir daha acilmasin (AP modu bilincli secim)
+  if (webServer.hasArg("skip")) {
+    setupDone = true;
+    saveSettings();
+    webServer.sendHeader("Cache-Control", "no-store");
+    webServer.send(200, "application/json", "{\"ok\":1,\"reboot\":0}");
+    return;
+  }
+
+  if (!fsReady) {
+    // Ayar dosyasi yazilamiyorsa sessizce basarili gorunmeyelim.
+    webServer.sendHeader("Cache-Control", "no-store");
+    webServer.send(200, "application/json", "{\"ok\":0,\"err\":\"fs\"}");
+    return;
+  }
+
   String ssid = webServer.arg("ssid");
   String pass = webServer.arg("pass");
   ssid.trim();
@@ -2036,31 +2071,62 @@ void handleApiWifi() {
     // AP-only mod: STA bilgilerini temizle
     wifiSsid = "";
     wifiPass = "";
+    setupDone = true;            // bilincli olarak ev agi kullanilmiyor
   } else {
     wifiSsid = ssid;
     if (pass.length() > 0 || ssid != oldSsid) {
       wifiPass = pass;
     }
+    // setupDone burada isaretlenmez: ancak ag gercekten baglanirsa tamamlanir.
   }
   saveSettings();
 
   webServer.sendHeader("Cache-Control", "no-store");
-  webServer.send(200, "application/json", "{\"ok\":true,\"reboot\":true}");
-  restartAtMs = millis() + 1200UL;
+  webServer.send(200, "application/json",
+                 "{\"ok\":1,\"reboot\":1,\"ssid\":\"" + jsonEscape(wifiSsid) + "\"}");
+  restartAtMs = millis() + 1500UL;
 }
 
+// Tarama asenkron yurutulur: istek uzun sure bloklanmaz (AP+STA modunda
+// bloklayan tarama istegi zaman asimina ve kopmalara yol acabiliyor).
+// ?start=1 ile baslatilir, sonuc hazir olunca ayni uctan alinir.
+static unsigned long scanStartMs = 0;
+
 void handleApiWifiScan() {
-  // Cevredeki aglari tara (AP calisirken ~2-4 sn bloklar)
-  int n = WiFi.scanNetworks(false, false);
+  int16_t st;
+
+  if (webServer.hasArg("start")) {
+    WiFi.scanDelete();
+    scanStartMs = millis();
+    st = WiFi.scanNetworks(true, false);      // true = asenkron
+    if (st < 0) st = -2;                      // -1 = tarama basladi (hazir degil)
+  } else {
+    st = WiFi.scanComplete();                 // -2 calisiyor, -1 yok, >=0 adet
+  }
+
+  if (st == -2 && millis() - scanStartMs > 20000UL) {
+    WiFi.scanDelete();                        // takildi: birak
+    st = -1;
+  }
+
+  if (st == -2) {
+    webServer.sendHeader("Cache-Control", "no-store");
+    webServer.send(200, "application/json", "{\"ok\":1,\"busy\":1}");
+    return;
+  }
+
+  if (st < 0) {
+    webServer.sendHeader("Cache-Control", "no-store");
+    webServer.send(200, "application/json", "{\"ok\":0,\"err\":\"scan\"}");
+    return;
+  }
 
   String j;
-  j.reserve(96);
-  j  = "{\"ok\":";
-  j += (n >= 0) ? "1" : "0";
-  j += ",\"nets\":[";
+  j.reserve(900);
+  j  = "{\"ok\":1,\"busy\":0,\"state\":1,\"nets\":[";
 
   uint8_t added = 0;
-  for (int i = 0; i < n && added < 12; i++) {
+  for (int i = 0; i < st && added < 12; i++) {
     String ssid = WiFi.SSID(i);
     ssid.trim();
     if (ssid.length() == 0) continue;     // gizli SSID'leri atla

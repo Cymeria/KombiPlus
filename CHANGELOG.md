@@ -11,11 +11,24 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 - **Captive portal** — the room unit resolves every DNS name to itself while the access point is
   up (`DNSServer`) and answers the Windows/Android/iOS/macOS connectivity probes with a 302, so a
   phone or laptop that joins `KombiPlus` opens the web UI by itself.
-- **Web-based first setup** — `/api/status` now reports `setup` (1 when no home network is
-  configured) and the web UI opens a setup card with a Wi-Fi scan, SSID and password fields.
+- **Web-based first setup** — `/api/status` now reports `setup` (1 when the first setup is not
+  done yet) and the web UI opens a setup card with a Wi-Fi scan, SSID and password fields.
   Language and network can be configured entirely from the browser; the encoder is optional.
+  The state is stored as `setupdone=` in `config.txt` and only becomes 1 when the device really
+  joins the home network (or when the user picks "Not now"), so a failed attempt brings the card
+  back on the next boot.
 - **CI:** `.github/workflows/build.yml` compiles both sketches with arduino-cli
   (ESP8266 core 3.1.2) on every push.
+
+### Fixed
+
+- **Wi-Fi scan from the web UI** — the scan no longer runs blocking inside the HTTP handler
+  (which could stall or reset the request in AP+STA mode). `/api/scan?start=1` starts an
+  asynchronous scan and the page polls until results arrive; failures now return `ok:0`
+  instead of an empty list.
+- **Saving Wi-Fi from the web UI** — `/api/wifi` reports `ok:0` when the settings file cannot be
+  written instead of pretending success, the restart is delayed so the response is delivered,
+  and the page shows the result before reloading.
 
 ### Changed
 

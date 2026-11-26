@@ -626,6 +626,7 @@ function saveSettings(){
 }
 
 // Ag taramasi: normal Wi-Fi karti ve ilk kurulum karti ayni yardimciyi kullanir.
+// Cihaz taramayi arka planda yapar; sonuc hazir olana kadar burada yoklanir.
 let scanning = false;
 async function scanInto(btn, list, hint, ssidInput, passInput){
   if(scanning) return;
@@ -634,8 +635,18 @@ async function scanInto(btn, list, hint, ssidInput, passInput){
   btn.textContent = t('scanning');
   hint.textContent = t('scanBusy');
   try{
-    const r = await api('/api/scan');
-    const nets = (r && r.nets) ? r.nets : [];
+    let nets = null;
+    for(let i = 0; i < 25 && !nets; i++){
+      const r = await api('/api/scan' + (i === 0 ? '?start=1' : ''));
+      if(r && r.nets){
+        nets = r.nets;
+      }else if(!(r && r.ok)){
+        // Tarama yok ya da basarisiz oldu: yeniden baslat.
+        await api('/api/scan?start=1').catch(() => null);
+      }
+      if(!nets) await new Promise(res => setTimeout(res, 700));
+    }
+    if(!nets) throw new Error('scan');
     list.textContent = '';
     list.classList.add('on');
     if(nets.length === 0){
@@ -681,10 +692,11 @@ async function saveWifi(){
     if(!confirm(t('wifiClearConfirm'))) return;
   }
   try{
-    await api('/api/wifi', {method:'POST', body:new URLSearchParams({ssid:ssid, pass:pass})});
+    const r = await api('/api/wifi', {method:'POST', body:new URLSearchParams({ssid:ssid, pass:pass})});
+    if(!r || !r.ok) throw new Error('save');
     toast(t('wifiSaved'));
     setPill('warn', t('restarting'));
-    setTimeout(() => { location.reload(); }, 9000);
+    setTimeout(() => { location.reload(); }, 12000);
   }catch(e){ toast(t('saveError'), true); }
 }
 
@@ -694,20 +706,25 @@ function showSetup(){
   $('setupMask').hidden = false;
   if(S && S.ssid) $('suSsid').value = S.ssid;
 }
-function setupSkip(){ $('setupMask').hidden = true; }
+async function setupSkip(){
+  $('setupMask').hidden = true;
+  // Cihaza da bildir: sonraki acilista kart tekrar acilmasin.
+  try{ await api('/api/wifi?skip=1', {method:'POST'}); }catch(e){}
+}
 
 function setupScan(){
   scanInto($('suScan'), $('suList'), $('suHint'), $('suSsid'), $('suPass'));
 }
 
 async function setupSave(){
-  const ssid = $('suSsid').value.trim();
+      const ssid = $('suSsid').value.trim();
   if(!ssid){ toast(t('invalidValue'), true); return; }
   try{
-    await api('/api/wifi', {method:'POST', body:new URLSearchParams({ssid:ssid, pass:$('suPass').value})});
+    const r = await api('/api/wifi', {method:'POST', body:new URLSearchParams({ssid:ssid, pass:$('suPass').value})});
+    if(!r || !r.ok) throw new Error('save');
     toast(t('wifiSaved'));
     setPill('warn', t('restarting'));
-    setTimeout(() => { location.reload(); }, 9000);
+    setTimeout(() => { location.reload(); }, 12000);
   }catch(e){ toast(t('saveError'), true); }
 }
 
