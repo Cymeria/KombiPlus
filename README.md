@@ -96,7 +96,7 @@ by double-clicking it. It runs a mock API inside the browser, so nothing is inst
 ### Room unit (`oda_termostati/`)
 
 - **Sensor choice** — DHT11, DHT22 or DS18B20 with a single `#define`
-- **0.96" SSD1306 OLED** (128×64, I²C): 4× room temperature that blinks while heating;
+- **0.96" SSD1306 OLED** (128×64, I²C): 5× room temperature (4× while the footer line is in use) that blinks while heating;
   the first encoder turn only opens target edit mode (the value does not change), further turns
   step it and show the target in the same spot for 10 s; plus network/info/sleep pages
 - **KY-040 rotary encoder** — turn to set the setpoint, short press for pages, long press for mode

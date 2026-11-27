@@ -2536,11 +2536,10 @@ static void segDigit(int x, int y, uint8_t m) {
 }
 
 // Degerin kapladigi genislik (ortalamak ve "C" konumu icin).
-static int bigWidth(const char *s, uint8_t font) {
+static int bigWidth(const char *s, uint8_t font, uint8_t tsize) {
   int n = (int)strlen(s);
   if (font == 0) {
-    uint8_t t = (n <= 4) ? 4 : 3;
-    return n * 6 * t;
+    return n * 6 * (int)tsize;
   }
   int w = 0;
   for (int i = 0; i < n; i++) {
@@ -2550,13 +2549,17 @@ static int bigWidth(const char *s, uint8_t font) {
   return w;
 }
 
-static void bigText(const char *s, int x, int y, uint8_t font) {
+static void bigText(const char *s, int x, int y, uint8_t font, uint8_t tsize) {
   if (font == 0) {
-    uint8_t t = ((int)strlen(s) <= 4) ? 4 : 3;
-    display.setTextSize(t);
+    display.setTextSize(tsize);
     display.setTextColor(SSD1306_WHITE);
     display.setCursor(x, y);
     display.print(s);
+    if (tsize >= 5) {
+      // 1 px saga ikinci gecis: ince GFX fontunu kalinlastirir.
+      display.setCursor(x + 1, y);
+      display.print(s);
+    }
     display.setTextSize(1);
     return;
   }
@@ -2591,6 +2594,13 @@ void drawMainPage() {
   }
   bool editing = (setpointPeekMs != 0);
 
+  // Alt satirda bir sey yazilacaksa buyuk yazi 4x kalir; bos oldugunda 5x
+  // ile govdenin tamamini kullanir. (5x dort karakterde 120 px genislik.)
+  bool footLeft  = editing || (th.showHum && sensorReady && !isnan(currentHum));
+  bool footRight = (th.showBoost && boostActive) ||
+                   (th.showWater && boilerFlow > -100.0f);
+  bool footShown = footLeft || footRight;
+
   // Deger sabit tamponda tutulur: 4 Hz yenilemede String ayirmasi yapilmaz.
   char big[8];
   bool bigOn;
@@ -2606,19 +2616,23 @@ void drawMainPage() {
 
   // font 0: 4x sigmayan uzun degerler (or. "-10.5") 3x cizilir.
   const uint8_t font = th.font;
-  int bigW  = bigWidth(big, font);
+  uint8_t tsize = 4;
+  if (font == 0) {
+    tsize = ((int)strlen(big) <= 4) ? (footShown ? 4 : 5) : 3;
+  }
+  int bigW  = bigWidth(big, font, tsize);
   int lineY = base + 1;
   int cOff  = SEG_H - 9;                          // kucuk "C" dikey konumu
   if (font == 0) {
-    uint8_t tsize = ((int)strlen(big) <= 4) ? 4 : 3;
-    lineY += (tsize == 4) ? 0 : 4;
+    if (tsize == 5)      lineY = base + 4;        // 40 px: govdeye ortala
+    else if (tsize == 3) lineY += 4;
     cOff = tsize * 8 - 9;
   }
   int x0 = (128 - (bigW + 8)) / 2;                // +8: kucuk "C" ve bosluk
   if (x0 < 0) x0 = 0;
 
   if (bigOn) {
-    bigText(big, x0, lineY, font);
+    bigText(big, x0, lineY, font, tsize);
     display.setTextSize(1);
     display.setTextColor(SSD1306_WHITE);
     display.setCursor(x0 + bigW + 2, lineY + cOff);
@@ -2626,10 +2640,7 @@ void drawMainPage() {
   }
 
   // Alt satir: solda hedef etiketi ya da nem, sagda boost / kombi suyu.
-  bool footLeft  = editing || (th.showHum && sensorReady && !isnan(currentHum));
-  bool footRight = (th.showBoost && boostActive) ||
-                   (th.showWater && boilerFlow > -100.0f);
-  if (footLeft || footRight) oledThemeSeparator(display, th, footY - 2);
+  if (footShown) oledThemeSeparator(display, th, footY - 2);
 
   display.setTextSize(1);
   if (editing) {

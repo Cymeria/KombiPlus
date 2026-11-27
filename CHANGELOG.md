@@ -10,6 +10,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 - When the room sensor returns no data, the main screen now shows `00.0` instead of `--.-`
   in the large temperature slot.
+- **Larger, bolder main reading** — when the footer line is empty (no humidity, boiler water,
+  boost or target label) the GFX themes draw the room temperature at 5× with a second 1 px
+  pass instead of 4×, filling the screen width and staying readable from farther away. The 4×
+  size is kept whenever the footer is in use so nothing overlaps.
 
 ## [1.1.0] — 2026-11-27
 

@@ -232,7 +232,7 @@ seçilen dilde gelir.
 
 ### OLED sayfaları
 
-1. **Ana:** 4× oda sıcaklığı (ısıtırken yanıp söner); hedef yalnızca encoder
+1. **Ana:** 5× oda sıcaklığı (alt satır doluyken 4×; ısıtırken yanıp söner); hedef yalnızca encoder
    çevrildikten sonraki 10 sn boyunca aynı yerde yanıp söner; nem / kombi suyu
    yalnızca geçerli veri varsa alt satırda
 2. **Ağ:** AP IP, STA IP, SSID, kombi bağlantısı, sinyal
@@ -251,7 +251,7 @@ söner, alt satırda `HEDEF` etiketi görünür; süre dolunca güncel sıcaklı
 ### OLED temaları
 
 Ekran yerleşimi `src/OledTheme/` modülünden gelir. **10 yerleşik tema** vardır ve
-hepsi ana ekran yerleşimini paylaşır: ortada 4× oda sıcaklığı ve küçük `C`, altta
+hepsi ana ekran yerleşimini paylaşır: ortada 5× oda sıcaklığı (alt satır doluyken 4×) ve küçük `C`, altta
 yalnızca veri varsa nem ve kombi suyu. Hedef normalde çizilmez; encoder çevrilince
 10 sn boyunca aynı büyük yuvada yanıp söner ve alt satırda `HEDEF` etiketi görünür.
 
@@ -283,11 +283,11 @@ oluşturulur: `/themes/<id>.txt` ve `/themes/active.txt`.
 
 | Tema | Ikonlar | Font |
 |------|---------|------|
-| `klasik`  | çizgi (2 px)  | GFX 4× |
-| `ince`    | ince (1 px)   | GFX 4× |
-| `dolu`    | dolu (3 px)   | GFX 4× |
-| `kutu`    | çerçeveli     | GFX 4× |
-| `nokta`   | noktalı       | GFX 4× |
+| `klasik`  | çizgi (2 px)  | GFX 5×/4× |
+| `ince`    | ince (1 px)   | GFX 5×/4× |
+| `dolu`    | dolu (3 px)   | GFX 5×/4× |
+| `kutu`    | çerçeveli     | GFX 5×/4× |
+| `nokta`   | noktalı       | GFX 5×/4× |
 | `dijital` | çizgi (2 px)  | yedi parçalı (dijital) |
 | `neon`    | dolu (3 px)   | yedi parçalı (dijital) |
 | `panel`   | çerçeveli     | yedi parçalı (dijital) |
