@@ -83,17 +83,8 @@
   .scr .r.s5 span{width:30px}
   /* yedi parcali temalar: kalin ve parlak rakamlar */
   .scr .r.seg{font-weight:700;letter-spacing:-1px;text-shadow:0 0 4px rgba(120,180,255,.9)}
-  /* ust bant simgeleri (11x12) */
-  .scr .ic{position:absolute;top:2px;width:11px;height:12px}
-  .scr .ic.temp:before{content:"";position:absolute;left:4px;top:0;width:3px;height:8px;background:#d3e6ff}
-  .scr .ic.temp:after{content:"";position:absolute;left:2px;top:7px;width:7px;height:5px;border-radius:50%;background:#d3e6ff}
-  .scr .ic.link:before,.scr .ic.link:after{content:"";position:absolute;top:3px;width:6px;height:6px;border:1px solid #d3e6ff;border-radius:2px}
-  .scr .ic.link:before{left:0}.scr .ic.link:after{right:0}
-  .scr .ic.wifi{background:
-    linear-gradient(#d3e6ff,#d3e6ff) 1px 3px/9px 1px no-repeat,
-    linear-gradient(#d3e6ff,#d3e6ff) 3px 6px/5px 1px no-repeat,
-    linear-gradient(#d3e6ff,#d3e6ff) 5px 9px/1px 1px no-repeat}
-  .scr .ic.bad{opacity:.35}
+  /* ust bant simgeleri (11x12 SVG; kalinlik/nokta tema.icons ile degisir) */
+  .scr .ic{position:absolute;top:2px;width:11px;height:12px;overflow:visible}
   .scr .dot{position:absolute;top:7px;width:2px;height:2px;border:1px solid #d3e6ff;box-sizing:border-box}
   .scr .dot.on{background:#d3e6ff}
   .scr .r.dark{color:#04070d;text-shadow:none}
@@ -374,18 +365,54 @@ function statusText(s) {
   return 'BEKLIYOR';
 }
 
-// Ust bant: sensor / kombi / wifi simgeleri (hata varsa soluk).
-function bandIcons(s) {
+// Simge stilleri (OledTheme.cpp iconT/iconH/iconV): 0 cizgi, 1 ince,
+// 2 dolu, 3 cerceveli, 4 noktali. Fark gercek kalinlik/nokta ile cizilir.
+function iconSvg(kind, style, bad, x) {
+  const w = [2, 1, 3, 1.5, 1.6][style] || 2;
+  const dash = style === 4 ? ' stroke-dasharray="1 1.3"' : '';
+  let g = '';
+  if (kind === 'temp') {
+    g = '<line x1="5.5" y1="1.2" x2="5.5" y2="7.4"/><circle cx="5.5" cy="9.2" r="2.1"/>';
+  } else if (kind === 'link') {
+    g = '<circle cx="2.9" cy="6" r="1.7"/><circle cx="8.1" cy="6" r="1.7"/><line x1="4.4" y1="6" x2="6.6" y2="6"/>';
+  } else {
+    g = '<path d="M1 4.3 Q5.5 0.8 10 4.3"/><path d="M2.5 6.8 Q5.5 4.4 8.5 6.8"/>'
+      + '<circle cx="5.5" cy="9.7" r="0.8" fill="#d3e6ff" stroke="none"/>';
+  }
+  const box = style === 3
+    ? '<rect x="0.5" y="0.5" width="10" height="11" fill="none" stroke="#d3e6ff" stroke-width="0.8"/>'
+    : '';
+  return '<svg class="ic" style="left:' + x + 'px' + (bad ? ';opacity:.35' : '') + '" width="11" height="12" viewBox="0 0 11 12">'
+    + '<g stroke="#d3e6ff" fill="none" stroke-width="' + w + '" stroke-linecap="round" stroke-linejoin="round"' + dash + '>'
+    + g + '</g>' + box + '</svg>';
+}
+
+// oledThemeStatusBar(): simgeler + sayfa noktalari + sagda saat (ana ekranda nem/su).
+function band(s, page, info) {
+  const th = theme();
+  const st = th.icons || 0;
   const items = [
-    { cls: 'temp', bad: !s.sensorOk },
-    { cls: 'link', bad: !s.link },
-    { cls: 'wifi', bad: false }
+    { kind: 'temp', bad: !s.sensorOk },
+    { kind: 'link', bad: !s.link },
+    { kind: 'wifi', bad: false }
   ];
-  let out = '';
+  let h = '';
   items.forEach((it, i) => {
-    out += '<div class="ic ' + it.cls + (it.bad ? ' bad' : '') + '" style="left:' + (2 + i * 12) + 'px"></div>';
+    h += iconSvg(it.kind, st, it.bad, 2 + i * 12);
   });
-  return out;
+  if (th.header === 1) h += hl(15);
+  if (th.header === 2) h += hl(14) + hl(15);
+  if (th.header === 3) h += '<div class="box" style="top:1px;height:14px"></div>';
+
+  const right = info || new Date().toTimeString().slice(0, 5);
+  const total = PAGE_COUNT * 2 + (PAGE_COUNT - 1) * 2;
+  let dx = 126 - Array.from(right).length * 6 - 3 - total;
+  if (dx < 40) dx = 40;
+  h += rowR(126, 4, right);
+  for (let i = 0; i < PAGE_COUNT; i++) {
+    h += '<div class="dot' + (i === page - 1 ? ' on' : '') + '" style="left:' + (dx + i * 4) + 'px"></div>';
+  }
+  return h;
 }
 
 // drawMainPage(): govdenin tamami sicaklik; alt satir yok, nem/su ust bantta.
@@ -400,24 +427,10 @@ function page1(s) {
   let x = Math.floor((128 - (tempW + 8)) / 2);
   if (x < 0) x = 0;
 
-  let h = bandIcons(s);
-  if (th.header === 1) h += hl(15);
-  if (th.header === 2) h += hl(14) + hl(15);
-  if (th.header === 3) h += '<div class="box" style="top:1px;height:14px"></div>';
-
   // Saatin yerine nem (yoksa kombi suyu), en sagda.
   const info = (s.sensorOk && s.hum !== null) ? Math.round(s.hum) + '%'
              : (s.flow !== null ? Math.round(s.flow) + 'C' : '');
-  const total = PAGE_COUNT * 2 + (PAGE_COUNT - 1) * 2;
-  let dx = 128 - total;
-  if (info) {
-    dx = 126 - Array.from(info).length * 6 - 3 - total;
-    h += rowR(126, 4, info);
-  }
-  if (dx < 40) dx = 40;
-  for (let i = 0; i < PAGE_COUNT; i++) {
-    h += '<div class="dot' + (i === 0 ? ' on' : '') + '" style="left:' + (dx + i * 4) + 'px"></div>';
-  }
+  let h = band(s, 1, info);
 
   h += row(x, tempY, tempStr, cls);
   h += row(x + tempW + 2, tempY + (big ? 31 : 23), 'C');
@@ -428,11 +441,11 @@ function page2(s) {
   const th = theme();
   let ssid = NET.ssid;
   if (ssid.length > 19) ssid = ssid.slice(0, 19);
-  let h = header('AG BILGISI', 2, th);
-  h += row(0, 12, 'AP: ' + NET.apip);
-  h += row(0, 21, 'IP: ' + NET.ip);
-  h += row(0, 30, 'STA: ' + ssid);
-  h += row(0, 39, 'Kombi: ' + (s.link ? 'BAGLI' : 'YOK'));
+  let h = band(s, 2);
+  h += row(0, 16, 'AP: ' + NET.apip);
+  h += row(0, 24, 'IP: ' + NET.ip);
+  h += row(0, 32, 'STA: ' + ssid);
+  h += row(0, 40, 'Kombi: ' + (s.link ? 'BAGLI' : 'YOK'));
   if (s.link) h += row(0, 48, 'Role IP: ' + NET.clientIp);
   h += row(0, 56, 'Sinyal: ' + NET.rssi + ' dBm');
   return h;
@@ -444,11 +457,11 @@ function page3(s) {
   const hh = Math.floor((UPTIME % 86400) / 3600);
   const mm = Math.floor((UPTIME % 3600) / 60);
   const up = (d > 0 ? d + 'g ' : '') + hh + 's ' + mm + 'd';
-  let h = header('BILGI', 3, th);
-  h += row(0, 12, 'Histerezis: 0.3C');
-  h += row(0, 21, 'Kalibrasyon: +0.0C');
-  h += row(0, 30, 'Don koruma: 5.0C');
-  h += row(0, 39, 'Boost: ' + (boostOn ? '45 dk' : 'yok'));
+  let h = band(s, 3);
+  h += row(0, 16, 'Histerezis: 0.3C');
+  h += row(0, 24, 'Kalibrasyon: +0.0C');
+  h += row(0, 32, 'Don koruma: 5.0C');
+  h += row(0, 40, 'Boost: ' + (boostOn ? '45 dk' : 'yok'));
   h += row(0, 48, 'Calisma: ' + up);
   h += row(0, 56, 'FW 1.1.1  Heap:38k');
   return h;
@@ -456,13 +469,13 @@ function page3(s) {
 
 function page4(s) {
   const th = theme();
-  let h = header('UYKU MODU', 4, th);
-  h += row(0, 12, 'Durum: ' + (!SLEEP.enabled ? 'kapali' : SLEEP.active ? 'AKTIF' : 'bekliyor'));
-  h += row(0, 21, 'Aralik: ' + SLEEP.start + ' - ' + SLEEP.end);
-  h += row(0, 30, 'Uyku hedefi: ' + SLEEP.sp.toFixed(1) + 'C');
-  h += row(0, 39, 'Normal hedef: ' + s.sp.toFixed(1) + 'C');
-  h += row(0, 48, 'Saat: NTP OK 03:24');
-  h += row(0, 56, 'Role FS: ' + (SLEEP.failsafe ? 'ACIK kalir' : 'kapanir'));
+  let h = band(s, 4);
+  h += row(0, 16, 'Durum: ' + (!SLEEP.enabled ? 'kapali' : SLEEP.active ? 'AKTIF' : 'bekliyor'));
+  h += row(0, 24, 'Aralik: ' + SLEEP.start + ' - ' + SLEEP.end);
+  h += row(0, 32, 'Uyku hedefi: ' + SLEEP.sp.toFixed(1) + 'C');
+  h += row(0, 40, 'Normal hedef: ' + s.sp.toFixed(1) + 'C');
+  h += row(0, 48, 'Role FS: ' + (SLEEP.failsafe ? 'ACIK kalir' : 'kapanir'));
+  h += row(0, 56, 'Kombi suyu: ' + (s.flow !== null ? s.flow.toFixed(1) + 'C' : '--'));
   return h;
 }
 
