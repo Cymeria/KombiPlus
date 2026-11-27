@@ -4,6 +4,13 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Changed
+
+- When the room sensor returns no data, the main screen now shows `00.0` instead of `--.-`
+  in the large temperature slot.
+
 ## [1.1.0] — 2026-11-27
 
 OLED-focused release: the room temperature is now the whole main screen, ten themes share that

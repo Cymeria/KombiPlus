@@ -2599,7 +2599,7 @@ void drawMainPage() {
     bigOn = ((millis() / 450UL) % 2 == 0);        // hedef yanip soner
   } else {
     if (sensorReady) snprintf(big, sizeof(big), "%.1f", currentTemp);
-    else             snprintf(big, sizeof(big), "--.-");
+    else             snprintf(big, sizeof(big), "00.0");
     // Isitma talebi varken deger yanip soner: "ISITIYOR" yazisi yerine gorsel.
     bigOn = !heating || ((millis() / 600UL) % 2 == 0);
   }
