@@ -96,14 +96,14 @@ by double-clicking it. It runs a mock API inside the browser, so nothing is inst
 ### Room unit (`oda_termostati/`)
 
 - **Sensor choice** — DHT11, DHT22 or DS18B20 with a single `#define`
-- **0.96" SSD1306 OLED** (128×64, I²C): 5× room temperature (4× while the footer line is in use) that blinks while heating;
+- **0.96" SSD1306 OLED** (128×64, I²C): 5× room temperature (4× for long values such as `-10.5`) that blinks while heating;
   the first encoder turn only opens target edit mode (the value does not change), further turns
   step it and show the target in the same spot for 10 s; plus network/info/sleep pages
 - **KY-040 rotary encoder** — turn to set the setpoint, short press for pages, long press for mode
 - **Status band** — the yellow top 16 px shows separate sensor, boiler-link and Wi-Fi icons,
-  the current time on the right, and page dots; the room temperature is the biggest item on
-  the main page, the target only appears for 10 s after a turn, and humidity only appears
-  when the sensor reports it
+  page dots and, on the other pages, the current time. The main page puts humidity (or boiler
+  water when humidity is unavailable) where the clock sits, because it has no footer row: the
+  room temperature fills the body and the target only replaces it for 10 s after a turn
 - **10 built-in OLED themes** in editable `/themes/*.txt` — all share one main-screen layout and
   differ only in the status icons and the large temperature font; hold the encoder button and
   turn to switch

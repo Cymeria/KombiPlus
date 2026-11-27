@@ -92,8 +92,10 @@ class OledThemeStore {
 int  oledThemeHeaderHeight(const OledTheme &t);
 // Ust bandi bildirim simgeleri, sayfa noktalari ve saatle cizer.
 // clock NULL/"" ise saat cizilmez; baslik metni hic yazilmaz.
+// info doluysa saatin yerine o kisa metin yazilir (nem/su gibi).
 void oledThemeStatusBar(Adafruit_GFX &d, const OledTheme &t, uint8_t notes,
-                        int page, int pageCount, const char *clock);
+                        int page, int pageCount, const char *clock,
+                        const char *info);
 void oledThemeSeparator(Adafruit_GFX &d, const OledTheme &t, int y);
 void oledThemeStatus(Adafruit_GFX &d, const OledTheme &t, int y,
                      const __FlashStringHelper *label, bool highlight);

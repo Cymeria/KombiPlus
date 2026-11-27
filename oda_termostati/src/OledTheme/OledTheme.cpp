@@ -391,7 +391,8 @@ static void iconBox(Adafruit_GFX &d, uint8_t s, int x, int y, uint16_t c) {
 // Ust (sari) bant = durum alani: solda sensor/kombi/wifi simgeleri,
 // ortada sayfa noktalari, en sagda guncel saat. Baslik metni cizilmez.
 void oledThemeStatusBar(Adafruit_GFX &d, const OledTheme &t, uint8_t notes,
-                        int page, int pageCount, const char *clock) {
+                        int page, int pageCount, const char *clock,
+                        const char *info) {
   const int band = OLED_BAND_H;
   uint16_t fg = SSD1306_WHITE;
 
@@ -419,8 +420,22 @@ void oledThemeStatusBar(Adafruit_GFX &d, const OledTheme &t, uint8_t notes,
   if (notes & OLED_NOTE_SLEEP) { iconMoon(d, st, x, 2, fg);  iconBox(d, st, x, 2, fg); x += 12; }
   if (notes & OLED_NOTE_BOOST) { iconBolt(d, st, x, 2, fg);  iconBox(d, st, x, 2, fg); x += 12; }
 
+  // info: saatin yerine yazilan kisa deger (ana ekranda nem / kombi suyu).
   int clockX = 0;
-  if (clock && clock[0]) {
+  bool infoShown = false;
+  if (info && info[0]) {
+    int w = (int)strlen(info) * 6;
+    int cx = 128 - w;
+    if (cx >= x + 2) {
+      d.setTextSize(1);
+      d.setTextColor(fg);
+      d.setCursor(cx, 4);
+      d.print(info);
+      clockX = cx;
+      infoShown = true;
+    }
+  }
+  if (!infoShown && clock && clock[0]) {
     int w = (int)strlen(clock) * 6;
     clockX = 128 - w;
     if (clockX < x) clockX = x;

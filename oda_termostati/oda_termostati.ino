@@ -2488,7 +2488,7 @@ void oledClockText(char *out, size_t n) {
   snprintf(out, n, "%02d:%02d", tmv.tm_hour, tmv.tm_min);
 }
 
-void oledHeader() {
+void oledHeader(const char *info) {
   uint8_t notes = 0;
   if (!sensorOk)                      notes |= OLED_NOTE_SENSOR;
   if (!boilerLinked())                notes |= OLED_NOTE_NOLINK;
@@ -2499,17 +2499,17 @@ void oledHeader() {
   char hm[8];
   oledClockText(hm, sizeof(hm));
   oledThemeStatusBar(display, themeStore.active(), notes, oledPage,
-                     OLED_PAGE_COUNT, hm);
+                     OLED_PAGE_COUNT, (info && info[0]) ? nullptr : hm, info);
 }
 
 // ---- Buyuk sicaklik yazisi -------------------------------------------------
 // Tum temalar ayni yuvayi kullanir; yalnizca font degisir:
 //   0 = Adafruit GFX yerlesik fontu (4x, uzun degerlerde 3x)
 //   1 = yedi parcali (dijital) rakamlar
-#define SEG_W   16
-#define SEG_H   30
-#define SEG_T   3
-#define SEG_GAP 4
+#define SEG_W   26
+#define SEG_H   40
+#define SEG_T   5
+#define SEG_GAP 5
 
 // A B C D E F G = 0x01..0x40
 static const uint8_t SEG_DIGIT[10] = {
@@ -2555,7 +2555,7 @@ static void bigText(const char *s, int x, int y, uint8_t font, uint8_t tsize) {
     display.setTextColor(SSD1306_WHITE);
     display.setCursor(x, y);
     display.print(s);
-    if (tsize >= 5) {
+    if (tsize >= 4) {
       // 1 px saga ikinci gecis: ince GFX fontunu kalinlastirir.
       display.setCursor(x + 1, y);
       display.print(s);
@@ -2573,15 +2573,13 @@ static void bigText(const char *s, int x, int y, uint8_t font, uint8_t tsize) {
   }
 }
 
-// Ana ekran: oda sicakligi olabildigince buyuk (4x, ortada). Hedef deger
-// normalde gizlidir; encoder cevrilince 10 sn boyunca ayni yuvada yanip soner.
-// Alt satirda yalnizca veri varsa nem / kombi suyu. Durum metni yok.
+// Ana ekran: oda sicakligi olabildigince buyuk (5x, ortada), alt satir yok.
+// Hedef normalde gizlidir; encoder cevrilince 10 sn ayni yuvada yanip soner.
+// Nem (yoksa kombi suyu) ust bantta, saatin yerinde gosterilir.
 void drawMainPage() {
   const OledTheme &th = themeStore.active();
-  oledHeader();
 
   const int base  = oledThemeHeaderHeight(th);    // sari bantin hemen alti
-  const int footY = OLED_BAND_H + 38;             // 54: en alt satir
 
   bool sensorReady = sensorOk && !isnan(currentTemp);
   // Don korumasi dahil her isi talebinde sicaklik yanip soner.
@@ -2594,12 +2592,15 @@ void drawMainPage() {
   }
   bool editing = (setpointPeekMs != 0);
 
-  // Alt satirda bir sey yazilacaksa buyuk yazi 4x kalir; bos oldugunda 5x
-  // ile govdenin tamamini kullanir. (5x dort karakterde 120 px genislik.)
-  bool footLeft  = editing || (th.showHum && sensorReady && !isnan(currentHum));
-  bool footRight = (th.showBoost && boostActive) ||
-                   (th.showWater && boilerFlow > -100.0f);
-  bool footShown = footLeft || footRight;
+  // Ust bantta saat yerine nem (yoksa kombi suyu) yazilir; boylece ana
+  // ekranda alt satir kalmaz ve sicaklik govdenin tamamini kullanir.
+  char bandInfo[8] = "";
+  if (th.showHum && sensorReady && !isnan(currentHum)) {
+    snprintf(bandInfo, sizeof(bandInfo), "%d%%", (int)roundf(currentHum));
+  } else if (th.showWater && boilerFlow > -100.0f) {
+    snprintf(bandInfo, sizeof(bandInfo), "%dC", (int)lroundf(boilerFlow));
+  }
+  oledHeader(bandInfo);
 
   // Deger sabit tamponda tutulur: 4 Hz yenilemede String ayirmasi yapilmaz.
   char big[8];
@@ -2614,20 +2615,15 @@ void drawMainPage() {
     bigOn = !heating || ((millis() / 600UL) % 2 == 0);
   }
 
-  // font 0: 4x sigmayan uzun degerler (or. "-10.5") 3x cizilir.
+  // font 0: 5x (dort karakter, 40 px) veya 4x (uzun deger, 32 px); govdeye orta.
   const uint8_t font = th.font;
-  uint8_t tsize = 4;
-  if (font == 0) {
-    tsize = ((int)strlen(big) <= 4) ? (footShown ? 4 : 5) : 3;
-  }
+  uint8_t tsize = 5;
+  if (font == 0) tsize = ((int)strlen(big) <= 4) ? 5 : 4;
+  const int bodyH = 64 - base;
   int bigW  = bigWidth(big, font, tsize);
-  int lineY = base + 1;
+  int lineY = base + (bodyH - (font == 0 ? tsize * 8 : SEG_H)) / 2;
   int cOff  = SEG_H - 9;                          // kucuk "C" dikey konumu
-  if (font == 0) {
-    if (tsize == 5)      lineY = base + 4;        // 40 px: govdeye ortala
-    else if (tsize == 3) lineY += 4;
-    cOff = tsize * 8 - 9;
-  }
+  if (font == 0) cOff = tsize * 8 - 9;
   int x0 = (128 - (bigW + 8)) / 2;                // +8: kucuk "C" ve bosluk
   if (x0 < 0) x0 = 0;
 
@@ -2639,38 +2635,10 @@ void drawMainPage() {
     display.print(F("C"));
   }
 
-  // Alt satir: solda hedef etiketi ya da nem, sagda boost / kombi suyu.
-  if (footShown) oledThemeSeparator(display, th, footY - 2);
-
-  display.setTextSize(1);
-  if (editing) {
-    display.setCursor(0, footY);
-    display.print(OT(L_TARGET));
-  } else if (footLeft) {
-    // Nem yalnizca gecerli veri varsa yazilir; yoksa ekranda yer kaplamaz.
-    display.setCursor(0, footY);
-    display.print(OT(L_HUM));
-    display.print(F(" %"));
-    display.print((int)roundf(currentHum));
-  }
-
-  // Alt sag: boost kalan sure, yoksa kombi su sicakligi (veri varsa).
-  if (th.showBoost && boostActive) {
-    char b[16];
-    snprintf(b, sizeof(b), "%s %u%s", OT(L_BOOST),
-             (unsigned)((boostRemainSec() + 59) / 60), OT(L_MIN));
-    display.setCursor(128 - (int)strlen(b) * 6, footY);
-    display.print(b);
-  } else if (th.showWater && boilerFlow > -100.0f) {
-    char f[20];
-    snprintf(f, sizeof(f), "%s %.1fC", OT(L_WATER), boilerFlow);
-    display.setCursor(128 - (int)strlen(f) * 6, footY);
-    display.print(f);
-  }
 }
 
 void drawNetPage() {
-  oledHeader();
+  oledHeader(nullptr);
   display.setTextSize(1);
   display.setCursor(0, OLED_BAND_H);
   display.print(F("AP: "));  display.print(WiFi.softAPIP());
@@ -2708,7 +2676,7 @@ void drawNetPage() {
 }
 
 void drawInfoPage() {
-  oledHeader();
+  oledHeader(nullptr);
 
   display.setTextSize(1);
   // Sabit tamponlar: 4 Hz yenilemede String ayirmasi yapilmaz.
@@ -2763,7 +2731,7 @@ void drawInfoPage() {
 }
 
 void drawSleepPage() {
-  oledHeader();
+  oledHeader(nullptr);
 
   display.setTextSize(1);
   display.setCursor(0, OLED_BAND_H);
@@ -2824,7 +2792,7 @@ void drawSleepPage() {
 
 // Ilk acilis dil secimi ekrani: encoder cevir -> dil, kisa bas -> kaydet.
 void drawLangPage() {
-  oledHeader();
+  oledHeader(nullptr);
   display.setTextSize(1);
 
   display.setCursor(0, OLED_BAND_H);

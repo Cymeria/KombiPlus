@@ -232,28 +232,29 @@ seçilen dilde gelir.
 
 ### OLED sayfaları
 
-1. **Ana:** 5× oda sıcaklığı (alt satır doluyken 4×; ısıtırken yanıp söner); hedef yalnızca encoder
+1. **Ana:** 5× oda sıcaklığı (uzun değerlerde 4×; ısıtırken yanıp söner); hedef yalnızca encoder
    çevrildikten sonraki 10 sn boyunca aynı yerde yanıp söner; nem / kombi suyu
-   yalnızca geçerli veri varsa alt satırda
+   üst bantta, saatin yerinde
 2. **Ağ:** AP IP, STA IP, SSID, kombi bağlantısı, sinyal
 3. **Bilgi:** histerezis, kalibrasyon, don koruması, boost, çalışma süresi, FW
 4. **Uyku:** durum, saat aralığı, uyku/normal hedef, NTP saati, röle fail‑safe
 
 Üstteki 16 piksellik sarı bant **durum alanıdır**: solda oda sensörü, kombi ve wifi
 bağlantısı için üç ayrı simge (kopukken üzeri çizili / `!` işaretli), gerektiğinde
-mod kapalı, uyku ve boost simgeleri, ortada sayfa noktaları, **en sağda güncel saat**
-(NTP yoksa `--:--`). Sayfa başlığı metni (ör. `TERMOSTAT`) bilinçli olarak çizilmez.
-Ana ekranda `ISITIYOR` / `BEKLIYOR` gibi durum yazısı yoktur: ısıtma talebi varken
-oda sıcaklığı yanıp söner, nem verisi yoksa nem için hiç yer ayrılmaz. Hedef değer
+mod kapalı, uyku ve boost simgeleri ve ortada sayfa noktaları. Sağ uçta diğer sayfalarda
+**güncel saat** (NTP yoksa `--:--`) durur; **ana ekranda saatin yerini nem** (nem yoksa
+kombi suyu) alır. Sayfa başlığı metni (ör. `TERMOSTAT`) bilinçli olarak çizilmez.
+Ana ekranda alt satır yoktur: 5× oda sıcaklığı gövdenin tamamını kullanır. `ISITIYOR` /
+`BEKLIYOR` gibi durum yazısı yerine ısıtma talebi varken değer yanıp söner. Hedef değer
 normalde gizlidir: encoder çevrilince 10 sn boyunca oda sıcaklığının yerinde yanıp
-söner, alt satırda `HEDEF` etiketi görünür; süre dolunca güncel sıcaklık döner.
+söner; süre dolunca güncel sıcaklık döner.
 
 ### OLED temaları
 
 Ekran yerleşimi `src/OledTheme/` modülünden gelir. **10 yerleşik tema** vardır ve
-hepsi ana ekran yerleşimini paylaşır: ortada 5× oda sıcaklığı (alt satır doluyken 4×) ve küçük `C`, altta
-yalnızca veri varsa nem ve kombi suyu. Hedef normalde çizilmez; encoder çevrilince
-10 sn boyunca aynı büyük yuvada yanıp söner ve alt satırda `HEDEF` etiketi görünür.
+hepsi ana ekran yerleşimini paylaşır: ortada 5× oda sıcaklığı (uzun değerlerde 4×) ve
+küçük `C`; alt satır yoktur, nem (yoksa kombi suyu) üst bantta gösterilir. Hedef normalde
+çizilmez; encoder çevrilince 10 sn boyunca aynı büyük yuvada yanıp söner.
 
 Temalar arasında yalnızca iki şey değişir:
 
