@@ -54,7 +54,7 @@
 
   <g font-family="ui-monospace,Consolas,'Courier New',monospace" font-size="12">
     <rect x="454" y="196" width="96" height="32" rx="16" fill="#1d2c49" stroke="#365075"/>
-    <text x="502" y="217" text-anchor="middle" fill="#ffb066">v1.0.0</text>
+    <text x="502" y="217" text-anchor="middle" fill="#ffb066">v1.1.0</text>
     <rect x="562" y="196" width="136" height="32" rx="16" fill="#1d2c49" stroke="#365075"/>
     <text x="630" y="217" text-anchor="middle" fill="#cfe0fa">NodeMCU v3</text>
     <rect x="710" y="196" width="196" height="32" rx="16" fill="#1d2c49" stroke="#365075"/>

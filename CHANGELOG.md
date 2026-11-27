@@ -4,7 +4,10 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
 [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [1.1.0] — 2026-11-27
+
+OLED-focused release: the room temperature is now the whole main screen, ten themes share that
+layout, and a new device can be set up entirely from the browser.
 
 ### Added
 
@@ -17,6 +20,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
   The state is stored as `setupdone=` in `config.txt` and only becomes 1 when the device really
   joins the home network (or when the user picks "Not now"), so a failed attempt brings the card
   back on the next boot.
+- **Panel test page** — `GET /test` shows a live mirror of the OLED (the real SSD1306
+  framebuffer from `/api/oled`, so themes, pages and colors match) next to a virtual encoder and
+  button. Turning changes the setpoint, holding the left/right buttons switches the theme, a
+  short press changes the page and a long press toggles the mode, all through the same handlers
+  the physical controls use. The page works even without a panel attached, because the sketch
+  now renders the display buffer regardless.
 - **CI:** `.github/workflows/build.yml` compiles both sketches with arduino-cli
   (ESP8266 core 3.1.2) on every push.
 
@@ -32,11 +41,32 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ### Changed
 
-- **OLED themes: yellow top band** — two-colour SSD1306 modules paint the first 16 px yellow,
-  so every theme now keeps the page header inside `0..15` (`OLED_BAND_H`) and starts the body at
-  y=16. `header=0` means a plain title instead of no header; the filled bar, box and lines are
-  drawn at the bottom of the band. Info pages were re-laid out on an 8 px grid inside the band
-  limit. Theme files/comments and the theme table in `oda_termostati/README.md` updated.
+- **Ten OLED themes on one layout** — `klasik`, `ince`, `dolu`, `kutu`, `nokta`, `dijital`,
+  `neon`, `panel`, `minimal` and `retro` all keep the main screen the same; a theme changes only
+  the status icons (`ikon=`: line, thin, filled, boxed, dotted) and the large temperature font
+  (`font=`: GFX or seven-segment digits). Every theme file is generated on first boot.
+- **First encoder turn only enters edit mode** — while the room temperature is on screen the
+  first turn no longer changes the target; it opens the blinking target view for 10 s, and only
+  the following turns step the setpoint. An accidental bump cannot alter the setting.
+- **OLED status band now shows links, time and state** — separate icons for the room sensor,
+  the boiler link and Wi-Fi are always drawn (broken link / sensor `!` / crossed waves on
+  failure), plus mode-off, sleep and boost when active; the current `HH:MM` (or `--:--` before
+  NTP) sits at the far right with the page dots beside it.
+- **Main page is built around the room temperature** — the temperature is drawn at 4×, centred,
+  with a small `C` beside it; the `ISITIYOR`/`BEKLIYOR` status text is gone (the value blinks
+  while there is heat demand) and humidity/boiler water are only drawn when data exists, so a
+  missing humidity reading no longer reserves space. The target is hidden by default: turning
+  the encoder draws it blinking in the same large slot for 10 s, then the room temperature
+  returns.
+- **OLED themes: yellow top band is a status area** — two-colour SSD1306 modules paint
+  the first 16 px yellow, so that band now shows icons for sensor error, no boiler link, AP
+  mode, sleep and boost, with the page dots on the right. Page-title text (`TERMOSTAT`,
+  `NETWORK`, …) is no longer drawn. The body starts at y=16 (`OLED_BAND_H`).
+- **Theme switching without the theme page** — the dedicated theme page is gone. Hold the
+  encoder button and turn right/left for the next/previous theme, or hold the left/right
+  buttons on `/test`; the visible page redraws with the new theme immediately.
+  `GET /api/theme?step=1` (or `-1`) drives the same path. At that point a single `klasik` layout
+  was built in while the theme structure was reworked; `/themes/active.txt` still stores the choice.
 - **Web UI scan helper** — the first-setup card and the Wi-Fi card now share one `scanInto()`
   helper instead of duplicating the `/api/scan` list rendering.
 - The product is named **KombiPlus** in the firmware banner, web UI, READMEs and banner image.

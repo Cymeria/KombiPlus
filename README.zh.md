@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="docs/images/banner.svg" alt="KombiPlus v1.0.0 — 双节点 ESP8266 Wi-Fi 室内温控器" width="100%">
+  <img src="docs/images/banner.svg" alt="KombiPlus v1.1.0 — 双节点 ESP8266 Wi-Fi 室内温控器" width="100%">
 </div>
 
 <h1 align="center">KombiPlus</h1>
@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img alt="版本" src="https://img.shields.io/badge/%E7%89%88%E6%9C%AC-1.0.0-ff8a3d?style=flat-square">
+  <img alt="版本" src="https://img.shields.io/badge/%E7%89%88%E6%9C%AC-1.1.0-ff8a3d?style=flat-square">
   <img alt="平台" src="https://img.shields.io/badge/platform-NodeMCU%20v3%20(ESP8266)-2b3d61?style=flat-square">
   <img alt="核心" src="https://img.shields.io/badge/Arduino%20core-3.1.2-00979D?style=flat-square&logo=arduino&logoColor=white">
   <img alt="云" src="https://img.shields.io/badge/%E4%BA%91%E7%AB%AF-%E6%97%A0%E9%9C%80-2dd47c?style=flat-square">
@@ -216,11 +216,11 @@ kombi/
 ```cpp
 // oda_termostati.ino
 #define AP_SSID  "KombiPlus"
-#define AP_PASS  "Ck.073214"
+#define AP_PASS  "Kombi.1881"
 
 // kombi_rolesi.ino
 #define TERMOSTAT_AP_SSID  "KombiPlus"
-#define TERMOSTAT_AP_PASS  "Ck.073214"
+#define TERMOSTAT_AP_PASS  "Kombi.1881"
 ```
 
 在室内单元选择传感器：
@@ -239,7 +239,7 @@ kombi/
 
 1. 先烧录**继电器单元**（暂不接锅炉接点）。
 2. 再烧录**室内单元**。
-3. 连接 `KombiPlus`（密码 `Ck.073214`），打开 `http://192.168.4.1`。
+3. 连接 `KombiPlus`（密码 `Kombi.1881`），打开 `http://192.168.4.1`。
 4. 继电器串口应输出 `Oda unitesine baglandi.`，网页显示 **Kombi bağlı**。
 5. 测试完成后，请**持证技师**把继电器接点接到锅炉温控端子。
 
@@ -289,7 +289,7 @@ kombi/
 | 方向 | 行 |
 |------|-----|
 | 室内 → 继电器 | `SET heat=1 sp=21.0 hyst=0.3 mode=1 fs=0\n` |
-| 继电器 → 室内 | `STATUS relay=1 flow=42.50 rssi=-58 up=123 fs=0 fw=1.0.0\n` |
+| 继电器 → 室内 | `STATUS relay=1 flow=42.50 rssi=-58 up=123 fs=0 fw=1.1.0\n` |
 
 两个方向都可在 115200 串口日志中查看。
 
@@ -350,8 +350,8 @@ fsTotal, uptime, ip, apip, ssid, sta, rssi, heap, client`。
 - `/themes/active.txt` — 最后选择的主题 ID
 - 网页绘制 24 小时 / 7 天 / 30 天曲线；`/fs` 可列出、下载、上传、删除与编辑文件
 
-内置主题：`klasik`、`minimal`、`ters`、`kutu`、`genis`、`gece`、`retro`、`durum`、
-`kompakt`、`dev`。
+内置主题：`klasik`、`ince`、`dolu`、`kutu`、`nokta`、`dijital`、`neon`、`panel`、
+`minimal`、`retro`。
 
 ---
 
@@ -368,6 +368,7 @@ fsTotal, uptime, ip, apip, ssid, sta, rssi, heap, client`。
 
 ## 版本
 
+- **v1.1.0** — 10 个 OLED 主题、以室温为主的主界面、浏览器初次设置 ([CHANGELOG.md](CHANGELOG.md))
 - **v1.0.0** — 首个稳定版本（见 [CHANGELOG.md](CHANGELOG.md)）
 - 验证环境：ESP8266 Arduino core 3.1.2、Arduino IDE 2.x
 - 室内单元 IRAM 约 95 %（可用 `TELEGRAM_ENABLED 0` 释放空间）

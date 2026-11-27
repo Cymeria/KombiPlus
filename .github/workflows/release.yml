@@ -1,0 +1,55 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: arduino/setup-arduino-cli@v1
+
+      - name: Install ESP8266 core 3.1.2
+        run: |
+          arduino-cli config init
+          arduino-cli config add board_manager.additional_urls https://arduino.esp8266.com/stable/package_esp8266com_index.json
+          arduino-cli core update-index
+          arduino-cli core install esp8266:esp8266@3.1.2
+
+      - name: Install libraries
+        run: |
+          arduino-cli lib install "Adafruit GFX Library"
+          arduino-cli lib install "Adafruit SSD1306"
+          arduino-cli lib install "DHT sensor library"
+          arduino-cli lib install "OneWire"
+          arduino-cli lib install "DallasTemperature"
+          arduino-cli lib install "PubSubClient"
+
+      - name: Compile room unit
+        run: arduino-cli compile --fqbn esp8266:esp8266:nodemcu --warnings default --output-dir out/oda oda_termostati
+
+      - name: Compile relay unit
+        run: arduino-cli compile --fqbn esp8266:esp8266:nodemcu --warnings default --output-dir out/relay kombi_rolesi
+
+      - name: Collect binaries
+        run: |
+          mkdir -p dist
+          cp out/oda/oda_termostati.ino.bin "dist/KombiPlus-oda_termostati-${GITHUB_REF_NAME}.bin"
+          cp out/relay/kombi_rolesi.ino.bin "dist/KombiPlus-kombi_rolesi-${GITHUB_REF_NAME}.bin"
+          ls -l dist
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" dist/*.bin --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" dist/*.bin --title "KombiPlus $GITHUB_REF_NAME" --generate-notes
+          fi

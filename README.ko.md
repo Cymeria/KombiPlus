@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="docs/images/banner.svg" alt="KombiPlus v1.0.0 — ESP8266 2개 구성 Wi-Fi 실내 온도조절기" width="100%">
+  <img src="docs/images/banner.svg" alt="KombiPlus v1.1.0 — ESP8266 2개 구성 Wi-Fi 실내 온도조절기" width="100%">
 </div>
 
 <h1 align="center">KombiPlus</h1>
@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img alt="버전" src="https://img.shields.io/badge/%EB%B2%84%EC%A0%84-1.0.0-ff8a3d?style=flat-square">
+  <img alt="버전" src="https://img.shields.io/badge/%EB%B2%84%EC%A0%84-1.1.0-ff8a3d?style=flat-square">
   <img alt="플랫폼" src="https://img.shields.io/badge/platform-NodeMCU%20v3%20(ESP8266)-2b3d61?style=flat-square">
   <img alt="코어" src="https://img.shields.io/badge/Arduino%20core-3.1.2-00979D?style=flat-square&logo=arduino&logoColor=white">
   <img alt="클라우드" src="https://img.shields.io/badge/%ED%81%B4%EB%9D%BC%EC%9A%B0%EB%93%9C-%EB%B6%88%ED%95%84%EC%9A%94-2dd47c?style=flat-square">
@@ -217,11 +217,11 @@ kombi/
 ```cpp
 // oda_termostati.ino
 #define AP_SSID  "KombiPlus"
-#define AP_PASS  "Ck.073214"
+#define AP_PASS  "Kombi.1881"
 
 // kombi_rolesi.ino
 #define TERMOSTAT_AP_SSID  "KombiPlus"
-#define TERMOSTAT_AP_PASS  "Ck.073214"
+#define TERMOSTAT_AP_PASS  "Kombi.1881"
 ```
 
 실내 유닛 센서 선택:
@@ -240,7 +240,7 @@ kombi/
 
 1. 먼저 **릴레이 유닛**을 업로드합니다(보일러 접점은 아직 연결하지 않음).
 2. 다음으로 **실내 유닛**을 업로드합니다.
-3. `KombiPlus`(비밀번호 `Ck.073214`)에 접속해 `http://192.168.4.1`을 엽니다.
+3. `KombiPlus`(비밀번호 `Kombi.1881`)에 접속해 `http://192.168.4.1`을 엽니다.
 4. 릴레이 로그에 `Oda unitesine baglandi.`, 웹 UI에 **Kombi bağlı**가 표시되어야 합니다.
 5. 테스트 후 릴레이 접점의 보일러 연결은 **자격을 갖춘 기술자**에게 맡기세요.
 
@@ -291,7 +291,7 @@ kombi/
 | 방향 | 줄 |
 |------|-----|
 | 실내 → 릴레이 | `SET heat=1 sp=21.0 hyst=0.3 mode=1 fs=0\n` |
-| 릴레이 → 실내 | `STATUS relay=1 flow=42.50 rssi=-58 up=123 fs=0 fw=1.0.0\n` |
+| 릴레이 → 실내 | `STATUS relay=1 flow=42.50 rssi=-58 up=123 fs=0 fw=1.1.0\n` |
 
 양방향 모두 115200 시리얼 로그에서 확인할 수 있습니다.
 
@@ -352,8 +352,8 @@ fsTotal, uptime, ip, apip, ssid, sta, rssi, heap, client`.
 - `/themes/active.txt` — 마지막 선택 테마 ID
 - 웹 UI는 24시간 / 7일 / 30일 그래프를 그립니다. `/fs`에서 목록·다운로드·업로드·삭제·편집 가능
 
-내장 테마: `klasik`, `minimal`, `ters`, `kutu`, `genis`, `gece`, `retro`, `durum`,
-`kompakt`, `dev`.
+내장 테마: `klasik`, `ince`, `dolu`, `kutu`, `nokta`, `dijital`, `neon`, `panel`,
+`minimal`, `retro`.
 
 ---
 
@@ -370,6 +370,7 @@ fsTotal, uptime, ip, apip, ssid, sta, rssi, heap, client`.
 
 ## 버전
 
+- **v1.1.0** — OLED 테마 10종, 실내 온도 중심 메인 화면, 브라우저 초기 설정 ([CHANGELOG.md](CHANGELOG.md))
 - **v1.0.0** — 첫 안정 릴리스 ([CHANGELOG.md](CHANGELOG.md))
 - 검증 환경: ESP8266 Arduino core 3.1.2, Arduino IDE 2.x
 - 실내 유닛 IRAM은 약 95 % (`TELEGRAM_ENABLED 0`으로 여유 확보 가능)

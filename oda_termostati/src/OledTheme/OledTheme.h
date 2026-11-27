@@ -6,6 +6,9 @@
  *  LittleFS'de /themes/<id>.txt dosyalari olarak tutulur; dosya yoksa ilk
  *  acilista gomulu varsayilanlardan olusturulur. Dosyadaki anahtar=deger
  *  satirlarini duzenleyip cihazi yeniden baslatarak tema ozellestirilebilir.
+ *
+ *  Tum temalar ayni ana ekran yerlesimini kullanir; yalnizca ust banttaki
+ *  simge stili (ikon=) ve buyuk sicaklik yazisinin fontu (font=) degisir.
  * ============================================================================
  */
 
@@ -15,13 +18,24 @@
 #include <Arduino.h>
 #include <Adafruit_GFX.h>
 
+// Gomulu temalar: 5 simge stili x 2 font = 10 tema.
 #define OLED_THEME_COUNT   10
 #define OLED_THEME_DIR     "/themes"
 #define OLED_THEME_ACTIVE  "/themes/active.txt"
 
 // Iki renkli (sari/mavi) SSD1306 modullerinde ust 16 piksel her zaman saridir.
-// Bu yuzden her temada baslik bu bantta tutulur, gövde 16. pikselin altinda baslar.
+// Ust bant bildirim alani olarak kullanilir; gövde 16. pikselin altinda baslar.
 #define OLED_BAND_H        16
+
+// Ust (sari) bantta simge olarak gosterilen bildirimler.
+// Sensor, kombi ve wifi durumu her zaman bir simgeyle gosterilir; bayrak
+// set ise simge "hata/kopuk" varyantina doner.
+#define OLED_NOTE_SENSOR   0x01   // oda sensoru hatasi
+#define OLED_NOTE_NOLINK   0x02   // kombi baglantisi yok
+#define OLED_NOTE_AP       0x04   // wifi yok (AP modu)
+#define OLED_NOTE_SLEEP    0x08   // uyku modu etkin
+#define OLED_NOTE_BOOST    0x10   // boost etkin
+#define OLED_NOTE_OFF      0x20   // mod kapali
 
 struct OledTheme {
   char id[16];
@@ -39,6 +53,8 @@ struct OledTheme {
   uint8_t labels;       // etiketler (HEDEF vb.)
   uint8_t invert;       // tum ekran negatif
   uint8_t dim;          // dusuk kontrast
+  uint8_t icons;        // 0 cizgi | 1 ince | 2 dolu | 3 kutu | 4 nokta
+  uint8_t font;         // 0 gfx | 1 yedi parcali (dijital)
 };
 
 void oledThemeDefaults(OledTheme &t);
@@ -74,8 +90,10 @@ class OledThemeStore {
 
 // Cizim yardimcilari (sayfa icerigi uygulamaya, cerceve temaya aittir)
 int  oledThemeHeaderHeight(const OledTheme &t);
-void oledThemeHeader(Adafruit_GFX &d, const OledTheme &t,
-                     const __FlashStringHelper *title, int page, int pageCount);
+// Ust bandi bildirim simgeleri, sayfa noktalari ve saatle cizer.
+// clock NULL/"" ise saat cizilmez; baslik metni hic yazilmaz.
+void oledThemeStatusBar(Adafruit_GFX &d, const OledTheme &t, uint8_t notes,
+                        int page, int pageCount, const char *clock);
 void oledThemeSeparator(Adafruit_GFX &d, const OledTheme &t, int y);
 void oledThemeStatus(Adafruit_GFX &d, const OledTheme &t, int y,
                      const __FlashStringHelper *label, bool highlight);

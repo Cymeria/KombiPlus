@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="docs/images/banner.svg" alt="KombiPlus v1.0.0 — двухмодульный Wi-Fi комнатный термостат на ESP8266" width="100%">
+  <img src="docs/images/banner.svg" alt="KombiPlus v1.1.0 — двухмодульный Wi-Fi комнатный термостат на ESP8266" width="100%">
 </div>
 
 <h1 align="center">KombiPlus</h1>
@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img alt="версия" src="https://img.shields.io/badge/%D0%B2%D0%B5%D1%80%D1%81%D0%B8%D1%8F-1.0.0-ff8a3d?style=flat-square">
+  <img alt="версия" src="https://img.shields.io/badge/%D0%B2%D0%B5%D1%80%D1%81%D0%B8%D1%8F-1.1.0-ff8a3d?style=flat-square">
   <img alt="платформа" src="https://img.shields.io/badge/platform-NodeMCU%20v3%20(ESP8266)-2b3d61?style=flat-square">
   <img alt="ядро" src="https://img.shields.io/badge/Arduino%20core-3.1.2-00979D?style=flat-square&logo=arduino&logoColor=white">
   <img alt="облако" src="https://img.shields.io/badge/%D0%BE%D0%B1%D0%BB%D0%B0%D0%BA%D0%BE-%D0%BD%D0%B5%20%D1%82%D1%80%D0%B5%D0%B1%D1%83%D0%B5%D1%82%D1%81%D1%8F-2dd47c?style=flat-square">
@@ -223,11 +223,11 @@ kombi/
 ```cpp
 // oda_termostati.ino
 #define AP_SSID  "KombiPlus"
-#define AP_PASS  "Ck.073214"
+#define AP_PASS  "Kombi.1881"
 
 // kombi_rolesi.ino
 #define TERMOSTAT_AP_SSID  "KombiPlus"
-#define TERMOSTAT_AP_PASS  "Ck.073214"
+#define TERMOSTAT_AP_PASS  "Kombi.1881"
 ```
 
 Выбор датчика в комнатном блоке:
@@ -246,7 +246,7 @@ kombi/
 
 1. Сначала прошейте **блок реле** (контакт котла пока не подключайте).
 2. Затем **комнатный блок**.
-3. Подключитесь к `KombiPlus` (пароль `Ck.073214`) и откройте `http://192.168.4.1`.
+3. Подключитесь к `KombiPlus` (пароль `Kombi.1881`) и откройте `http://192.168.4.1`.
 4. В логе реле появится `Oda unitesine baglandi.`, в интерфейсе — **Kombi bağlı**.
 5. Только после тестов поручите **квалифицированному специалисту** подключить контакт
    реле к клемме термостата котла.
@@ -298,7 +298,7 @@ kombi/
 | Направление | Строка |
 |-------------|--------|
 | Комната → Реле | `SET heat=1 sp=21.0 hyst=0.3 mode=1 fs=0\n` |
-| Реле → Комната | `STATUS relay=1 flow=42.50 rssi=-58 up=123 fs=0 fw=1.0.0\n` |
+| Реле → Комната | `STATUS relay=1 flow=42.50 rssi=-58 up=123 fs=0 fw=1.1.0\n` |
 
 Оба направления видны в логах 115200.
 
@@ -360,8 +360,8 @@ fsTotal, uptime, ip, apip, ssid, sta, rssi, heap, client`.
 - Веб-интерфейс рисует графики за 24 ч / 7 дн / 30 дн; `/fs` — список, скачивание,
   загрузка, удаление и правка файлов
 
-Встроенные темы: `klasik`, `minimal`, `ters`, `kutu`, `genis`, `gece`, `retro`, `durum`,
-`kompakt`, `dev`.
+Встроенные темы: `klasik`, `ince`, `dolu`, `kutu`, `nokta`, `dijital`, `neon`, `panel`,
+`minimal`, `retro`.
 
 ---
 
@@ -378,6 +378,7 @@ fsTotal, uptime, ip, apip, ssid, sta, rssi, heap, client`.
 
 ## Версия
 
+- **v1.1.0** — десять тем OLED, главный экран с температурой room-first и первичная настройка из браузера ([CHANGELOG.md](CHANGELOG.md))
 - **v1.0.0** — первый стабильный выпуск ([CHANGELOG.md](CHANGELOG.md))
 - Проверено: ESP8266 Arduino core 3.1.2, Arduino IDE 2.x
 - IRAM комнатного блока заполнен на ~95 % (`TELEGRAM_ENABLED 0` освобождает место)

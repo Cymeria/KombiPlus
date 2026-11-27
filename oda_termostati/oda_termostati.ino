@@ -42,10 +42,11 @@
 #include "src/LittleFSExplorer/LittleFSExplorer.h"
 #include "src/OledTheme/OledTheme.h"
 #include "web_ui.h"
+#include "web_test.h"
 
 // ============================ KULLANICI AYARLARI ============================
 
-#define FW_VERSION "1.0.0"
+#define FW_VERSION "1.1.0"
 
 // ---- MQTT / Telegram / gecmis (derleme zamani ac/kapat) ----
 #define MQTT_ENABLED        1
@@ -65,7 +66,7 @@
 
 // ---- AP (Kombi role unitesi bu aga baglanir) ----
 #define AP_SSID         "KombiPlus"
-#define AP_PASS         "Ck.073214"     // en az 8 karakter
+#define AP_PASS         "Kombi.1881"     // en az 8 karakter
 #define OTA_PASS        "1881"
 #define MDNS_NAME       "KombiPlus"
 
@@ -88,9 +89,9 @@ const uint8_t PIN_ENC_SW   = D7;   // GPIO13 Encoder butonu
 #define SETPOINT_MIN_C        5.0f
 #define SETPOINT_MAX_C        30.0f
 #define SETPOINT_STEP_C       0.5f
+#define SETPOINT_PEEK_MS      10000UL  // encoder sonrasi hedef gosterimi
 #define OLED_REFRESH_MS       250UL
-#define OLED_PAGE_COUNT       5        // 0 ana, 1 ag, 2 bilgi, 3 uyku, 4 tema
-#define OLED_PAGE_THEME       4
+#define OLED_PAGE_COUNT       4        // 0 ana, 1 ag, 2 bilgi, 3 uyku
 #define ENCODER_REVERSE       0        // yon ters geliyorsa 1 yapin
 
 // ---- Web / TCP ----
@@ -231,6 +232,7 @@ String boilerRxLine = "";
 
 // ---- Genel ----
 uint8_t oledPage = 0;
+unsigned long setpointPeekMs = 0;   // hedefin ekranda tutuldugu an (0 = kapali)
 bool displayReady = false;
 unsigned long lastOledMs = 0;
 unsigned long restartAtMs = 0;
@@ -1069,6 +1071,8 @@ void startBoost(int minutes) {
 
 volatile int16_t encoderDelta = 0;
 volatile uint8_t encoderState = 0;
+unsigned long pendingButtonMs = 0;   // /test: sanal buton basisi (loop isler)
+bool encThemeTurn = false;           // buton basili cevrilerek tema degistirildi
 
 const int8_t ENC_TABLE[16] = {
    0, -1,  1,  0,
@@ -1085,11 +1089,25 @@ void ICACHE_RAM_ATTR encoderISR() {
 }
 
 void changeSetpoint(float delta) {
+  // Ilk cevirme yalnizca duzenleme moduna gecer: ekranda guncel oda sicakligi
+  // varken hedef degismez, deger 10 sn boyunca yanip soner. Sonraki cevirmeler
+  // hedefi degistirir. Boylece kazara cevirme hedefi bozmaz.
+  if (setpointPeekMs == 0) {
+    oledPage = 0;
+    setpointPeekMs = millis();
+    if (setpointPeekMs == 0) setpointPeekMs = 1;
+    return;
+  }
+
   float sp = roundToStep(cfg.setpoint + delta, SETPOINT_STEP_C);
   sp = clampf(sp, SETPOINT_MIN_C, SETPOINT_MAX_C);
+  // Her cevirme ana ekrana doner ve hedefi 10 sn boyunca gosterir;
+  // sinirda olsa bile kullanici degeri gorsun.
+  oledPage = 0;
+  setpointPeekMs = millis();
+  if (setpointPeekMs == 0) setpointPeekMs = 1;
   if (fabsf(sp - cfg.setpoint) < 0.001f) return;
   cfg.setpoint = sp;
-  oledPage = 0;
   markSettingsDirty();
   forceSend = true;
   Serial.printf("Hedef: %.1f C\n", cfg.setpoint);
@@ -1114,15 +1132,18 @@ void handleEncoder() {
     return;
   }
 
+  // Buton basiliyken cevirmek tema degistirir: sag = sonraki, sol = onceki.
+  // Ekran hangi sayfada olursa olsun tema aninda uygulanir.
+  bool themeTurn = (digitalRead(PIN_ENC_SW) == LOW);
   while (accum >= 4) {
     accum -= 4;
-    if (oledPage == OLED_PAGE_THEME) themeStep(1);
-    else changeSetpoint( SETPOINT_STEP_C);
+    if (themeTurn) { themeStep(1); encThemeTurn = true; }
+    else           changeSetpoint( SETPOINT_STEP_C);
   }
   while (accum <= -4) {
     accum += 4;
-    if (oledPage == OLED_PAGE_THEME) themeStep(-1);
-    else changeSetpoint(-SETPOINT_STEP_C);
+    if (themeTurn) { themeStep(-1); encThemeTurn = true; }
+    else           changeSetpoint(-SETPOINT_STEP_C);
   }
 }
 
@@ -1134,11 +1155,37 @@ void toggleMode() {
   forceSend = true;
 }
 
+// Buton birakildiginda yapilacak is: gercek buton ve /test ayni yolu kullanir.
+void applyButtonPress(unsigned long dur) {
+  if (!langChosen()) {
+    // Dil secimi: kisa basista onayla, kalici olarak kaydet
+    if (dur >= 40UL) {
+      uiLang = LANG_CODES[langCursor];
+      langPrompt = false;
+      langMarker = 1;
+      markSettingsDirty();
+      oledPage = 0;
+      Serial.printf("Dil secildi: %s\n", uiLang.c_str());
+    }
+  } else if (dur >= 1200UL) {
+    toggleMode();
+  } else if (dur >= 40UL) {
+    oledPage = (oledPage + 1) % OLED_PAGE_COUNT;
+  }
+}
+
 void handleEncoderButton() {
   static bool lastRaw = false;
   static bool stable = false;
   static unsigned long changeMs = 0;
   static unsigned long pressStartMs = 0;
+
+  // /test sayfasindan gelen sanal basis
+  if (pendingButtonMs) {
+    unsigned long dur = pendingButtonMs;
+    pendingButtonMs = 0;
+    applyButtonPress(dur);
+  }
 
   bool raw = (digitalRead(PIN_ENC_SW) == LOW);
   unsigned long now = millis();
@@ -1152,23 +1199,12 @@ void handleEncoderButton() {
     stable = raw;
     if (stable) {
       pressStartMs = now;
+      encThemeTurn = false;
+    } else if (encThemeTurn) {
+      // Buton basili cevrilerek tema secildi: sayfa/mod degistirme
+      encThemeTurn = false;
     } else {
-      unsigned long dur = now - pressStartMs;
-      if (!langChosen()) {
-        // Dil secimi: kisa basista onayla, kalici olarak kaydet
-        if (dur >= 40UL) {
-          uiLang = LANG_CODES[langCursor];
-          langPrompt = false;
-          langMarker = 1;
-          markSettingsDirty();
-          oledPage = 0;
-          Serial.printf("Dil secildi: %s\n", uiLang.c_str());
-        }
-      } else if (dur >= 1200UL) {
-        toggleMode();
-      } else if (dur >= 40UL) {
-        oledPage = (oledPage + 1) % OLED_PAGE_COUNT;
-      }
+      applyButtonPress(now - pressStartMs);
     }
   }
 }
@@ -2166,10 +2202,17 @@ void handleApiTheme() {
       forceSend = true;
     }
   }
+  // /api/theme?step=1 (sonraki) / -1 (onceki): uzun basilan sag/sol tusu
+  if (webServer.hasArg("step")) {
+    long st = webServer.arg("step").toInt();
+    themeStep(st < 0 ? -1 : 1);
+    forceSend = true;
+    changed = true;
+  }
   if (webServer.hasArg("reload")) changed = themeStore.reload() || changed;
 
   String j;
-  j.reserve(720);
+  j.reserve(1400);
   j  = "{\"active\":\"";
   j += themeStore.active().id;
   j += "\",\"index\":";
@@ -2191,6 +2234,8 @@ void handleApiTheme() {
     j += ",\"header\":";   j += String(t.header);
     j += ",\"status\":";   j += String(t.statusStyle);
     j += ",\"separator\":"; j += String(t.separator);
+    j += ",\"icons\":";     j += String(t.icons);
+    j += ",\"font\":";      j += String(t.font);
     j += ",\"invert\":";    j += String(t.invert);
     j += "}";
   }
@@ -2241,6 +2286,69 @@ String hostOnly(String host) {
   return host;
 }
 
+// ---- /test: panel simulasyonu ---------------------------------------------
+// OLED tamponunu (1024 bayt, sayfa bazli) hex olarak verir. Ekran modulu
+// bagli olmasa da cizim tamponu oldugu icin sayfa cihazin ne gosterecegini
+// birebir yansitir; tema renkleri (invert) ayrica bildirilir.
+void handleApiOled() {
+  uint8_t *buf = display.getBuffer();
+  if (!buf) {
+    webServer.sendHeader("Cache-Control", "no-store");
+    webServer.send(503, "application/json", "{\"ok\":0,\"err\":\"tampon yok\"}");
+    return;
+  }
+
+  static const char *const HXD = "0123456789abcdef";
+  static char out[2240];
+  const OledTheme &th = themeStore.active();
+
+  int n = snprintf(out, sizeof(out),
+                   "{\"ok\":1,\"page\":%u,\"invert\":%u,\"dim\":%u,\"ask\":%u,\"px\":\"",
+                   (unsigned)oledPage, (unsigned)(th.invert ? 1 : 0),
+                   (unsigned)(th.dim ? 1 : 0), (unsigned)(langChosen() ? 0 : 1));
+  if (n < 0 || n > (int)sizeof(out) - 2060) {
+    webServer.send(500, "application/json", "{\"ok\":0,\"err\":\"tampon kucuk\"}");
+    return;
+  }
+  for (uint16_t i = 0; i < 1024; i++) {
+    out[n++] = HXD[buf[i] >> 4];
+    out[n++] = HXD[buf[i] & 0x0F];
+  }
+  out[n++] = '"';
+  out[n++] = '}';
+  out[n] = 0;
+
+  webServer.sendHeader("Cache-Control", "no-store");
+  webServer.send(200, "application/json", out);
+}
+
+// /test: enkoder cevirme. steps = tik sayisi (yon isaretli), her tik 4
+// gecis uretir; handleEncoder bunlari 4'luk gruplar halinde isler.
+void handleApiEncoder() {
+  long steps = webServer.arg("steps").toInt();
+  if (steps == 0) steps = webServer.arg("d").toInt();
+  steps = constrain(steps, -20L, 20L);
+
+  noInterrupts();
+  encoderDelta = (int16_t)(encoderDelta + (int16_t)(steps * 4));
+  interrupts();
+
+  webServer.sendHeader("Cache-Control", "no-store");
+  webServer.send(200, "application/json", "{\"ok\":1}");
+}
+
+// /test: buton basisi. ms = basili kalma suresi; loop icinde gercek butonla
+// ayni isleyici (applyButtonPress) calisir.
+void handleApiButton() {
+  long ms = webServer.arg("ms").toInt();
+  if (ms < 40) ms = 120;
+  if (ms > 6000) ms = 6000;
+  pendingButtonMs = (unsigned long)ms;
+
+  webServer.sendHeader("Cache-Control", "no-store");
+  webServer.send(200, "application/json", "{\"ok\":1}");
+}
+
 void setupWeb() {
   webServer.on("/", HTTP_GET, []() {
     webServer.sendHeader("Cache-Control", "no-store");
@@ -2263,6 +2371,17 @@ void setupWeb() {
   webServer.on("/api/reboot", HTTP_GET, handleApiReboot);
   webServer.on("/api/theme", HTTP_GET, handleApiTheme);
   webServer.on("/api/theme", HTTP_POST, handleApiTheme);
+
+  // Panel simulasyonu: /test sayfasi + OLED aynasi ve sanal kontroller
+  webServer.on("/test", HTTP_GET, []() {
+    webServer.sendHeader("Cache-Control", "no-store");
+    webServer.send_P(200, "text/html; charset=utf-8", TEST_HTML);
+  });
+  webServer.on("/api/oled", HTTP_GET, handleApiOled);
+  webServer.on("/api/encoder", HTTP_GET, handleApiEncoder);
+  webServer.on("/api/encoder", HTTP_POST, handleApiEncoder);
+  webServer.on("/api/button", HTTP_GET, handleApiButton);
+  webServer.on("/api/button", HTTP_POST, handleApiButton);
 
   // LittleFS dosya yoneticisi: http://<ip>/fs
   fsExplorer.begin(&webServer, "/fs");
@@ -2360,115 +2479,187 @@ const char *OT(uint8_t id) {
   return OLED_TXT[oledLang()][id];
 }
 
-void oledHeader(const __FlashStringHelper *title) {
-  oledThemeHeader(display, themeStore.active(), title, oledPage, OLED_PAGE_COUNT);
+// Ust bant saati: NTP yoksa "--:--" gosterilir.
+void oledClockText(char *out, size_t n) {
+  if (!timeReady()) { snprintf(out, n, "--:--"); return; }
+  time_t t = time(nullptr);
+  struct tm tmv;
+  localtime_r(&t, &tmv);
+  snprintf(out, n, "%02d:%02d", tmv.tm_hour, tmv.tm_min);
 }
 
-const __FlashStringHelper *mainStatusText() {
-  if (!sensorOk) return FPSTR(OT(L_SENSOR_ERR));
-  if (!boilerLinked()) return FPSTR(OT(L_NO_BOILER));
-  if (!cfg.mode) return FPSTR(OT(L_OFF));
-  if (demand) return FPSTR(OT(L_HEATING));
-  return FPSTR(OT(L_WAITING));
+void oledHeader() {
+  uint8_t notes = 0;
+  if (!sensorOk)                      notes |= OLED_NOTE_SENSOR;
+  if (!boilerLinked())                notes |= OLED_NOTE_NOLINK;
+  if (WiFi.status() != WL_CONNECTED)  notes |= OLED_NOTE_AP;
+  if (sleepActive)                    notes |= OLED_NOTE_SLEEP;
+  if (boostActive)                    notes |= OLED_NOTE_BOOST;
+  if (!cfg.mode)                      notes |= OLED_NOTE_OFF;
+  char hm[8];
+  oledClockText(hm, sizeof(hm));
+  oledThemeStatusBar(display, themeStore.active(), notes, oledPage,
+                     OLED_PAGE_COUNT, hm);
 }
 
+// ---- Buyuk sicaklik yazisi -------------------------------------------------
+// Tum temalar ayni yuvayi kullanir; yalnizca font degisir:
+//   0 = Adafruit GFX yerlesik fontu (4x, uzun degerlerde 3x)
+//   1 = yedi parcali (dijital) rakamlar
+#define SEG_W   16
+#define SEG_H   30
+#define SEG_T   3
+#define SEG_GAP 4
+
+// A B C D E F G = 0x01..0x40
+static const uint8_t SEG_DIGIT[10] = {
+  0x3F, 0x06, 0x5B, 0x4F, 0x66, 0x6D, 0x7D, 0x07, 0x7F, 0x6F
+};
+
+static int segCharW(char ch) {
+  if (ch == '-') return 10;
+  if (ch == '.') return 4;
+  if (ch == ' ') return 6;
+  return SEG_W;
+}
+
+static void segDigit(int x, int y, uint8_t m) {
+  const int hx = x + SEG_T;
+  const int hw = SEG_W - 2 * SEG_T;
+  if (m & 0x01) display.fillRect(hx, y, hw, SEG_T, SSD1306_WHITE);                       // A
+  if (m & 0x02) display.fillRect(x + SEG_W - SEG_T, y + SEG_T, SEG_T, SEG_H / 2 - SEG_T, SSD1306_WHITE);
+  if (m & 0x04) display.fillRect(x + SEG_W - SEG_T, y + SEG_H / 2, SEG_T, SEG_H / 2 - SEG_T, SSD1306_WHITE);
+  if (m & 0x08) display.fillRect(hx, y + SEG_H - SEG_T, hw, SEG_T, SSD1306_WHITE);       // D
+  if (m & 0x10) display.fillRect(x, y + SEG_H / 2, SEG_T, SEG_H / 2 - SEG_T, SSD1306_WHITE);
+  if (m & 0x20) display.fillRect(x, y + SEG_T, SEG_T, SEG_H / 2 - SEG_T, SSD1306_WHITE);
+  if (m & 0x40) display.fillRect(hx, y + SEG_H / 2 - SEG_T / 2, hw, SEG_T, SSD1306_WHITE);
+}
+
+// Degerin kapladigi genislik (ortalamak ve "C" konumu icin).
+static int bigWidth(const char *s, uint8_t font) {
+  int n = (int)strlen(s);
+  if (font == 0) {
+    uint8_t t = (n <= 4) ? 4 : 3;
+    return n * 6 * t;
+  }
+  int w = 0;
+  for (int i = 0; i < n; i++) {
+    w += segCharW(s[i]);
+    if (i < n - 1) w += SEG_GAP;
+  }
+  return w;
+}
+
+static void bigText(const char *s, int x, int y, uint8_t font) {
+  if (font == 0) {
+    uint8_t t = ((int)strlen(s) <= 4) ? 4 : 3;
+    display.setTextSize(t);
+    display.setTextColor(SSD1306_WHITE);
+    display.setCursor(x, y);
+    display.print(s);
+    display.setTextSize(1);
+    return;
+  }
+  int cx = x;
+  for (const char *p = s; *p; p++) {
+    int cw = segCharW(*p);
+    if (*p >= '0' && *p <= '9')      segDigit(cx, y, SEG_DIGIT[*p - '0']);
+    else if (*p == '-')              display.fillRect(cx, y + SEG_H / 2 - SEG_T / 2, cw, SEG_T, SSD1306_WHITE);
+    else if (*p == '.')              display.fillRect(cx + 1, y + SEG_H - SEG_T, 3, SEG_T, SSD1306_WHITE);
+    cx += cw + SEG_GAP;
+  }
+}
+
+// Ana ekran: oda sicakligi olabildigince buyuk (4x, ortada). Hedef deger
+// normalde gizlidir; encoder cevrilince 10 sn boyunca ayni yuvada yanip soner.
+// Alt satirda yalnizca veri varsa nem / kombi suyu. Durum metni yok.
 void drawMainPage() {
   const OledTheme &th = themeStore.active();
-  oledHeader(FPSTR(OT(L_MAIN)));
+  oledHeader();
 
-  int base  = oledThemeHeaderHeight(th);          // sari bantin hemen alti
-  int tempY = base + (th.tempSize == 3 ? 0 : 2);
-  int sepY  = tempY + (th.tempSize == 3 ? 25 : 19);
-  int statY = (th.separator ? sepY + 3 : sepY + 1);
-  int footY = OLED_BAND_H + 40;                   // 56: en alt satir
+  const int base  = oledThemeHeaderHeight(th);    // sari bantin hemen alti
+  const int footY = OLED_BAND_H + 38;             // 54: en alt satir
 
-  if (sleepActive && th.header) {
-    display.setCursor(72, 3);
-    display.print(OT(L_SLEEP_TAG));
+  bool sensorReady = sensorOk && !isnan(currentTemp);
+  // Don korumasi dahil her isi talebinde sicaklik yanip soner.
+  bool heating = demand && boilerLinked();
+
+  // Hedef gosterimi: son encoder cevirmesinden sonra SETPOINT_PEEK_MS.
+  if (setpointPeekMs != 0 &&
+      (millis() - setpointPeekMs) >= SETPOINT_PEEK_MS) {
+    setpointPeekMs = 0;
+  }
+  bool editing = (setpointPeekMs != 0);
+
+  // Deger sabit tamponda tutulur: 4 Hz yenilemede String ayirmasi yapilmaz.
+  char big[8];
+  bool bigOn;
+  if (editing) {
+    snprintf(big, sizeof(big), "%.1f", cfg.setpoint);
+    bigOn = ((millis() / 450UL) % 2 == 0);        // hedef yanip soner
+  } else {
+    if (sensorReady) snprintf(big, sizeof(big), "%.1f", currentTemp);
+    else             snprintf(big, sizeof(big), "--.-");
+    // Isitma talebi varken deger yanip soner: "ISITIYOR" yazisi yerine gorsel.
+    bigOn = !heating || ((millis() / 600UL) % 2 == 0);
   }
 
-  // Sicaklik metni sabit tamponda tutulur: 4 Hz yenilemede String
-  // ayirma/toplama yapilmasin (uzun calismada heap kirilmasini onler).
-  char tempStr[8];
-  if (sensorOk) snprintf(tempStr, sizeof(tempStr), "%.1f", currentTemp);
-  else          snprintf(tempStr, sizeof(tempStr), "--.-");
+  // font 0: 4x sigmayan uzun degerler (or. "-10.5") 3x cizilir.
+  const uint8_t font = th.font;
+  int bigW  = bigWidth(big, font);
+  int lineY = base + 1;
+  int cOff  = SEG_H - 9;                          // kucuk "C" dikey konumu
+  if (font == 0) {
+    uint8_t tsize = ((int)strlen(big) <= 4) ? 4 : 3;
+    lineY += (tsize == 4) ? 0 : 4;
+    cOff = tsize * 8 - 9;
+  }
+  int x0 = (128 - (bigW + 8)) / 2;                // +8: kucuk "C" ve bosluk
+  if (x0 < 0) x0 = 0;
 
-  display.setTextSize(th.tempSize);
-  int tempW = (int)strlen(tempStr) * 6 * th.tempSize;
-  int tempX = th.tempCenter ? (128 - tempW) / 2 : 0;
-  if (tempX < 0) tempX = 0;
-  display.setCursor(tempX, tempY);
-  display.print(tempStr);
+  if (bigOn) {
+    bigText(big, x0, lineY, font);
+    display.setTextSize(1);
+    display.setTextColor(SSD1306_WHITE);
+    display.setCursor(x0 + bigW + 2, lineY + cOff);
+    display.print(F("C"));
+  }
+
+  // Alt satir: solda hedef etiketi ya da nem, sagda boost / kombi suyu.
+  bool footLeft  = editing || (th.showHum && sensorReady && !isnan(currentHum));
+  bool footRight = (th.showBoost && boostActive) ||
+                   (th.showWater && boilerFlow > -100.0f);
+  if (footLeft || footRight) oledThemeSeparator(display, th, footY - 2);
 
   display.setTextSize(1);
-  display.setCursor(tempX + tempW + 2, tempY + (th.tempSize == 3 ? 14 : 6));
-  display.print(F("C"));
-
-  if (th.setpointCol) {
-    if (th.tempCenter) {
-      // Sicaklik ortada: hedef icin serbest kolon yok, iki satir korunur.
-      display.setCursor(84, tempY + 1);
-      display.print(OT(th.labels ? L_TARGET : L_TARGET_SHORT));
-      display.setCursor(84, tempY + 11);
-      display.print(cfg.setpoint, 1);
-      display.print(F("C"));
-    } else {
-      // HEDEF etiketi kaldirildi: hedef, cerceve icinde buyuk yazilir.
-      const int bx = 58, by = tempY - 1, bw = 68, bh = 19;
-      char spTxt[8];
-      snprintf(spTxt, sizeof(spTxt), "%.1f", cfg.setpoint);
-      int spW = (int)strlen(spTxt) * 12;
-      int cx = bx + (bw - (spW + 7)) / 2;
-      if (cx < bx + 2) cx = bx + 2;
-
-      display.drawRect(bx, by, bw, bh, SSD1306_WHITE);
-      display.setTextSize(2);
-      display.setCursor(cx, by + 1);
-      display.print(spTxt);
-      display.setTextSize(1);
-      display.setCursor(cx + spW + 1, by + 10);
-      display.print(F("C"));
-    }
-  }
-
-  oledThemeSeparator(display, th, sepY);
-
-  bool heating = demand && boilerLinked() && cfg.mode;
-  oledThemeStatus(display, th, statY, mainStatusText(), heating);
-
-  if (th.showHum) {
+  if (editing) {
     display.setCursor(0, footY);
-    if (sensorOk && !isnan(currentHum)) {
-      display.print(OT(L_HUM));
-      display.print(F(" %"));
-      display.print((int)roundf(currentHum));
-    } else {
-      display.print(OT(L_HUM));
-      display.print(F(" --"));
-    }
+    display.print(OT(L_TARGET));
+  } else if (footLeft) {
+    // Nem yalnizca gecerli veri varsa yazilir; yoksa ekranda yer kaplamaz.
+    display.setCursor(0, footY);
+    display.print(OT(L_HUM));
+    display.print(F(" %"));
+    display.print((int)roundf(currentHum));
   }
 
+  // Alt sag: boost kalan sure, yoksa kombi su sicakligi (veri varsa).
   if (th.showBoost && boostActive) {
-    display.setCursor(68, footY);
-    display.print(OT(L_BOOST));
-    display.print(' ');
-    display.print((boostRemainSec() + 59) / 60);
-    display.print(OT(L_MIN));
+    char b[16];
+    snprintf(b, sizeof(b), "%s %u%s", OT(L_BOOST),
+             (unsigned)((boostRemainSec() + 59) / 60), OT(L_MIN));
+    display.setCursor(128 - (int)strlen(b) * 6, footY);
+    display.print(b);
   } else if (th.showWater && boilerFlow > -100.0f) {
     char f[20];
     snprintf(f, sizeof(f), "%s %.1fC", OT(L_WATER), boilerFlow);
     display.setCursor(128 - (int)strlen(f) * 6, footY);
     display.print(f);
-  } else if (!th.setpointCol && th.labels) {
-    char sp[20];
-    snprintf(sp, sizeof(sp), "%s %.1f", OT(L_TARGET_SHORT), cfg.setpoint);
-    display.setCursor(128 - (int)strlen(sp) * 6, footY);
-    display.print(sp);
   }
 }
 
 void drawNetPage() {
-  oledHeader(FPSTR(OT(L_NET)));
+  oledHeader();
   display.setTextSize(1);
   display.setCursor(0, OLED_BAND_H);
   display.print(F("AP: "));  display.print(WiFi.softAPIP());
@@ -2506,7 +2697,7 @@ void drawNetPage() {
 }
 
 void drawInfoPage() {
-  oledHeader(FPSTR(OT(L_INFO)));
+  oledHeader();
 
   display.setTextSize(1);
   // Sabit tamponlar: 4 Hz yenilemede String ayirmasi yapilmaz.
@@ -2561,7 +2752,7 @@ void drawInfoPage() {
 }
 
 void drawSleepPage() {
-  oledHeader(FPSTR(OT(L_SLEEP)));
+  oledHeader();
 
   display.setTextSize(1);
   display.setCursor(0, OLED_BAND_H);
@@ -2620,47 +2811,9 @@ void drawSleepPage() {
   display.print(OT(cfg.relayFailSafeOn ? L_FS_HOLD : L_FS_CLOSE));
 }
 
-void drawThemePage() {
-  const OledTheme &th = themeStore.active();
-  oledHeader(FPSTR(OT(L_THEME)));
-
-  display.setTextSize(1);
-  display.setCursor(0, OLED_BAND_H);
-  display.print(OT(L_THEME));
-  display.print(F(": "));
-  display.print(themeStore.index() + 1);
-  display.print('/');
-  display.print(OLED_THEME_COUNT);
-  if (th.invert) display.print(F(" NEG"));
-  if (th.dim)    display.print(F(" DIM"));
-
-  display.setCursor(0, OLED_BAND_H + 8);
-  display.print(OT(L_NAME));
-  display.print(F(": "));
-  display.print(th.name);
-
-  display.setCursor(0, OLED_BAND_H + 16);
-  display.print(OT(L_ID));
-  display.print(F(": "));
-  display.print(th.id);
-
-  display.setCursor(0, OLED_BAND_H + 24);
-  display.print(OT(L_HEADER));
-  display.print(F(": "));
-  display.print(oledThemeHeaderName(th.header));
-
-  display.setCursor(0, OLED_BAND_H + 32);
-  display.print(OT(L_STATUS));
-  display.print(F(": "));
-  display.print(oledThemeStatusName(th.statusStyle));
-
-  display.setCursor(0, OLED_BAND_H + 40);
-  display.print(OT(L_ENC_THEME));
-}
-
 // Ilk acilis dil secimi ekrani: encoder cevir -> dil, kisa bas -> kaydet.
 void drawLangPage() {
-  oledHeader(FPSTR(OT(L_LANG)));
+  oledHeader();
   display.setTextSize(1);
 
   display.setCursor(0, OLED_BAND_H);
@@ -2683,7 +2836,9 @@ void drawLangPage() {
 }
 
 void drawOled() {
-  if (!displayReady) return;
+  // Panel bagli olmasa da tampon cizilir: /test gercek ekran icerigini
+  // birebir gosterebilsin (SSD1306 tamponu begin() icinde ayrilir).
+  if (!display.getBuffer()) return;
   unsigned long now = millis();
   if (now - lastOledMs < OLED_REFRESH_MS) return;
   lastOledMs = now;
@@ -2700,21 +2855,22 @@ void drawOled() {
       case 1:  drawNetPage();   break;
       case 2:  drawInfoPage();  break;
       case 3:  drawSleepPage(); break;
-      case 4:  drawThemePage(); break;
       default: drawMainPage();  break;
     }
   }
 
-  static uint8_t appliedInvert = 0xFF;
-  static uint8_t appliedDim = 0xFF;
-  if (th.invert != appliedInvert) {
-    display.invertDisplay(th.invert);
-    appliedInvert = th.invert;
-  }
-  if (th.dim != appliedDim) {
-    display.dim(th.dim);
-    appliedDim = th.dim;
-  }
+  if (displayReady) {
+    static uint8_t appliedInvert = 0xFF;
+    static uint8_t appliedDim = 0xFF;
+    if (th.invert != appliedInvert) {
+      display.invertDisplay(th.invert);
+      appliedInvert = th.invert;
+    }
+    if (th.dim != appliedDim) {
+      display.dim(th.dim);
+      appliedDim = th.dim;
+    }
 
-  display.display();
+    display.display();
+  }
 }

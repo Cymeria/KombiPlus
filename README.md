@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="docs/images/banner.svg" alt="KombiPlus v1.0.0 — two-node ESP8266 room thermostat" width="100%">
+  <img src="docs/images/banner.svg" alt="KombiPlus v1.1.0 — two-node ESP8266 room thermostat" width="100%">
 </div>
 
 <h1 align="center">KombiPlus</h1>
@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img alt="version" src="https://img.shields.io/badge/version-1.0.0-ff8a3d?style=flat-square">
+  <img alt="version" src="https://img.shields.io/badge/version-1.1.0-ff8a3d?style=flat-square">
   <img alt="platform" src="https://img.shields.io/badge/platform-NodeMCU%20v3%20(ESP8266)-2b3d61?style=flat-square">
   <img alt="core" src="https://img.shields.io/badge/Arduino%20core-3.1.2-00979D?style=flat-square&logo=arduino&logoColor=white">
   <img alt="ide" src="https://img.shields.io/badge/Arduino%20IDE-2.x-00979D?style=flat-square">
@@ -64,7 +64,7 @@
 - The relay unit applies the demand and — if no command arrives for **5 minutes** —
   falls back to the configured fail-safe behaviour.
 - Optional waterproof DS18B20 reports boiler flow temperature back to the room unit.
-- **Sleep mode**, **holiday-free frost protection**, **boost**, **10 OLED themes**,
+- **Sleep mode**, **holiday-free frost protection**, **boost**, **OLED theme engine**,
   **hourly history**, **LittleFS file manager** and **OTA updates** are built in.
 
 <p align="center">
@@ -96,9 +96,17 @@ by double-clicking it. It runs a mock API inside the browser, so nothing is inst
 ### Room unit (`oda_termostati/`)
 
 - **Sensor choice** — DHT11, DHT22 or DS18B20 with a single `#define`
-- **0.96" SSD1306 OLED** (128×64, I²C): temperature, setpoint, state, network and info pages
+- **0.96" SSD1306 OLED** (128×64, I²C): 4× room temperature that blinks while heating;
+  the first encoder turn only opens target edit mode (the value does not change), further turns
+  step it and show the target in the same spot for 10 s; plus network/info/sleep pages
 - **KY-040 rotary encoder** — turn to set the setpoint, short press for pages, long press for mode
-- **10 OLED themes** stored as editable `/themes/*.txt` files on LittleFS
+- **Status band** — the yellow top 16 px shows separate sensor, boiler-link and Wi-Fi icons,
+  the current time on the right, and page dots; the room temperature is the biggest item on
+  the main page, the target only appears for 10 s after a turn, and humidity only appears
+  when the sensor reports it
+- **10 built-in OLED themes** in editable `/themes/*.txt` — all share one main-screen layout and
+  differ only in the status icons and the large temperature font; hold the encoder button and
+  turn to switch
 - **Mobile-first web UI** — setpoint, mode, boost, sleep, relay behaviour, MQTT/Telegram,
   history chart, hysteresis, calibration, frost protection, **Wi-Fi network scanner**, system info
 - **8 UI languages** — English, Turkish, Russian, Spanish, Portuguese, Japanese, Korean and
@@ -235,11 +243,11 @@ Use the **same access point credentials in both sketches**:
 ```cpp
 // oda_termostati.ino
 #define AP_SSID  "KombiPlus"
-#define AP_PASS  "Ck.073214"
+#define AP_PASS  "Kombi.1881"
 
 // kombi_rolesi.ino
 #define TERMOSTAT_AP_SSID  "KombiPlus"
-#define TERMOSTAT_AP_PASS  "Ck.073214"
+#define TERMOSTAT_AP_PASS  "Kombi.1881"
 ```
 
 Pick the sensor in the room unit:
@@ -258,7 +266,7 @@ Active-high relay boards:
 
 1. Flash the **relay unit** first (leave the boiler contact disconnected).
 2. Flash the **room unit**.
-3. Join `KombiPlus` (password `Ck.073214`) and open `http://192.168.4.1`.
+3. Join `KombiPlus` (password `Kombi.1881`) and open `http://192.168.4.1`.
 4. The relay serial log should print `Oda unitesine baglandi.` and the web UI shows **Boiler linked**.
 5. Only after testing, have a **qualified technician** connect the relay contact to the
    boiler thermostat terminal.
@@ -310,7 +318,7 @@ The room unit listens on **TCP 8266**; the relay unit is the client. Line-based 
 | Direction | Line |
 |-----------|------|
 | Room → Relay | `SET heat=1 sp=21.0 hyst=0.3 mode=1 fs=0\n` |
-| Relay → Room | `STATUS relay=1 flow=42.50 rssi=-58 up=123 fs=0 fw=1.0.0\n` |
+| Relay → Room | `STATUS relay=1 flow=42.50 rssi=-58 up=123 fs=0 fw=1.1.0\n` |
 
 Both directions are visible in the serial logs at 115200 baud.
 
@@ -330,9 +338,10 @@ The embedded web server serves JSON on port 80 — handy for Home Assistant, scr
 | GET | `/api/set?sleep=1&sleepstart=23:00&sleepend=07:00&sleepsp=18` | Sleep mode |
 | GET | `/api/set?failsafe=1` | Relay fail-safe: hold last demand |
 | GET | `/api/set?lang=ja` | Interface language: en/tr/ru/es/pt/ja/ko/zh |
-| GET | `/api/set?theme=gece` | Select OLED theme |
+| GET | `/api/set?theme=klasik` | Select OLED theme |
 | GET | `/api/theme` | Theme list + active theme |
-| GET | `/api/theme?set=retro` | Select a theme |
+| GET | `/api/theme?set=klasik` | Select a theme |
+| GET | `/api/theme?step=1` | Next theme (`-1` = previous) |
 | GET | `/api/theme?reload=1` | Re-read theme files |
 | POST | `/api/net` | MQTT / Telegram settings |
 | GET | `/api/history?hours=24` | History points |
@@ -342,6 +351,10 @@ The embedded web server serves JSON on port 80 — handy for Home Assistant, scr
 | POST | `/api/wifi` | `ssid`, `pass` form fields |
 | POST | `/api/reboot` | Restart |
 | GET | `/fs` | LittleFS file manager |
+| GET | `/test` | Panel simulation: live OLED mirror + virtual encoder/button |
+| GET | `/api/oled` | OLED framebuffer as hex (`px`) with `page`, `invert`, `dim`, `ask` |
+| GET/POST | `/api/encoder?steps=1` | Simulate encoder clicks (negative turns left) |
+| GET/POST | `/api/button?ms=120` | Simulate a button press (`ms` >= 1200 toggles the mode) |
 
 `/api/status` keys: `fw, theme, temp, hum, sp, eff, hyst, cal, frost, mode, demand, relay,
 link, flow, brssi, boost, boostMin, sensorOk, sleepEn, sleep, sleepStart, sleepEnd, sleepSp,
@@ -370,13 +383,16 @@ Replies and the `/help` list come in the selected language. Only the configured 
 - `/config.txt` — all settings (`key=value`), migrated automatically from the old EEPROM layout
 - `/history.csv` — hourly samples: `time, room, humidity, setpoint, demand, sleep`
 - `/themes/*.txt` — theme definitions (`id, header, tempsize, separator, status, nem, boost, su,
-  sayfa, etiket, ters, dim`); regenerated on first boot if missing
+  sayfa, etiket, ters, dim, ikon, font`); regenerated on first boot if missing
 - `/themes/active.txt` — last selected theme id
 - Web UI draws 24 h / 7 d / 30 d history charts; `/fs` lets you list, download, upload, delete
   and edit files
 
-Ten built-in themes: `klasik`, `minimal`, `ters`, `kutu`, `genis`, `gece`, `retro`, `durum`,
-`kompakt`, `dev`.
+Ten built-in themes — `klasik`, `ince`, `dolu`, `kutu`, `nokta`, `dijital`, `neon`, `panel`,
+`minimal`, `retro` — share the main-screen layout and differ only in the status icons
+(`ikon=0..4`: line, thin, filled, boxed, dotted) and the large temperature font (`font=0`:
+GFX, `font=1`: seven-segment). Hold the encoder button and turn right/left (or hold the
+left/right buttons on `/test`) to switch the theme; the active screen redraws immediately.
 
 ---
 
@@ -393,6 +409,8 @@ Ten built-in themes: `klasik`, `minimal`, `ters`, `kutu`, `genis`, `gece`, `retr
 
 ## Version
 
+- **v1.1.0** — ten OLED themes, a room-temperature-first main screen and web-based first setup
+  (see [CHANGELOG.md](CHANGELOG.md))
 - **v1.0.0** — first stable release (see [CHANGELOG.md](CHANGELOG.md))
 - Tested platform: ESP8266 Arduino core 3.1.2, Arduino IDE 2.x
 - Room unit IRAM is ~95 % full (`TELEGRAM_ENABLED 0` frees room if needed)

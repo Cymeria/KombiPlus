@@ -3,7 +3,7 @@
 Kombi ısıtmasını oda sıcaklığına göre yöneten, 0.96" OLED ekranlı ve mobil uyumlu
 web arayüzüne sahip oda ünitesi.
 
-> Sürüm **1.0.0** · Diğer diller ve proje genel bakışı: [`README.md`](../README.md)
+> Sürüm **1.1.0** · Diğer diller ve proje genel bakışı: [`README.md`](../README.md)
 > (English, Türkçe, Русский, Español, Português, 日本語, 한국어, 中文)
 
 > Bu klasördeki `oda_termostati.ino` + `web_ui.h` birlikte derlenir.
@@ -32,9 +32,9 @@ web arayüzüne sahip oda ünitesi.
 - **Telegram botu:** durum ve uzaktan kontrol (yalnızca tanımlı sohbet)
 - **LittleFS:** ayarlar `/config.txt`, saatlik geçmiş `/history.csv`;
   `/fs` adresinde dosya yöneticisi (LittleFSExplorer)
-- **OLED temaları:** 10 yerleşik tema, ilk açılışta `/themes/*.txt` olarak
-  LittleFS'e yaratılır; encoder'ın tema sayfasından, `/api/theme` veya
-  `theme=<id>` komutu ile seçilir
+- **OLED temaları:** 10 yerleşik tema (aynı ana ekran, farklı simge stili ve font),
+  ilk açılışta `/themes/<id>.txt` olarak LittleFS'e yaratılır; enkoder butonu
+  basılıyken sağ/sol çevirme, `/api/theme` veya `theme=<id>` komutu ile seçilir
 - **Histerezis + minimum açık/kapalı süre** ile kombinin kısa döngü yapması engellenir
 - **Boost:** hedefi geçici olarak +1.5 °C yükseltir (5/15/30 dk)
 - **Don koruması:** mod kapalıyken bile 5 °C altında ısıtma talebi üretir
@@ -166,7 +166,7 @@ otomatik derler; ayrıca Library Manager'dan kurmak gerekmez.
 
 1. Kodu yükleyin, seri portu **115200** ile açın.
 2. Telefon/PC ile `KombiPlus` ağına bağlanın.
-   - Şifre: `Ck.073214`
+   - Şifre: `Kombi.1881`
 3. Tarayıcıda **http://192.168.4.1** adresini açın.
 4. OLED'de sıcaklık görünmeye başlar (sensör okuma ~3 sn).
 5. Ev ağına bağlamak için **Wi‑Fi Ayarları** bölümünü kullanın.
@@ -188,10 +188,10 @@ Bu süre fail‑safe süresinden (5 dk) kısadır.
 
 | Hareket | İşlev |
 |---------|-------|
-| Sağa / sola döndürme | Hedef sıcaklığı 0.5 °C adımlarla değiştirir |
-| Kısa basış | OLED sayfası: Ana → Ağ → Bilgi → Uyku → Tema |
+| Sağa / sola döndürme | İlk çevirme yalnızca hedef düzenleme moduna geçer (değer değişmez); sonraki çevirmeler hedefi 0.5 °C adımlarla değiştirir ve 10 sn gösterir |
+| Kısa basış | OLED sayfası: Ana → Ağ → Bilgi → Uyku |
 | Uzun basış (≥1.2 sn) | Mod: Açık ↔ Kapalı (don koruması) |
-| Tema sayfasında döndürme | Aktif OLED temasını değiştirir |
+| Buton basılı + döndürme | Aktif OLED teması: sağ = sonraki, sol = önceki |
 
 Yön ters geliyorsa koddaki `ENCODER_REVERSE` değerini `1` yapın.
 
@@ -232,50 +232,70 @@ seçilen dilde gelir.
 
 ### OLED sayfaları
 
-1. **Ana:** büyük oda sıcaklığı, hedef, durum, nem / kombi su sıcaklığı / boost;
-   uyku aktifken üstte `UYKU` etiketi
+1. **Ana:** 4× oda sıcaklığı (ısıtırken yanıp söner); hedef yalnızca encoder
+   çevrildikten sonraki 10 sn boyunca aynı yerde yanıp söner; nem / kombi suyu
+   yalnızca geçerli veri varsa alt satırda
 2. **Ağ:** AP IP, STA IP, SSID, kombi bağlantısı, sinyal
 3. **Bilgi:** histerezis, kalibrasyon, don koruması, boost, çalışma süresi, FW
 4. **Uyku:** durum, saat aralığı, uyku/normal hedef, NTP saati, röle fail‑safe
-5. **Tema:** aktif tema adı/kimliği, dosya kaynağı, üst çizgi ve durum stili;
-   encoder ile tema seçimi
+
+Üstteki 16 piksellik sarı bant **durum alanıdır**: solda oda sensörü, kombi ve wifi
+bağlantısı için üç ayrı simge (kopukken üzeri çizili / `!` işaretli), gerektiğinde
+mod kapalı, uyku ve boost simgeleri, ortada sayfa noktaları, **en sağda güncel saat**
+(NTP yoksa `--:--`). Sayfa başlığı metni (ör. `TERMOSTAT`) bilinçli olarak çizilmez.
+Ana ekranda `ISITIYOR` / `BEKLIYOR` gibi durum yazısı yoktur: ısıtma talebi varken
+oda sıcaklığı yanıp söner, nem verisi yoksa nem için hiç yer ayrılmaz. Hedef değer
+normalde gizlidir: encoder çevrilince 10 sn boyunca oda sıcaklığının yerinde yanıp
+söner, alt satırda `HEDEF` etiketi görünür; süre dolunca güncel sıcaklık döner.
 
 ### OLED temaları
 
-Ekran yerleşimi `src/OledTheme/` modülünden gelir. Tema, ekranın üst çizgisi,
-hedef kolonu, sıcaklık boyutu, ayırıcı, durum şeridi ve alt bilgi satırını
-belirleyen küçük bir veri yapısıdır. Hedef kolonu olan temalarda hedef
-sıcaklık, üstünde `HEDEF` etiketi olmadan çerçeve içinde 2× boyutta gösterilir;
-durum satırı (`ISITIYOR` / `BEKLIYOR`) her temada yatay ortalanır.
+Ekran yerleşimi `src/OledTheme/` modülünden gelir. **10 yerleşik tema** vardır ve
+hepsi ana ekran yerleşimini paylaşır: ortada 4× oda sıcaklığı ve küçük `C`, altta
+yalnızca veri varsa nem ve kombi suyu. Hedef normalde çizilmez; encoder çevrilince
+10 sn boyunca aynı büyük yuvada yanıp söner ve alt satırda `HEDEF` etiketi görünür.
+
+Temalar arasında yalnızca iki şey değişir:
+
+- **`ikon`** — üst banttaki durum simgelerinin stili: `0` çizgi (2 px),
+  `1` ince (1 px), `2` dolu (3 px), `3` kutu (her simge çerçeveli), `4` noktalı
+- **`font`** — büyük sıcaklık yazısının fontu: `0` Adafruit GFX yerleşik fontu,
+  `1` yedi parçalı (dijital) rakamlar
+
+Yerleşim anahtarları (`header`, `separator`, `status`, `nem`, `boost`, `su`,
+`sayfa`, `etiket`) tüm yerleşik temalarda aynıdır; dosyayı düzenleyerek
+değiştirilebilir.
 
 **Sarı üst bant:** 0.96" iki renkli SSD1306 modüllerinin üst **16 pikseli** her
-zaman sarı, alt kısmı mavidir. Bu nedenle temalar, hangi `header` stili seçilirse
-seçilsin sayfa başlığını bu bantta (y=0–15) tutar; sıcaklık ve diğer satırlar
-16. pikselin altında başlar. Sadece tek renkli (beyaz) panelde de aynı yerleşim
-geçerlidir, sadece renk ayrımı görünmez. Tüm sayfaların gövde satırları
-`OLED_BAND_H` (16) sabitinden türetilir.
+zaman sarı, alt kısmı mavidir. Bu bant artık **bildirim alanı** olarak kullanılır:
+sensör hatası, kopuk kombi bağlantısı, AP modu, uyku ve boost simgeleri burada
+gösterilir. Sıcaklık ve diğer satırlar 16. pikselin altında başlar. Sadece tek
+renkli (beyaz) panelde de aynı yerleşim geçerlidir, sadece renk ayrımı görünmez.
+Tüm sayfaların gövde satırları `OLED_BAND_H` (16) sabitinden türetilir.
 
-İlk açılışta (veya dosya silinmişse) `LittleFS` üzerinde şunlar oluşturulur:
+**Tema değiştirme:** Enkoder butonunu basılı tutup enkoderi sağa çevirmek
+sonraki temaya, sola çevirmek önceki temaya geçer; ekran aynı sayfada anında
+yeni temayla yenilenir. `/test` sayfasında sağ/sol tuşunu 450 ms basılı tutmak
+aynı işi yapar. Eski tema seçim sayfası kaldırıldı.
 
-```
-/themes/klasik.txt    /themes/minimal.txt   /themes/ters.txt
-/themes/kutu.txt      /themes/genis.txt     /themes/gece.txt
-/themes/retro.txt     /themes/durum.txt     /themes/kompakt.txt
-/themes/dev.txt       /themes/active.txt
-```
+İlk açılışta (veya dosya silinmişse) `LittleFS` üzerinde her tema için bir dosya
+oluşturulur: `/themes/<id>.txt` ve `/themes/active.txt`.
 
-| Tema | Karakter |
-|------|----------|
-| `klasik` | Özgün yerleşim: çizgi başlık, 2× sıcaklık, talep barı |
-| `minimal` | Çizgisiz başlık, ortada 3× sıcaklık, sade durum metni |
-| `ters` | Negatif ekran, dolu başlık şeridi, ters durum şeridi |
-| `kutu` | Kutu başlık, çift ayırıcı, çerçeveli durum |
-| `genis` | 3× sıcaklık, çift ayırıcı, etiketsiz |
-| `gece` | Düşük kontrast (dim), çift çizgi, noktalı ayırıcı |
-| `retro` | Çift çizgi, noktalı ayırıcı, çerçeveli durum |
-| `durum` | Durum şeridi odaklı, hedef kolonu yok |
-| `kompakt` | Dolu başlık şeridi, kısa etiketler (`HD`) |
-| `dev` | Sade başlık, dev sıcaklık + durum |
+| Tema | Ikonlar | Font |
+|------|---------|------|
+| `klasik`  | çizgi (2 px)  | GFX 4× |
+| `ince`    | ince (1 px)   | GFX 4× |
+| `dolu`    | dolu (3 px)   | GFX 4× |
+| `kutu`    | çerçeveli     | GFX 4× |
+| `nokta`   | noktalı       | GFX 4× |
+| `dijital` | çizgi (2 px)  | yedi parçalı (dijital) |
+| `neon`    | dolu (3 px)   | yedi parçalı (dijital) |
+| `panel`   | çerçeveli     | yedi parçalı (dijital) |
+| `minimal` | ince (1 px)   | yedi parçalı (dijital) |
+| `retro`   | noktalı       | yedi parçalı (dijital) |
+
+Yeni temalar `src/OledTheme/OledTheme.cpp` içindeki `THEME_TABLE` ve
+`/themes/<id>.txt` dosyaları üzerinden eklenir.
 
 Dosya biçimi `anahtar=değer` (web'de `/fs` üzerinden düzenlenebilir):
 
@@ -283,7 +303,7 @@ Dosya biçimi `anahtar=değer` (web'de `/fs` üzerinden düzenlenebilir):
 id=klasik
 adi=Klasik
 header=1        # 0 sade, 1 tek çizgi, 2 çift çizgi, 3 kutu, 4 dolu şerit (hepsi üst 16 px bantta)
-tempsize=2      # 2 veya 3 (yazı boyutu)
+tempsize=3      # 2 veya 3 (klasik ana ekran okunabilirlik icin 3 kullanir)
 tempcenter=0    # 1 = ortala
 setpointcol=1   # sağda çerçeveli büyük hedef (tempcenter=0 iken)
 separator=1     # 0 yok, 1 tek, 2 çift, 3 noktalı
@@ -291,10 +311,12 @@ status=1        # 0 metin, 1 talep barı, 2 çerçeve, 3 ters şerit
 nem=1           # alt satırda nem
 boost=1         # alt satırda boost
 su=1            # alt satırda kombi su sıcaklığı
-sayfa=1         # sağ üstte sayfa sayacı
+sayfa=1         # sağ üstte sayfa noktaları
 etiket=1        # HEDEF/Nem etiketleri (ortalanmış sıcaklık yerleşiminde)
 ters=0          # tüm ekranı negatif yap
 dim=0           # düşük kontrast
+ikon=0          # 0 çizgi, 1 ince, 2 dolu, 3 kutu, 4 nokta
+font=0          # 0 gfx, 1 yedi parçalı (dijital)
 ```
 
 `/themes/active.txt` yalnızca son seçilen temanın kimliğini (`id=...`) tutar;
@@ -339,9 +361,10 @@ Talep KAPALI: sıcaklık ≥ hedef + histerezis  VE  son açmadan ≥ 60 sn geç
 | GET | `/api/set?boost=15` | 15 dk boost (`0` = iptal) |
 | GET | `/api/set?sleep=1&sleepstart=23:00&sleepend=07:00&sleepsp=18` | Uyku modu |
 | GET | `/api/set?failsafe=1` | Röle fail‑safe: son talebi koru |
-| GET | `/api/set?theme=gece` | OLED temasını seç (10 tema) |
+| GET | `/api/set?theme=klasik` | OLED temasını seç |
 | GET | `/api/theme` | Tema listesi + aktif tema (JSON) |
-| GET | `/api/theme?set=retro` | Tema seç |
+| GET | `/api/theme?set=klasik` | Tema seç |
+| GET | `/api/theme?step=1` | Sonraki tema (`-1` = önceki) |
 | GET | `/api/theme?reload=1` | Tema dosyalarını diskten yeniden oku |
 | POST | `/api/net` | MQTT/Telegram ayarları |
 | GET | `/api/history?hours=24` | Geçmiş noktaları (JSON) |

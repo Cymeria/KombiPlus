@@ -3,7 +3,7 @@
 Oda termostatından gelen ısı talebine göre kombinin kuru kontağını süren,
 bağlantı koptuğunda röleyi **otomatik olarak kapatan** güvenli röle ünitesi.
 
-> Sürüm **1.0.0** · Diğer diller ve proje genel bakışı: [`README.md`](../README.md)
+> Sürüm **1.1.0** · Diğer diller ve proje genel bakışı: [`README.md`](../README.md)
 > (English, Türkçe, Русский, Español, Português, 日本語, 한국어, 中文)
 
 > Bu klasördeki `kombi_rolesi.ino` tek dosyadır.
@@ -125,7 +125,7 @@ bağlantı koptuğunda röleyi **otomatik olarak kapatan** güvenli röle ünite
 #define FLOW_PIN            D2
 
 #define TERMOSTAT_AP_SSID  "KombiPlus"
-#define TERMOSTAT_AP_PASS  "Ck.073214"
+#define TERMOSTAT_AP_PASS  "Kombi.1881"
 
 #define SERVER_HOST        "192.168.4.1"
 #define TCP_PORT           8266
@@ -161,7 +161,7 @@ bağlantı koptuğunda röleyi **otomatik olarak kapatan** güvenli röle ünite
 
 ```
 Oda ünitesi her 2 sn:  SET heat=0/1 sp=21.0 hyst=0.3 mode=1 fs=0
-Röle ünitesi yanıt  :  STATUS relay=1 flow=42.5 rssi=-58 up=123 fs=0 fw=1.0.0
+Röle ünitesi yanıt  :  STATUS relay=1 flow=42.5 rssi=-58 up=123 fs=0 fw=1.1.0
 ```
 
 - Röle yalnızca şu koşullarda açılır:

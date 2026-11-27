@@ -23,7 +23,7 @@
 
 // ============================ KULLANICI AYARLARI ============================
 
-#define FW_VERSION "1.0.0"
+#define FW_VERSION "1.1.0"
 
 // Role modulu (aktif dusuk role kartlari yaygindir)
 #define RELAY_PIN          D1        // GPIO5
@@ -39,7 +39,7 @@
 
 // Oda unitesi AP bilgileri (oda kodu ile AYNI olmali!)
 #define TERMOSTAT_AP_SSID  "KombiPlus"
-#define TERMOSTAT_AP_PASS  "Ck.073214"
+#define TERMOSTAT_AP_PASS  "Kombi.1881"
 
 // Oda unitesinin AP uzerindeki sabit adresi
 #define SERVER_HOST        "192.168.4.1"

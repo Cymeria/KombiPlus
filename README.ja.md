@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="docs/images/banner.svg" alt="KombiPlus v1.0.0 — ESP8266 2 台構成の Wi-Fi ルームサーモスタット" width="100%">
+  <img src="docs/images/banner.svg" alt="KombiPlus v1.1.0 — ESP8266 2 台構成の Wi-Fi ルームサーモスタット" width="100%">
 </div>
 
 <h1 align="center">KombiPlus</h1>
@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img alt="バージョン" src="https://img.shields.io/badge/%E3%83%90%E3%83%BC%E3%82%B8%E3%83%A7%E3%83%B3-1.0.0-ff8a3d?style=flat-square">
+  <img alt="バージョン" src="https://img.shields.io/badge/%E3%83%90%E3%83%BC%E3%82%B8%E3%83%A7%E3%83%B3-1.1.0-ff8a3d?style=flat-square">
   <img alt="プラットフォーム" src="https://img.shields.io/badge/platform-NodeMCU%20v3%20(ESP8266)-2b3d61?style=flat-square">
   <img alt="コア" src="https://img.shields.io/badge/Arduino%20core-3.1.2-00979D?style=flat-square&logo=arduino&logoColor=white">
   <img alt="クラウド" src="https://img.shields.io/badge/%E3%82%AF%E3%83%A9%E3%82%A6%E3%83%89-%E4%B8%8D%E8%A6%81-2dd47c?style=flat-square">
@@ -217,11 +217,11 @@ kombi/
 ```cpp
 // oda_termostati.ino
 #define AP_SSID  "KombiPlus"
-#define AP_PASS  "Ck.073214"
+#define AP_PASS  "Kombi.1881"
 
 // kombi_rolesi.ino
 #define TERMOSTAT_AP_SSID  "KombiPlus"
-#define TERMOSTAT_AP_PASS  "Ck.073214"
+#define TERMOSTAT_AP_PASS  "Kombi.1881"
 ```
 
 室内ユニットのセンサーを選択:
@@ -240,7 +240,7 @@ kombi/
 
 1. まず**リレーユニット**を書き込みます（ボイラーへの接点接続はまだ行わない）。
 2. 次に**室内ユニット**を書き込みます。
-3. `KombiPlus`（パスワード `Ck.073214`）に接続し、`http://192.168.4.1` を開きます。
+3. `KombiPlus`（パスワード `Kombi.1881`）に接続し、`http://192.168.4.1` を開きます。
 4. リレーのシリアルログに `Oda unitesine baglandi.`、Web UI に **Kombi bağlı** が出れば OK。
 5. テスト後、リレー接点のボイラー接続は**有資格の技術者**に依頼してください。
 
@@ -291,7 +291,7 @@ kombi/
 | 方向 | 行 |
 |------|-----|
 | 室内 → リレー | `SET heat=1 sp=21.0 hyst=0.3 mode=1 fs=0\n` |
-| リレー → 室内 | `STATUS relay=1 flow=42.50 rssi=-58 up=123 fs=0 fw=1.0.0\n` |
+| リレー → 室内 | `STATUS relay=1 flow=42.50 rssi=-58 up=123 fs=0 fw=1.1.0\n` |
 
 どちらも 115200 のシリアルログで確認できます。
 
@@ -353,8 +353,8 @@ fsUsed, fsTotal, uptime, ip, apip, ssid, sta, rssi, heap, client`。
 - Web UI は 24 時間 / 7 日 / 30 日のグラフを描画。`/fs` で一覧・ダウンロード・アップロード・
   削除・編集が可能
 
-内蔵テーマ: `klasik`、`minimal`、`ters`、`kutu`、`genis`、`gece`、`retro`、`durum`、
-`kompakt`、`dev`。
+内蔵テーマ: `klasik`、`ince`、`dolu`、`kutu`、`nokta`、`dijital`、`neon`、`panel`、
+`minimal`、`retro`。
 
 ---
 
@@ -371,6 +371,7 @@ fsUsed, fsTotal, uptime, ip, apip, ssid, sta, rssi, heap, client`。
 
 ## バージョン
 
+- **v1.1.0** — OLEDテーマ10種、室温中心のメイン画面、ブラウザからの初期設定 ([CHANGELOG.md](CHANGELOG.md))
 - **v1.0.0** — 最初の安定版（[CHANGELOG.md](CHANGELOG.md)）
 - 検証環境: ESP8266 Arduino core 3.1.2、Arduino IDE 2.x
 - 室内ユニットの IRAM は約 95 %（必要なら `TELEGRAM_ENABLED 0` で確保）

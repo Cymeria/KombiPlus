@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="docs/images/banner.svg" alt="KombiPlus v1.0.0 — termostato de habitación Wi-Fi de dos módulos ESP8266" width="100%">
+  <img src="docs/images/banner.svg" alt="KombiPlus v1.1.0 — termostato de habitación Wi-Fi de dos módulos ESP8266" width="100%">
 </div>
 
 <h1 align="center">KombiPlus</h1>
@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img alt="versión" src="https://img.shields.io/badge/versi%C3%B3n-1.0.0-ff8a3d?style=flat-square">
+  <img alt="versión" src="https://img.shields.io/badge/versi%C3%B3n-1.1.0-ff8a3d?style=flat-square">
   <img alt="plataforma" src="https://img.shields.io/badge/platform-NodeMCU%20v3%20(ESP8266)-2b3d61?style=flat-square">
   <img alt="núcleo" src="https://img.shields.io/badge/Arduino%20core-3.1.2-00979D?style=flat-square&logo=arduino&logoColor=white">
   <img alt="nube" src="https://img.shields.io/badge/nube-no%20necesaria-2dd47c?style=flat-square">
@@ -222,11 +222,11 @@ kombi/
 ```cpp
 // oda_termostati.ino
 #define AP_SSID  "KombiPlus"
-#define AP_PASS  "Ck.073214"
+#define AP_PASS  "Kombi.1881"
 
 // kombi_rolesi.ino
 #define TERMOSTAT_AP_SSID  "KombiPlus"
-#define TERMOSTAT_AP_PASS  "Ck.073214"
+#define TERMOSTAT_AP_PASS  "Kombi.1881"
 ```
 
 Elige el sensor en la unidad de habitación:
@@ -245,7 +245,7 @@ Módulo de relé activo alto:
 
 1. Flashea primero la **unidad de relé** (sin conectar el contacto a la caldera).
 2. Flashea la **unidad de habitación**.
-3. Conéctate a `KombiPlus` (contraseña `Ck.073214`) y abre `http://192.168.4.1`.
+3. Conéctate a `KombiPlus` (contraseña `Kombi.1881`) y abre `http://192.168.4.1`.
 4. El registro del relé mostrará `Oda unitesine baglandi.` y la web **Kombi bağlı**.
 5. Solo después de probar, pide a un **técnico autorizado** que conecte el contacto del relé
    a la bornera del termostato de la caldera.
@@ -297,7 +297,7 @@ La unidad de habitación escucha en **TCP 8266**; la de relé es el cliente. ASC
 | Dirección | Línea |
 |-----------|-------|
 | Habitación → Relé | `SET heat=1 sp=21.0 hyst=0.3 mode=1 fs=0\n` |
-| Relé → Habitación | `STATUS relay=1 flow=42.50 rssi=-58 up=123 fs=0 fw=1.0.0\n` |
+| Relé → Habitación | `STATUS relay=1 flow=42.50 rssi=-58 up=123 fs=0 fw=1.1.0\n` |
 
 Ambas direcciones se ven en los registros serie a 115200.
 
@@ -359,8 +359,8 @@ fsUsed, fsTotal, uptime, ip, apip, ssid, sta, rssi, heap, client`.
 - La web dibuja gráficos de 24 h / 7 d / 30 d; `/fs` permite listar, descargar, subir,
   borrar y editar archivos
 
-Temas incluidos: `klasik`, `minimal`, `ters`, `kutu`, `genis`, `gece`, `retro`, `durum`,
-`kompakt`, `dev`.
+Temas incluidos: `klasik`, `ince`, `dolu`, `kutu`, `nokta`, `dijital`, `neon`, `panel`,
+`minimal`, `retro`.
 
 ---
 
@@ -377,6 +377,7 @@ Temas incluidos: `klasik`, `minimal`, `ters`, `kutu`, `genis`, `gece`, `retro`, 
 
 ## Versión
 
+- **v1.1.0** — ten OLED themes, a room-temperature-first main screen and web-based first setup ([CHANGELOG.md](CHANGELOG.md))
 - **v1.0.0** — primera versión estable ([CHANGELOG.md](CHANGELOG.md))
 - Probado con: ESP8266 Arduino core 3.1.2, Arduino IDE 2.x
 - La IRAM de la unidad de habitación está al ~95 % (`TELEGRAM_ENABLED 0` libera espacio)

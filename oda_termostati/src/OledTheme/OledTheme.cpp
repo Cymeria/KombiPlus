@@ -11,18 +11,21 @@
 
 // Gomulu varsayilan temalar. Kolonlar:
 // id, ad, header, tempSize, tempCenter, setpointCol, separator, statusStyle,
-// showHum, showBoost, showWater, showPage, labels, invert, dim
+// showHum, showBoost, showWater, showPage, labels, invert, dim, icons, font
+// Tum temalar ayni ana ekran yerlesimini kullanir; yalnizca simge stili ve
+// buyuk sicaklik fontu degisir.
 static const OledTheme THEME_TABLE[OLED_THEME_COUNT] = {
-  {"klasik",  "Klasik",     1, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0},
-  {"minimal", "Minimal",    0, 3, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-  {"ters",    "Ters",       4, 2, 0, 1, 1, 3, 1, 1, 0, 1, 1, 1, 0},
-  {"kutu",    "Kutu",       3, 2, 0, 1, 2, 2, 1, 1, 1, 1, 1, 0, 0},
-  {"genis",   "Genis",      1, 3, 1, 0, 2, 1, 1, 1, 0, 1, 0, 0, 0},
-  {"gece",    "Gece",       2, 3, 1, 0, 3, 0, 0, 1, 0, 0, 0, 0, 1},
-  {"retro",   "Retro",      2, 2, 0, 1, 3, 2, 1, 1, 1, 1, 1, 0, 0},
-  {"durum",   "Durum",      1, 2, 0, 0, 0, 3, 1, 1, 1, 1, 0, 0, 0},
-  {"kompakt", "Kompakt",    4, 2, 0, 1, 0, 0, 1, 1, 1, 1, 0, 0, 0},
-  {"dev",     "Dev Rakam",  0, 3, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0},
+  //    id          ad           hdr ts tc sp sep st nem bst su syf lbl inv dim ikn fnt
+  {"klasik",  "Klasik",      1, 3, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0},
+  {"ince",    "Ince",        1, 3, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0},
+  {"dolu",    "Dolu",        1, 3, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 2, 0},
+  {"kutu",    "Kutu",        1, 3, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 3, 0},
+  {"nokta",   "Nokta",       1, 3, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 4, 0},
+  {"dijital", "Dijital",     1, 3, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1},
+  {"neon",    "Neon",        1, 3, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 2, 1},
+  {"panel",   "Panel",       1, 3, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 3, 1},
+  {"minimal", "Minimal",     1, 3, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1},
+  {"retro",   "Retro",       1, 3, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 4, 1},
 };
 
 // ============================ YARDIMCILAR ==================================
@@ -68,6 +71,8 @@ bool oledThemeParse(OledTheme &t, const String &rawKey, const String &rawVal) {
   else if (key == "etiket" || key == "labels") t.labels = clampByte(val, 0, 1, t.labels);
   else if (key == "ters" || key == "invert")   t.invert = clampByte(val, 0, 1, t.invert);
   else if (key == "dim")              t.dim = clampByte(val, 0, 1, t.dim);
+  else if (key == "ikon" || key == "icons")  t.icons = clampByte(val, 0, 4, t.icons);
+  else if (key == "font")             t.font = clampByte(val, 0, 1, t.font);
   else return false;
 
   return true;
@@ -81,6 +86,8 @@ String oledThemeToFile(const OledTheme &t) {
   s += "# header: 0 sade, 1 tek cizgi, 2 cift cizgi, 3 kutu, 4 dolu serit\n";
   s += "# status: 0 metin, 1 talep bar, 2 cerceve, 3 ters serit\n";
   s += "# separator: 0 yok, 1 tek, 2 cift, 3 noktali\n";
+  s += "# ikon: 0 cizgi, 1 ince, 2 dolu, 3 kutu, 4 nokta\n";
+  s += "# font: 0 gfx, 1 yedi parcali (dijital)\n";
   s += "id=" + String(t.id) + "\n";
   s += "adi=" + String(t.name) + "\n";
   s += "header=" + String(t.header) + "\n";
@@ -96,6 +103,8 @@ String oledThemeToFile(const OledTheme &t) {
   s += "etiket=" + String(t.labels) + "\n";
   s += "ters=" + String(t.invert) + "\n";
   s += "dim=" + String(t.dim) + "\n";
+  s += "ikon=" + String(t.icons) + "\n";
+  s += "font=" + String(t.font) + "\n";
   return s;
 }
 
@@ -261,41 +270,189 @@ int oledThemeHeaderHeight(const OledTheme &t) {
   return OLED_BAND_H;
 }
 
-void oledThemeHeader(Adafruit_GFX &d, const OledTheme &t,
-                     const __FlashStringHelper *title, int page, int pageCount) {
-  d.setTextSize(1);
-  d.setTextColor(SSD1306_WHITE);
+// ---- Bildirim simgeleri (12 px yuva, ~11 px cizim) -----------------------
+// Tum temalar ayni govde geometrisini kullanir; stil yalnizca kalinligi ve
+// dolguyu degistirir: 0 cizgi (2 px), 1 ince (1 px), 2 dolu (3 px),
+// 3 kutu (1 px + cerceve), 4 noktali (seyrek pikseller).
 
-  char pg[8];
-  pg[0] = '\0';
-  int pgW = 0;
-  if (t.showPage && pageCount > 1) {
-    snprintf(pg, sizeof(pg), "%d/%d", page + 1, pageCount);
-    pgW = (int)strlen(pg) * 6;
+static int iconT(uint8_t s) { return (s == 2) ? 3 : (s == 1 ? 1 : 2); }
+
+static void iconH(Adafruit_GFX &d, uint8_t s, int x, int y, int w, uint16_t c) {
+  if (w <= 0) return;
+  if (s == 4) { for (int i = 0; i < w; i += 2) d.drawPixel(x + i, y, c); return; }
+  d.fillRect(x, y, w, iconT(s), c);
+}
+
+static void iconV(Adafruit_GFX &d, uint8_t s, int x, int y, int h, uint16_t c) {
+  if (h <= 0) return;
+  if (s == 4) { for (int i = 0; i < h; i += 2) d.drawPixel(x, y + i, c); return; }
+  d.fillRect(x, y, iconT(s), h, c);
+}
+
+static void iconFrame(Adafruit_GFX &d, uint8_t s, int x, int y, int w, int h, uint16_t c) {
+  if (s == 4) {
+    for (int i = 0; i < w; i += 2) { d.drawPixel(x + i, y, c); d.drawPixel(x + i, y + h - 1, c); }
+    for (int i = 0; i < h; i += 2) { d.drawPixel(x, y + i, c); d.drawPixel(x + w - 1, y + i, c); }
+    return;
   }
+  int t = (s == 2) ? 2 : 1;
+  for (int i = 0; i < t; i++) d.drawRect(x + i, y + i, w - 2 * i, h - 2 * i, c);
+}
 
-  // Sari bant (0..15): baslik her temada burada, gövde 16'nin altinda.
+// Oda sensoru: termometre (saglikli).
+static void iconThermo(Adafruit_GFX &d, uint8_t s, int x, int y, uint16_t c) {
+  int cx = x + 4;
+  int t  = iconT(s);
+  iconV(d, s, cx - t / 2, y + 1, 6, c);
+  if (s == 2)      d.fillCircle(cx, y + 9, 3, c);
+  else if (s == 1) d.drawPixel(cx, y + 9, c);
+  else             d.fillCircle(cx, y + 9, 2, c);
+}
+
+// Oda sensoru hatasi: termometre + "!"
+static void iconSensorErr(Adafruit_GFX &d, uint8_t s, int x, int y, uint16_t c) {
+  iconThermo(d, s, x, y, c);
+  iconV(d, s, x + 9, y + 1, 6, c);
+  if (s == 2) d.fillRect(x + 8, y + 9, 3, 2, c);
+  else        d.drawPixel(x + 9, y + 9, c);
+}
+
+// Kombi bagi var: ic ice iki halka.
+static void iconLinkOn(Adafruit_GFX &d, uint8_t s, int x, int y, uint16_t c) {
+  iconFrame(d, s, x, y + 3, 7, 6, c);
+  iconFrame(d, s, x + 4, y + 3, 7, 6, c);
+}
+
+// Kombi bagi yok: kopuk halka.
+static void iconLinkOff(Adafruit_GFX &d, uint8_t s, int x, int y, uint16_t c) {
+  iconFrame(d, s, x, y + 3, 6, 6, c);
+  iconFrame(d, s, x + 5, y + 3, 6, 6, c);
+  d.drawLine(x + 3, y + 1, x + 7, y + 10, c);
+  if (s == 2) d.drawLine(x + 4, y + 1, x + 8, y + 10, c);
+}
+
+// Wifi bagi var: yaylar.
+static void iconWifiOn(Adafruit_GFX &d, uint8_t s, int x, int y, uint16_t c) {
+  int cx = x + 5;
+  if (s == 2)      d.fillRect(cx - 1, y + 7, 3, 3, c);
+  else if (s == 1) d.drawPixel(cx, y + 8, c);
+  else             d.fillRect(cx, y + 7, 2, 2, c);
+  iconH(d, s, cx - 1, y + 5, 3, c);
+  iconH(d, s, cx - 3, y + 3, 7, c);
+  iconH(d, s, cx - 4, y + 1, 9, c);
+}
+
+// Wifi bagi yok (AP modu): yaylar + capraz.
+static void iconWifiOff(Adafruit_GFX &d, uint8_t s, int x, int y, uint16_t c) {
+  iconWifiOn(d, s, x, y, c);
+  d.drawLine(x + 0, y + 1, x + 10, y + 10, c);
+  if (s == 2) d.drawLine(x + 1, y + 1, x + 11, y + 10, c);
+}
+
+// Mod kapali: guc simgesi.
+static void iconPower(Adafruit_GFX &d, uint8_t s, int x, int y, uint16_t c) {
+  int cx = x + 5;
+  d.drawCircle(cx, y + 6, 4, c);
+  if (s == 2) d.drawCircle(cx, y + 6, 3, c);
+  iconV(d, s, cx - iconT(s) / 2, y, 5, c);
+}
+
+// Uyku modu: hilal
+static void iconMoon(Adafruit_GFX &d, uint8_t s, int x, int y, uint16_t c) {
+  uint16_t cut = c ? SSD1306_BLACK : SSD1306_WHITE;
+  if (s == 1) {
+    d.fillCircle(x + 4, y + 5, 3, c);
+    d.fillCircle(x + 7, y + 3, 3, cut);
+    return;
+  }
+  d.fillCircle(x + 5, y + 5, 4, c);
+  d.fillCircle(x + 8, y + 4, 4, cut);
+}
+
+// Boost: simsek
+static void iconBolt(Adafruit_GFX &d, uint8_t s, int x, int y, uint16_t c) {
+  d.drawLine(x + 6, y + 1, x + 2, y + 6, c);
+  d.drawLine(x + 2, y + 6, x + 5, y + 6, c);
+  d.drawLine(x + 5, y + 6, x + 3, y + 11, c);
+  d.drawLine(x + 3, y + 11, x + 8, y + 5, c);
+  d.drawLine(x + 8, y + 5, x + 5, y + 5, c);
+  d.drawLine(x + 5, y + 5, x + 6, y + 1, c);
+  if (s == 2) {
+    d.drawLine(x + 7, y + 1, x + 3, y + 6, c);
+    d.drawLine(x + 4, y + 11, x + 9, y + 5, c);
+  }
+}
+
+// Kutu stilinde her simgenin arkasina 11x12 cerceve.
+static void iconBox(Adafruit_GFX &d, uint8_t s, int x, int y, uint16_t c) {
+  if (s == 3) d.drawRect(x, y, 11, 12, c);
+}
+
+// Ust (sari) bant = durum alani: solda sensor/kombi/wifi simgeleri,
+// ortada sayfa noktalari, en sagda guncel saat. Baslik metni cizilmez.
+void oledThemeStatusBar(Adafruit_GFX &d, const OledTheme &t, uint8_t notes,
+                        int page, int pageCount, const char *clock) {
+  const int band = OLED_BAND_H;
+  uint16_t fg = SSD1306_WHITE;
+
   if (t.header == 4) {
-    d.fillRect(0, 0, 128, OLED_BAND_H, SSD1306_WHITE);
-    d.setTextColor(SSD1306_BLACK);
+    d.fillRect(0, 0, 128, band, SSD1306_WHITE);
+    fg = SSD1306_BLACK;
   }
 
-  d.setCursor(2, 3);
-  d.print(title);
-  if (pgW > 0) {
-    d.setCursor(126 - pgW, 3);
-    d.print(pg);
+  // Uc baglanti durumu her zaman gorunur; hata bayragi simgeyi degistirir.
+  const uint8_t st = t.icons;
+  int x = 2;
+  if (notes & OLED_NOTE_SENSOR) iconSensorErr(d, st, x, 2, fg);
+  else                          iconThermo(d, st, x, 2, fg);
+  iconBox(d, st, x, 2, fg);
+  x += 12;
+  if (notes & OLED_NOTE_NOLINK) iconLinkOff(d, st, x, 2, fg);
+  else                          iconLinkOn(d, st, x, 2, fg);
+  iconBox(d, st, x, 2, fg);
+  x += 12;
+  if (notes & OLED_NOTE_AP)     iconWifiOff(d, st, x, 2, fg);
+  else                          iconWifiOn(d, st, x, 2, fg);
+  iconBox(d, st, x, 2, fg);
+  x += 12;
+  if (notes & OLED_NOTE_OFF)   { iconPower(d, st, x, 2, fg); iconBox(d, st, x, 2, fg); x += 12; }
+  if (notes & OLED_NOTE_SLEEP) { iconMoon(d, st, x, 2, fg);  iconBox(d, st, x, 2, fg); x += 12; }
+  if (notes & OLED_NOTE_BOOST) { iconBolt(d, st, x, 2, fg);  iconBox(d, st, x, 2, fg); x += 12; }
+
+  int clockX = 0;
+  if (clock && clock[0]) {
+    int w = (int)strlen(clock) * 6;
+    clockX = 128 - w;
+    if (clockX < x) clockX = x;
+    d.setTextSize(1);
+    d.setTextColor(fg);
+    d.setCursor(clockX, 4);
+    d.print(clock);
   }
+
+  if (pageCount > 1 && t.showPage) {
+    const int dot = 2, gap = 2;
+    int total = pageCount * dot + (pageCount - 1) * gap;
+    int dx = (clockX > 0 ? clockX - 3 : 126) - total;
+    if (dx < x) dx = x;
+    int cy = band / 2 - 1;
+    for (int i = 0; i < pageCount; i++) {
+      int px = dx + i * (dot + gap);
+      if (i == page) d.fillRect(px, cy, dot, dot, fg);
+      else          d.drawRect(px, cy, dot, dot, fg);
+    }
+  }
+
   d.setTextColor(SSD1306_WHITE);
 
   switch (t.header) {
-    case 1: d.drawFastHLine(0, OLED_BAND_H - 1, 128, SSD1306_WHITE); break;
+    case 1: d.drawFastHLine(0, band - 1, 128, SSD1306_WHITE); break;
     case 2:
-      d.drawFastHLine(0, OLED_BAND_H - 2, 128, SSD1306_WHITE);
-      d.drawFastHLine(0, OLED_BAND_H - 1, 128, SSD1306_WHITE);
+      d.drawFastHLine(0, band - 2, 128, SSD1306_WHITE);
+      d.drawFastHLine(0, band - 1, 128, SSD1306_WHITE);
       break;
-    case 3: d.drawRect(0, 2, 128, OLED_BAND_H - 3, SSD1306_WHITE); break;
-    default: break;   // 0: sade baslik, 4: bant zaten dolu
+    case 3: d.drawRect(0, 1, 128, band - 2, SSD1306_WHITE); break;
+    default: break;   // 0: sade, 4: bant zaten dolu
   }
 }
 

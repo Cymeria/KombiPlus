@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="docs/images/banner.svg" alt="KombiPlus v1.0.0 — iki cihazlı ESP8266 oda termostatı" width="100%">
+  <img src="docs/images/banner.svg" alt="KombiPlus v1.1.0 — iki cihazlı ESP8266 oda termostatı" width="100%">
 </div>
 
 <h1 align="center">KombiPlus</h1>
@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img alt="sürüm" src="https://img.shields.io/badge/s%C3%BCr%C3%BCm-1.0.0-ff8a3d?style=flat-square">
+  <img alt="sürüm" src="https://img.shields.io/badge/s%C3%BCr%C3%BCm-1.1.0-ff8a3d?style=flat-square">
   <img alt="platform" src="https://img.shields.io/badge/platform-NodeMCU%20v3%20(ESP8266)-2b3d61?style=flat-square">
   <img alt="çekirdek" src="https://img.shields.io/badge/Arduino%20core-3.1.2-00979D?style=flat-square&logo=arduino&logoColor=white">
   <img alt="bulut" src="https://img.shields.io/badge/bulut-gerekmez-2dd47c?style=flat-square">
@@ -230,11 +230,11 @@ kombi/
 ```cpp
 // oda_termostati.ino
 #define AP_SSID  "KombiPlus"
-#define AP_PASS  "Ck.073214"
+#define AP_PASS  "Kombi.1881"
 
 // kombi_rolesi.ino
 #define TERMOSTAT_AP_SSID  "KombiPlus"
-#define TERMOSTAT_AP_PASS  "Ck.073214"
+#define TERMOSTAT_AP_PASS  "Kombi.1881"
 ```
 
 Oda ünitesinde sensörü seçin:
@@ -253,7 +253,7 @@ Aktif‑high röle kartı:
 
 1. Önce **röle ünitesini** yükleyin (kontağı kombiye bağlamayın).
 2. Sonra **oda ünitesini** yükleyin.
-3. `KombiPlus` ağına bağlanın (şifre `Ck.073214`), `http://192.168.4.1` adresini açın.
+3. `KombiPlus` ağına bağlanın (şifre `Kombi.1881`), `http://192.168.4.1` adresini açın.
 4. Röle seri logunda `Oda unitesine baglandi.` yazmalı; arayüzde **Kombi bağlı** görünür.
 5. Testten sonra röle kontağını kombinin termostat klemensine **yetkili servise** bağlatın.
 
@@ -304,7 +304,7 @@ Oda ünitesi **TCP 8266** portunu dinler; röle ünitesi istemcidir. Satır taba
 | Yön | Satır |
 |-----|-------|
 | Oda → Röle | `SET heat=1 sp=21.0 hyst=0.3 mode=1 fs=0\n` |
-| Röle → Oda | `STATUS relay=1 flow=42.50 rssi=-58 up=123 fs=0 fw=1.0.0\n` |
+| Röle → Oda | `STATUS relay=1 flow=42.50 rssi=-58 up=123 fs=0 fw=1.1.0\n` |
 
 İki yön de 115200 baud seri loglarda izlenebilir.
 
@@ -369,8 +369,8 @@ gelir. Yalnızca tanımlı sohbet yanıt alır.
 - Web arayüzü 24 saat / 7 gün / 30 gün grafiği çizer; `/fs` ile dosya listeleme, indirme,
   yükleme, silme ve düzenleme yapılır
 
-Yerleşik temalar: `klasik`, `minimal`, `ters`, `kutu`, `genis`, `gece`, `retro`, `durum`,
-`kompakt`, `dev`.
+Yerleşik temalar: `klasik`, `ince`, `dolu`, `kutu`, `nokta`, `dijital`, `neon`, `panel`,
+`minimal`, `retro`.
 
 ---
 
@@ -387,6 +387,7 @@ Yerleşik temalar: `klasik`, `minimal`, `ters`, `kutu`, `genis`, `gece`, `retro`
 
 ## Sürüm
 
+- **v1.1.0** — on OLED teması, oda sıcaklığı odaklı ana ekran ve web'den ilk kurulum ([CHANGELOG.md](CHANGELOG.md))
 - **v1.0.0** — ilk kararlı sürüm ([CHANGELOG.md](CHANGELOG.md))
 - Test edilen platform: ESP8266 Arduino core 3.1.2, Arduino IDE 2.x
 - Oda ünitesi IRAM ~%95 doludur (gerekirse `TELEGRAM_ENABLED 0` ile yer açılır)
