@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="docs/images/banner.svg" alt="KombiPlus v1.1.0 — 双节点 ESP8266 Wi-Fi 室内温控器" width="100%">
+  <img src="docs/images/banner.svg" alt="KombiPlus v1.1.1 — 双节点 ESP8266 Wi-Fi 室内温控器" width="100%">
 </div>
 
 <h1 align="center">KombiPlus</h1>
@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img alt="版本" src="https://img.shields.io/badge/%E7%89%88%E6%9C%AC-1.1.0-ff8a3d?style=flat-square">
+  <img alt="版本" src="https://img.shields.io/badge/%E7%89%88%E6%9C%AC-1.1.1-ff8a3d?style=flat-square">
   <img alt="平台" src="https://img.shields.io/badge/platform-NodeMCU%20v3%20(ESP8266)-2b3d61?style=flat-square">
   <img alt="核心" src="https://img.shields.io/badge/Arduino%20core-3.1.2-00979D?style=flat-square&logo=arduino&logoColor=white">
   <img alt="云" src="https://img.shields.io/badge/%E4%BA%91%E7%AB%AF-%E6%97%A0%E9%9C%80-2dd47c?style=flat-square">
@@ -289,7 +289,7 @@ kombi/
 | 方向 | 行 |
 |------|-----|
 | 室内 → 继电器 | `SET heat=1 sp=21.0 hyst=0.3 mode=1 fs=0\n` |
-| 继电器 → 室内 | `STATUS relay=1 flow=42.50 rssi=-58 up=123 fs=0 fw=1.1.0\n` |
+| 继电器 → 室内 | `STATUS relay=1 flow=42.50 rssi=-58 up=123 fs=0 fw=1.1.1\n` |
 
 两个方向都可在 115200 串口日志中查看。
 
@@ -368,6 +368,7 @@ fsTotal, uptime, ip, apip, ssid, sta, rssi, heap, client`。
 
 ## 版本
 
+- **v1.1.1** — 5ba46e2953606ee14e3b754c9762Ff0c6e7f5ea6548c950570896c346e2979fb81f3987690e872b66001680f ([CHANGELOG.md](CHANGELOG.md))
 - **v1.1.0** — 10 个 OLED 主题、以室温为主的主界面、浏览器初次设置 ([CHANGELOG.md](CHANGELOG.md))
 - **v1.0.0** — 首个稳定版本（见 [CHANGELOG.md](CHANGELOG.md)）
 - 验证环境：ESP8266 Arduino core 3.1.2、Arduino IDE 2.x

@@ -46,7 +46,7 @@
 
 // ============================ KULLANICI AYARLARI ============================
 
-#define FW_VERSION "1.1.0"
+#define FW_VERSION "1.1.1"
 
 // ---- MQTT / Telegram / gecmis (derleme zamani ac/kapat) ----
 #define MQTT_ENABLED        1

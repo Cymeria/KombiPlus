@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="docs/images/banner.svg" alt="KombiPlus v1.1.0 — ESP8266 2 台構成の Wi-Fi ルームサーモスタット" width="100%">
+  <img src="docs/images/banner.svg" alt="KombiPlus v1.1.1 — ESP8266 2 台構成の Wi-Fi ルームサーモスタット" width="100%">
 </div>
 
 <h1 align="center">KombiPlus</h1>
@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img alt="バージョン" src="https://img.shields.io/badge/%E3%83%90%E3%83%BC%E3%82%B8%E3%83%A7%E3%83%B3-1.1.0-ff8a3d?style=flat-square">
+  <img alt="バージョン" src="https://img.shields.io/badge/%E3%83%90%E3%83%BC%E3%82%B8%E3%83%A7%E3%83%B3-1.1.1-ff8a3d?style=flat-square">
   <img alt="プラットフォーム" src="https://img.shields.io/badge/platform-NodeMCU%20v3%20(ESP8266)-2b3d61?style=flat-square">
   <img alt="コア" src="https://img.shields.io/badge/Arduino%20core-3.1.2-00979D?style=flat-square&logo=arduino&logoColor=white">
   <img alt="クラウド" src="https://img.shields.io/badge/%E3%82%AF%E3%83%A9%E3%82%A6%E3%83%89-%E4%B8%8D%E8%A6%81-2dd47c?style=flat-square">
@@ -291,7 +291,7 @@ kombi/
 | 方向 | 行 |
 |------|-----|
 | 室内 → リレー | `SET heat=1 sp=21.0 hyst=0.3 mode=1 fs=0\n` |
-| リレー → 室内 | `STATUS relay=1 flow=42.50 rssi=-58 up=123 fs=0 fw=1.1.0\n` |
+| リレー → 室内 | `STATUS relay=1 flow=42.50 rssi=-58 up=123 fs=0 fw=1.1.1\n` |
 
 どちらも 115200 のシリアルログで確認できます。
 
@@ -371,6 +371,7 @@ fsUsed, fsTotal, uptime, ip, apip, ssid, sta, rssi, heap, client`。
 
 ## バージョン
 
+- **v1.1.1** — 5ba46e29304c30e130a430f3753b976251684f5330924f7f304430016e7f5ea6306830dc30a430e930fc6c346e29306f4e0a90e830d030f330c9307879fb52d5 ([CHANGELOG.md](CHANGELOG.md))
 - **v1.1.0** — OLEDテーマ10種、室温中心のメイン画面、ブラウザからの初期設定 ([CHANGELOG.md](CHANGELOG.md))
 - **v1.0.0** — 最初の安定版（[CHANGELOG.md](CHANGELOG.md)）
 - 検証環境: ESP8266 Arduino core 3.1.2、Arduino IDE 2.x

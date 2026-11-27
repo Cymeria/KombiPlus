@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="docs/images/banner.svg" alt="KombiPlus v1.1.0 — two-node ESP8266 room thermostat" width="100%">
+  <img src="docs/images/banner.svg" alt="KombiPlus v1.1.1 — two-node ESP8266 room thermostat" width="100%">
 </div>
 
 <h1 align="center">KombiPlus</h1>
@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img alt="version" src="https://img.shields.io/badge/version-1.1.0-ff8a3d?style=flat-square">
+  <img alt="version" src="https://img.shields.io/badge/version-1.1.1-ff8a3d?style=flat-square">
   <img alt="platform" src="https://img.shields.io/badge/platform-NodeMCU%20v3%20(ESP8266)-2b3d61?style=flat-square">
   <img alt="core" src="https://img.shields.io/badge/Arduino%20core-3.1.2-00979D?style=flat-square&logo=arduino&logoColor=white">
   <img alt="ide" src="https://img.shields.io/badge/Arduino%20IDE-2.x-00979D?style=flat-square">
@@ -318,7 +318,7 @@ The room unit listens on **TCP 8266**; the relay unit is the client. Line-based 
 | Direction | Line |
 |-----------|------|
 | Room → Relay | `SET heat=1 sp=21.0 hyst=0.3 mode=1 fs=0\n` |
-| Relay → Room | `STATUS relay=1 flow=42.50 rssi=-58 up=123 fs=0 fw=1.1.0\n` |
+| Relay → Room | `STATUS relay=1 flow=42.50 rssi=-58 up=123 fs=0 fw=1.1.1\n` |
 
 Both directions are visible in the serial logs at 115200 baud.
 
@@ -409,6 +409,8 @@ left/right buttons on `/test`) to switch the theme; the active screen redraws im
 
 ## Version
 
+- **v1.1.1** — the room temperature fills the whole main screen and humidity/boiler water moved
+  to the status band (see [CHANGELOG.md](CHANGELOG.md))
 - **v1.1.0** — ten OLED themes, a room-temperature-first main screen and web-based first setup
   (see [CHANGELOG.md](CHANGELOG.md))
 - **v1.0.0** — first stable release (see [CHANGELOG.md](CHANGELOG.md))

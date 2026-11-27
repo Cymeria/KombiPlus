@@ -23,7 +23,7 @@
 
 // ============================ KULLANICI AYARLARI ============================
 
-#define FW_VERSION "1.1.0"
+#define FW_VERSION "1.1.1"
 
 // Role modulu (aktif dusuk role kartlari yaygindir)
 #define RELAY_PIN          D1        // GPIO5

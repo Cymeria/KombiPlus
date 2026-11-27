@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="docs/images/banner.svg" alt="KombiPlus v1.1.0 — termostato de ambiente Wi-Fi de dois módulos ESP8266" width="100%">
+  <img src="docs/images/banner.svg" alt="KombiPlus v1.1.1 — termostato de ambiente Wi-Fi de dois módulos ESP8266" width="100%">
 </div>
 
 <h1 align="center">KombiPlus</h1>
@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img alt="versão" src="https://img.shields.io/badge/vers%C3%A3o-1.1.0-ff8a3d?style=flat-square">
+  <img alt="versão" src="https://img.shields.io/badge/vers%C3%A3o-1.1.1-ff8a3d?style=flat-square">
   <img alt="plataforma" src="https://img.shields.io/badge/platform-NodeMCU%20v3%20(ESP8266)-2b3d61?style=flat-square">
   <img alt="core" src="https://img.shields.io/badge/Arduino%20core-3.1.2-00979D?style=flat-square&logo=arduino&logoColor=white">
   <img alt="nuvem" src="https://img.shields.io/badge/nuvem-n%C3%A3o%20necess%C3%A1ria-2dd47c?style=flat-square">
@@ -297,7 +297,7 @@ A unidade de ambiente escuta em **TCP 8266**; a de relé é o cliente. ASCII por
 | Direção | Linha |
 |---------|-------|
 | Ambiente → Relé | `SET heat=1 sp=21.0 hyst=0.3 mode=1 fs=0\n` |
-| Relé → Ambiente | `STATUS relay=1 flow=42.50 rssi=-58 up=123 fs=0 fw=1.1.0\n` |
+| Relé → Ambiente | `STATUS relay=1 flow=42.50 rssi=-58 up=123 fs=0 fw=1.1.1\n` |
 
 Os dois sentidos aparecem nos logs seriais a 115200.
 
@@ -376,6 +376,7 @@ Temas incluídos: `klasik`, `ince`, `dolu`, `kutu`, `nokta`, `dijital`, `neon`, 
 
 ## Versão
 
+- **v1.1.1** — a temperatura ambiente ocupa a tela inteira; a umidade e a 00e1gua da caldeira foram para a faixa superior ([CHANGELOG.md](CHANGELOG.md))
 - **v1.1.0** — dez temas OLED, tela principal centrada na temperatura ambiente e configuração inicial pelo navegador ([CHANGELOG.md](CHANGELOG.md))
 - **v1.0.0** — primeira versão estável ([CHANGELOG.md](CHANGELOG.md))
 - Testado com: ESP8266 Arduino core 3.1.2, Arduino IDE 2.x

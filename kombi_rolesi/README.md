@@ -3,7 +3,7 @@
 Oda termostatından gelen ısı talebine göre kombinin kuru kontağını süren,
 bağlantı koptuğunda röleyi **otomatik olarak kapatan** güvenli röle ünitesi.
 
-> Sürüm **1.1.0** · Diğer diller ve proje genel bakışı: [`README.md`](../README.md)
+> Sürüm **1.1.1** · Diğer diller ve proje genel bakışı: [`README.md`](../README.md)
 > (English, Türkçe, Русский, Español, Português, 日本語, 한국어, 中文)
 
 > Bu klasördeki `kombi_rolesi.ino` tek dosyadır.

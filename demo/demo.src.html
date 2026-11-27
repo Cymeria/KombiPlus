@@ -77,6 +77,25 @@
   .scr .r.s2 span{width:12px}
   .scr .r.s3{height:24px;font:24px/24px ui-monospace,Consolas,"Courier New",monospace}
   .scr .r.s3 span{width:18px}
+  .scr .r.s4{height:32px;font:32px/32px ui-monospace,Consolas,"Courier New",monospace}
+  .scr .r.s4 span{width:24px}
+  .scr .r.s5{height:40px;font:40px/40px ui-monospace,Consolas,"Courier New",monospace}
+  .scr .r.s5 span{width:30px}
+  /* yedi parcali temalar: kalin ve parlak rakamlar */
+  .scr .r.seg{font-weight:700;letter-spacing:-1px;text-shadow:0 0 4px rgba(120,180,255,.9)}
+  /* ust bant simgeleri (11x12) */
+  .scr .ic{position:absolute;top:2px;width:11px;height:12px}
+  .scr .ic.temp:before{content:"";position:absolute;left:4px;top:0;width:3px;height:8px;background:#d3e6ff}
+  .scr .ic.temp:after{content:"";position:absolute;left:2px;top:7px;width:7px;height:5px;border-radius:50%;background:#d3e6ff}
+  .scr .ic.link:before,.scr .ic.link:after{content:"";position:absolute;top:3px;width:6px;height:6px;border:1px solid #d3e6ff;border-radius:2px}
+  .scr .ic.link:before{left:0}.scr .ic.link:after{right:0}
+  .scr .ic.wifi{background:
+    linear-gradient(#d3e6ff,#d3e6ff) 1px 3px/9px 1px no-repeat,
+    linear-gradient(#d3e6ff,#d3e6ff) 3px 6px/5px 1px no-repeat,
+    linear-gradient(#d3e6ff,#d3e6ff) 5px 9px/1px 1px no-repeat}
+  .scr .ic.bad{opacity:.35}
+  .scr .dot{position:absolute;top:7px;width:2px;height:2px;border:1px solid #d3e6ff;box-sizing:border-box}
+  .scr .dot.on{background:#d3e6ff}
   .scr .r.dark{color:#04070d;text-shadow:none}
   .scr .hl{position:absolute;left:0;width:128px;height:1px;background:#d3e6ff;opacity:.85}
   .scr .inv{position:absolute;background:#e6f1ff;border-radius:1px}
@@ -161,46 +180,42 @@
     <div class="toolbar" id="themes">
       <span class="lbl">Tema</span>
       <button class="chip theme" data-theme="klasik" aria-pressed="true">Klasik</button>
-      <button class="chip theme" data-theme="minimal" aria-pressed="false">Minimal</button>
-      <button class="chip theme" data-theme="ters" aria-pressed="false">Ters</button>
+      <button class="chip theme" data-theme="ince" aria-pressed="false">İnce</button>
+      <button class="chip theme" data-theme="dolu" aria-pressed="false">Dolu</button>
       <button class="chip theme" data-theme="kutu" aria-pressed="false">Kutu</button>
-      <button class="chip theme" data-theme="genis" aria-pressed="false">Geniş</button>
-      <button class="chip theme" data-theme="gece" aria-pressed="false">Gece</button>
+      <button class="chip theme" data-theme="nokta" aria-pressed="false">Nokta</button>
+      <button class="chip theme" data-theme="dijital" aria-pressed="false">Dijital</button>
+      <button class="chip theme" data-theme="neon" aria-pressed="false">Neon</button>
+      <button class="chip theme" data-theme="panel" aria-pressed="false">Panel</button>
+      <button class="chip theme" data-theme="minimal" aria-pressed="false">Minimal</button>
       <button class="chip theme" data-theme="retro" aria-pressed="false">Retro</button>
-      <button class="chip theme" data-theme="durum" aria-pressed="false">Durum</button>
-      <button class="chip theme" data-theme="kompakt" aria-pressed="false">Kompakt</button>
-      <button class="chip theme" data-theme="dev" aria-pressed="false">Dev Rakam</button>
     </div>
 
     <div class="oledGrid">
       <figure class="dev">
         <div class="bezel"><div class="oled" data-page="1"></div></div>
-        <figcaption><b>Sayfa 1/5 — Ana ekran</b><span>sıcaklık · hedef · durum</span></figcaption>
+        <figcaption><b>Sayfa 1/4 — Ana ekran</b><span>sıcaklık · hedef · durum</span></figcaption>
       </figure>
       <figure class="dev">
         <div class="bezel"><div class="oled" data-page="2"></div></div>
-        <figcaption><b>Sayfa 2/5 — Ağ bilgisi</b><span>AP · IP · röle</span></figcaption>
+        <figcaption><b>Sayfa 2/4 — Ağ bilgisi</b><span>AP · IP · röle</span></figcaption>
       </figure>
       <figure class="dev">
         <div class="bezel"><div class="oled" data-page="3"></div></div>
-        <figcaption><b>Sayfa 3/5 — Bilgi</b><span>ayarlar · süre · sürüm</span></figcaption>
+        <figcaption><b>Sayfa 3/4 — Bilgi</b><span>ayarlar · süre · sürüm</span></figcaption>
       </figure>
       <figure class="dev">
         <div class="bezel"><div class="oled" data-page="4"></div></div>
-        <figcaption><b>Sayfa 4/5 — Uyku modu</b><span>saat aralığı · uyku hedefi · NTP</span></figcaption>
-      </figure>
-      <figure class="dev">
-        <div class="bezel"><div class="oled" data-page="5"></div></div>
-        <figcaption><b>Sayfa 5/5 — Tema</b><span>tema listesi · LittleFS</span></figcaption>
+        <figcaption><b>Sayfa 4/4 — Uyku modu</b><span>saat aralığı · uyku hedefi · NTP</span></figcaption>
       </figure>
     </div>
 
     <div class="notes">
-      <div class="note"><b>Tema sistemi</b>10 tema <code>/themes/&lt;id&gt;.txt</code> dosyasında durur; ilk açılışta yoksa gömülü varsayılanlardan üretilir. Seçim <code>/config.txt</code> içindeki <code>theme=</code> satırında saklanır.</div>
-      <div class="note"><b>Sayfa 5</b>Sayfa 5'te encoder döndürmek temayı değiştirir: üst şerit, sıcaklık boyutu, ayırıcı, durum stili ve alt bilgi alanları anında güncellenir.</div>
-      <div class="note"><b>Isıtıyor</b>Isı talebi varken durum satırı temanın stilinde (bar · çerçeve · ters şerit) vurgulanır.</div>
-      <div class="note"><b>Encoder</b>Kısa basış sayfa değiştirir; uzun basış modu açar/kapatır.</div>
-      <div class="note"><b>Boost</b>Aktifken alt satırda <code>BST 45dk</code> görünür ve hedef +1.5 °C kabul edilir.</div>
+      <div class="note"><b>Tema sistemi</b>10 tema <code>/themes/&lt;id&gt;.txt</code> dosyasında durur; hepsi ana ekran yerleşimini paylaşır, yalnızca simge stili (5 seçenek) ve büyük rakam fontu (GFX / dijital) değişir. Seçim <code>/config.txt</code> içindeki <code>theme=</code> satırında saklanır.</div>
+      <div class="note"><b>Ana ekran</b>Oda sıcaklığı 5× çizilir (uzun değerlerde 4×); alt satır yoktur. Nem (yoksa kombi suyu) üst bantta, saatin yerinde görünür. Hedef yalnızca encoder çevrilince 10 sn aynı yuvada gösterilir.</div>
+      <div class="note"><b>Isıtıyor</b>Isı talebi varken sıcaklık yanıp söner; ayrı bir “ISITIYOR” satırı yoktur. Sensör / kombi / Wi-Fi durumu üst banttaki simgelerden okunur.</div>
+      <div class="note"><b>Encoder</b>Kısa basış sayfa değiştirir; uzun basış modu açar/kapatır. Buton basılıyken çevirme temayı değiştirir.</div>
+      <div class="note"><b>Boost</b>Aktifken hedef +1.5 °C kabul edilir; süre Bilgi sayfasında görünür.</div>
     </div>
   </section>
 
@@ -225,7 +240,7 @@
   <button class="fsClose" id="fsClose" onclick="closeFullUi()" aria-label="Tam ekranı kapat">×</button>
 
   <footer>
-    <span>KombiPlus · NodeMCU v3 (ESP8266) · firmware 1.1.0</span>
+    <span>KombiPlus · NodeMCU v3 (ESP8266) · firmware 1.1.1</span>
     <span>AP: TERMOSTAT-AP · http://192.168.4.1</span>
   </footer>
 </div>
@@ -266,23 +281,24 @@ const SCENES = {
   nolink: { temp: 21.4, sp: 22.0, hum: 55,  flow: null, mode: true, link: false, sensorOk: true,  demand: false }
 };
 
-// OledTheme.cpp icindeki THEME_TABLE ile ayni alanlar
+// OledTheme.cpp icindeki THEME_TABLE ile ayni: 5 simge stili x 2 font.
+// font 0 = GFX, font 1 = yedi parcali (dijital).
 const THEMES = [
-  { id:'klasik',  name:'Klasik',    header:1, tempSize:2, tempCenter:0, setpointCol:1, sep:1, status:1, hum:1, boost:1, water:1, page:1, labels:1, invert:0, dim:0 },
-  { id:'minimal', name:'Minimal',   header:0, tempSize:3, tempCenter:1, setpointCol:0, sep:0, status:0, hum:0, boost:0, water:0, page:0, labels:0, invert:0, dim:0 },
-  { id:'ters',    name:'Ters',      header:4, tempSize:2, tempCenter:0, setpointCol:1, sep:1, status:3, hum:1, boost:1, water:0, page:1, labels:1, invert:1, dim:0 },
-  { id:'kutu',    name:'Kutu',      header:3, tempSize:2, tempCenter:0, setpointCol:1, sep:2, status:2, hum:1, boost:1, water:1, page:1, labels:1, invert:0, dim:0 },
-  { id:'genis',   name:'Genis',     header:1, tempSize:3, tempCenter:1, setpointCol:0, sep:2, status:1, hum:1, boost:1, water:0, page:1, labels:0, invert:0, dim:0 },
-  { id:'gece',    name:'Gece',      header:2, tempSize:3, tempCenter:1, setpointCol:0, sep:3, status:0, hum:0, boost:1, water:0, page:0, labels:0, invert:0, dim:1 },
-  { id:'retro',   name:'Retro',     header:2, tempSize:2, tempCenter:0, setpointCol:1, sep:3, status:2, hum:1, boost:1, water:1, page:1, labels:1, invert:0, dim:0 },
-  { id:'durum',   name:'Durum',     header:1, tempSize:2, tempCenter:0, setpointCol:0, sep:0, status:3, hum:1, boost:1, water:1, page:1, labels:0, invert:0, dim:0 },
-  { id:'kompakt', name:'Kompakt',   header:4, tempSize:2, tempCenter:0, setpointCol:1, sep:0, status:0, hum:1, boost:1, water:1, page:1, labels:0, invert:0, dim:0 },
-  { id:'dev',     name:'Dev Rakam', header:0, tempSize:3, tempCenter:1, setpointCol:0, sep:1, status:1, hum:0, boost:0, water:0, page:0, labels:0, invert:0, dim:0 }
+  { id:'klasik',  name:'Klasik',  header:1, page:1, icons:0, font:0, invert:0, dim:0 },
+  { id:'ince',    name:'İnce',    header:1, page:1, icons:1, font:0, invert:0, dim:0 },
+  { id:'dolu',    name:'Dolu',    header:1, page:1, icons:2, font:0, invert:0, dim:0 },
+  { id:'kutu',    name:'Kutu',    header:1, page:1, icons:3, font:0, invert:0, dim:0 },
+  { id:'nokta',   name:'Nokta',   header:1, page:1, icons:4, font:0, invert:0, dim:0 },
+  { id:'dijital', name:'Dijital', header:1, page:1, icons:0, font:1, invert:0, dim:0 },
+  { id:'neon',    name:'Neon',    header:1, page:1, icons:2, font:1, invert:0, dim:0 },
+  { id:'panel',   name:'Panel',   header:1, page:1, icons:3, font:1, invert:0, dim:0 },
+  { id:'minimal', name:'Minimal', header:1, page:1, icons:1, font:1, invert:0, dim:0 },
+  { id:'retro',   name:'Retro',   header:1, page:1, icons:4, font:1, invert:0, dim:0 }
 ];
 
 const HEADER_NAMES  = ['yok', 'cizgi', 'cift', 'kutu', 'serit'];
 const STATUS_NAMES  = ['metin', 'bar', 'cerceve', 'ters'];
-const PAGE_COUNT    = 5;
+const PAGE_COUNT    = 4;
 
 const UPTIME = 2 * 86400 + 14 * 3600 + 22 * 60; // 2 gün 14 sa 22 dk
 let sceneKey = 'heat';
@@ -358,55 +374,53 @@ function statusText(s) {
   return 'BEKLIYOR';
 }
 
-// drawMainPage(): yerlesim matematigi .ino ile ayni
+// Ust bant: sensor / kombi / wifi simgeleri (hata varsa soluk).
+function bandIcons(s) {
+  const items = [
+    { cls: 'temp', bad: !s.sensorOk },
+    { cls: 'link', bad: !s.link },
+    { cls: 'wifi', bad: false }
+  ];
+  let out = '';
+  items.forEach((it, i) => {
+    out += '<div class="ic ' + it.cls + (it.bad ? ' bad' : '') + '" style="left:' + (2 + i * 12) + 'px"></div>';
+  });
+  return out;
+}
+
+// drawMainPage(): govdenin tamami sicaklik; alt satir yok, nem/su ust bantta.
 function page1(s) {
   const th = theme();
-  const tempStr = s.sensorOk ? s.temp.toFixed(1) : '--.-';
-  const heating = !!(s.demand && s.link && s.mode);
+  const tempStr = s.sensorOk ? s.temp.toFixed(1) : '00.0';
+  const big = Array.from(tempStr).length <= 4;
+  const cls = (big ? 's5' : 's4') + (th.font ? ' seg' : '');
+  const cw = big ? 30 : 24;
+  const tempW = Array.from(tempStr).length * cw;
+  const tempY = big ? 20 : 24;
+  let x = Math.floor((128 - (tempW + 8)) / 2);
+  if (x < 0) x = 0;
 
-  const base  = headerH(th) + 2;
-  const tempY = base + (th.tempSize === 3 ? 0 : 2);
-  const sepY  = tempY + (th.tempSize === 3 ? 25 : 19);
-  const statY = th.sep ? sepY + 3 : sepY + 1;
-  const footY = th.header ? 54 : ((statY + 14 < 55) ? statY + 14 : 55);
+  let h = bandIcons(s);
+  if (th.header === 1) h += hl(15);
+  if (th.header === 2) h += hl(14) + hl(15);
+  if (th.header === 3) h += '<div class="box" style="top:1px;height:14px"></div>';
 
-  let h = header('TERMOSTAT', 1, th);
-  if (SLEEP.active && th.header) h += row(72, 0, 'UYKU');
-
-  const cls = th.tempSize === 3 ? 's3' : 's2';
-  const tempW = tempStr.length * 6 * th.tempSize;
-  let tempX = th.tempCenter ? Math.floor((128 - tempW) / 2) : 0;
-  if (tempX < 0) tempX = 0;
-  h += row(tempX, tempY, tempStr, cls);
-  h += row(tempX + tempW + 2, tempY + (th.tempSize === 3 ? 14 : 6), 'C');
-
-  if (th.setpointCol && !th.tempCenter) {
-    // HEDEF etiketi yerine hedef, cerceve icinde buyuk yazilir
-    const sp = s.sp.toFixed(1);
-    const bx = 58, by = tempY - 1, bw = 68, bh = 19;
-    const spW = sp.length * 12;
-    const cx = bx + Math.max(2, Math.floor((bw - (spW + 7)) / 2));
-    h += '<div class="box" style="left:' + bx + 'px;top:' + by + 'px;width:' + bw + 'px;height:' + bh + 'px"></div>';
-    h += row(cx, by + 1, sp, 's2');
-    h += row(cx + spW + 1, by + 10, 'C');
-  } else if (th.setpointCol) {
-    h += row(84, tempY + 1, th.labels ? 'HEDEF' : 'HD');
-    h += row(84, tempY + 11, s.sp.toFixed(1) + 'C');
+  // Saatin yerine nem (yoksa kombi suyu), en sagda.
+  const info = (s.sensorOk && s.hum !== null) ? Math.round(s.hum) + '%'
+             : (s.flow !== null ? Math.round(s.flow) + 'C' : '');
+  const total = PAGE_COUNT * 2 + (PAGE_COUNT - 1) * 2;
+  let dx = 128 - total;
+  if (info) {
+    dx = 126 - Array.from(info).length * 6 - 3 - total;
+    h += rowR(126, 4, info);
+  }
+  if (dx < 40) dx = 40;
+  for (let i = 0; i < PAGE_COUNT; i++) {
+    h += '<div class="dot' + (i === 0 ? ' on' : '') + '" style="left:' + (dx + i * 4) + 'px"></div>';
   }
 
-  h += separator(sepY, th);
-  h += status(statY, statusText(s), heating, th);
-
-  if (th.hum) {
-    h += row(0, footY, (s.sensorOk && s.hum !== null) ? 'Nem %' + Math.round(s.hum) : 'Nem --');
-  }
-  if (th.boost && boostOn) {
-    h += row(68, footY, 'BST 45dk');
-  } else if (th.water && s.flow !== null) {
-    h += rowR(128, footY, 'Su ' + s.flow.toFixed(1) + 'C');
-  } else if (!th.setpointCol && th.labels) {
-    h += rowR(128, footY, 'Hd ' + s.sp.toFixed(1));
-  }
+  h += row(x, tempY, tempStr, cls);
+  h += row(x + tempW + 2, tempY + (big ? 31 : 23), 'C');
   return h;
 }
 
@@ -436,7 +450,7 @@ function page3(s) {
   h += row(0, 30, 'Don koruma: 5.0C');
   h += row(0, 39, 'Boost: ' + (boostOn ? '45 dk' : 'yok'));
   h += row(0, 48, 'Calisma: ' + up);
-  h += row(0, 56, 'FW 1.1.0  Heap:38k');
+  h += row(0, 56, 'FW 1.1.1  Heap:38k');
   return h;
 }
 
@@ -452,21 +466,7 @@ function page4(s) {
   return h;
 }
 
-// drawThemePage()
-function page5(s) {
-  const th = theme();
-  const idx = THEMES.indexOf(th) + 1;
-  let h = header('TEMA', 5, th);
-  h += row(0, 12, 'Tema: ' + idx + '/' + THEMES.length + (th.invert ? ' NEG' : '') + (th.dim ? ' DIM' : ''));
-  h += row(0, 21, 'Ad: ' + th.name);
-  h += row(0, 30, 'Kimlik: ' + th.id);
-  h += row(0, 39, 'Ust: ' + HEADER_NAMES[th.header]);
-  h += row(0, 48, 'Durum: ' + STATUS_NAMES[th.status]);
-  h += row(0, 56, 'Enkoder: tema sec');
-  return h;
-}
-
-const PAGES = { 1: page1, 2: page2, 3: page3, 4: page4, 5: page5 };
+const PAGES = { 1: page1, 2: page2, 3: page3, 4: page4 };
 
 function render() {
   const s = SCENES[sceneKey];
