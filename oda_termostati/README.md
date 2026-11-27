@@ -3,7 +3,7 @@
 Kombi ısıtmasını oda sıcaklığına göre yöneten, 0.96" OLED ekranlı ve mobil uyumlu
 web arayüzüne sahip oda ünitesi.
 
-> Sürüm **1.1.1** · Diğer diller ve proje genel bakışı: [`README.md`](../README.md)
+> Sürüm **1.2.0** · Diğer diller ve proje genel bakışı: [`README.md`](../README.md)
 > (English, Türkçe, Русский, Español, Português, 日本語, 한국어, 中文)
 
 > Bu klasördeki `oda_termostati.ino` + `web_ui.h` birlikte derlenir.

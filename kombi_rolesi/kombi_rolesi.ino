@@ -20,10 +20,13 @@
 #include <EEPROM.h>
 #include <OneWire.h>
 #include <DallasTemperature.h>
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
 
 // ============================ KULLANICI AYARLARI ============================
 
-#define FW_VERSION "1.1.1"
+#define FW_VERSION "1.2.0"
 
 // Role modulu (aktif dusuk role kartlari yaygindir)
 #define RELAY_PIN          D1        // GPIO5
@@ -36,6 +39,14 @@
 // Opsiyonel kombi su sensoru (waterproof DS18B20)
 #define FLOW_SENSOR_ENABLED 0
 #define FLOW_PIN            D2        // GPIO4, 4.7k pull-up 3V3'e
+
+// Opsiyonel 0.96" SSD1306 OLED (oda unitesiyle AYNI pinler: SDA=D5, SCL=D6)
+#define OLED_ENABLED        1
+#define OLED_WIDTH          128
+#define OLED_HEIGHT         64
+#define OLED_ADDR           0x3C
+#define PIN_OLED_SDA        D5        // GPIO14
+#define PIN_OLED_SCL        D6        // GPIO12
 
 // Oda unitesi AP bilgileri (oda kodu ile AYNI olmali!)
 #define TERMOSTAT_AP_SSID  "KombiPlus"
@@ -62,6 +73,11 @@ unsigned long lastSetMs = 0;
 unsigned long lastStatusMs = 0;
 unsigned long lastConnectAttemptMs = 0;
 String rxLine = "";
+
+#if OLED_ENABLED
+Adafruit_SSD1306 display(OLED_WIDTH, OLED_HEIGHT, &Wire, -1);
+bool oledOk = false;
+#endif
 
 // ---- EEPROM: fail-safe tercihi ----
 #define RLY_MAGIC 0x524C5931UL   // "RLY1"
@@ -296,6 +312,69 @@ void updateLed() {
   }
 }
 
+// ============================ OLED =========================================
+
+#if OLED_ENABLED
+void updateOled() {
+  if (!oledOk) return;
+  static unsigned long lastMs = 0;
+  if (millis() - lastMs < 500UL) return;
+  lastMs = millis();
+
+  bool link = (lastSetMs != 0) &&
+              (millis() - lastSetMs < LINK_TIMEOUT_MS) && client.connected();
+  bool wifi = (WiFi.status() == WL_CONNECTED);
+
+  display.clearDisplay();
+  display.setTextColor(SSD1306_WHITE);
+  display.setTextSize(1);
+
+  display.setCursor(0, 0);
+  display.print(F("KOMBI ROLESI"));
+  display.setCursor(128 - 7 * 6, 0);
+  display.print(F("FW" FW_VERSION));
+  display.drawFastHLine(0, 9, 128, SSD1306_WHITE);
+
+  display.setCursor(0, 15);
+  display.print(F("ROLE"));
+  display.setTextSize(2);
+  display.setCursor(34, 11);
+  display.print(relayOn ? F("ACIK") : F("KAPALI"));
+  display.setTextSize(1);
+
+  display.setCursor(0, 34);
+  display.print(F("Oda : "));
+  display.print(link ? F("BAGLI") : F("YOK"));
+  display.setCursor(96, 34);
+  display.print(failSafeOn ? F("fs1") : F("fs0"));
+
+  display.setCursor(0, 44);
+  display.print(F("Su  : "));
+#if FLOW_SENSOR_ENABLED
+  if (flowTemp > -100.0f) {
+    display.print(flowTemp, 1);
+    display.print('C');
+  } else {
+    display.print(F("--"));
+  }
+#else
+  display.print(F("--"));
+#endif
+
+  display.setCursor(0, 54);
+  if (wifi) {
+    display.print(WiFi.localIP());
+    char rs[8];
+    snprintf(rs, sizeof(rs), " %d", WiFi.RSSI());
+    display.print(rs);
+  } else {
+    display.print(F("Wi-Fi yok"));
+  }
+
+  display.display();
+}
+#endif
+
 // ============================ SETUP / LOOP =================================
 
 void setup() {
@@ -313,6 +392,24 @@ void setup() {
 
   pinMode(STATUS_LED_PIN, OUTPUT);
   digitalWrite(STATUS_LED_PIN, LED_ACTIVE_LOW ? HIGH : LOW);
+
+#if OLED_ENABLED
+  Wire.begin(PIN_OLED_SDA, PIN_OLED_SCL);
+  if (!display.begin(SSD1306_SWITCHCAPVCC, OLED_ADDR)) {
+    oledOk = false;
+    Serial.println(F("OLED bulunamadi (SDA D5 / SCL D6)."));
+  } else {
+    oledOk = true;
+    display.clearDisplay();
+    display.setTextColor(SSD1306_WHITE);
+    display.setTextSize(1);
+    display.setCursor(0, 0);
+    display.println(F("KOMBI ROLESI"));
+    display.println(F("baslatiliyor..."));
+    display.display();
+    Serial.println(F("OLED hazir."));
+  }
+#endif
 
 #if FLOW_SENSOR_ENABLED
   flowSensor.begin();
@@ -340,6 +437,9 @@ void loop() {
   updateFlowSensor();
 #endif
   updateLed();
+#if OLED_ENABLED
+  updateOled();
+#endif
 
   if (client.connected() && (millis() - lastStatusMs >= STATUS_PERIOD_MS)) {
     lastStatusMs = millis();

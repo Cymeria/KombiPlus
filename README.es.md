@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="docs/images/banner.svg" alt="KombiPlus v1.1.1 — termostato de habitación Wi-Fi de dos módulos ESP8266" width="100%">
+  <img src="docs/images/banner.svg" alt="KombiPlus v1.2.0 — termostato de habitación Wi-Fi de dos módulos ESP8266" width="100%">
 </div>
 
 <h1 align="center">KombiPlus</h1>
@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img alt="versión" src="https://img.shields.io/badge/versi%C3%B3n-1.1.1-ff8a3d?style=flat-square">
+  <img alt="versión" src="https://img.shields.io/badge/versi%C3%B3n-1.2.0-ff8a3d?style=flat-square">
   <img alt="plataforma" src="https://img.shields.io/badge/platform-NodeMCU%20v3%20(ESP8266)-2b3d61?style=flat-square">
   <img alt="núcleo" src="https://img.shields.io/badge/Arduino%20core-3.1.2-00979D?style=flat-square&logo=arduino&logoColor=white">
   <img alt="nube" src="https://img.shields.io/badge/nube-no%20necesaria-2dd47c?style=flat-square">
@@ -297,7 +297,7 @@ La unidad de habitación escucha en **TCP 8266**; la de relé es el cliente. ASC
 | Dirección | Línea |
 |-----------|-------|
 | Habitación → Relé | `SET heat=1 sp=21.0 hyst=0.3 mode=1 fs=0\n` |
-| Relé → Habitación | `STATUS relay=1 flow=42.50 rssi=-58 up=123 fs=0 fw=1.1.1\n` |
+| Relé → Habitación | `STATUS relay=1 flow=42.50 rssi=-58 up=123 fs=0 fw=1.2.0\n` |
 
 Ambas direcciones se ven en los registros serie a 115200.
 
@@ -377,6 +377,8 @@ Temas incluidos: `klasik`, `ince`, `dolu`, `kutu`, `nokta`, `dijital`, `neon`, `
 
 ## Versión
 
+- **v1.2.0** — the relay unit can show its state on an optional OLED display ([CHANGELOG.md](CHANGELOG.md))
+- **v1.2.0** — la unidad de rel00e9 puede mostrar su estado en una pantalla OLED opcional ([CHANGELOG.md](CHANGELOG.md))
 - **v1.1.1** — la temperatura ambiente ocupa toda la pantalla; la humedad y el agua de la caldera pasaron a la banda superior ([CHANGELOG.md](CHANGELOG.md))
 - **v1.1.0** — diez temas OLED, pantalla principal centrada en la temperatura ambiente y configuración inicial desde el navegador ([CHANGELOG.md](CHANGELOG.md))
 - **v1.0.0** — primera versión estable ([CHANGELOG.md](CHANGELOG.md))

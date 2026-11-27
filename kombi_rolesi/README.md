@@ -3,7 +3,7 @@
 Oda termostatından gelen ısı talebine göre kombinin kuru kontağını süren,
 bağlantı koptuğunda röleyi **otomatik olarak kapatan** güvenli röle ünitesi.
 
-> Sürüm **1.1.1** · Diğer diller ve proje genel bakışı: [`README.md`](../README.md)
+> Sürüm **1.2.0** · Diğer diller ve proje genel bakışı: [`README.md`](../README.md)
 > (English, Türkçe, Русский, Español, Português, 日本語, 한국어, 中文)
 
 > Bu klasördeki `kombi_rolesi.ino` tek dosyadır.
@@ -34,6 +34,8 @@ bağlantı koptuğunda röleyi **otomatik olarak kapatan** güvenli röle ünite
   (röle kapanır **veya** son talep korunur)
 - Fail‑safe tercihi oda ünitesinden (`fs=0/1`) gelir ve rölenin EEPROM'unda saklanır
 - Açılışta röle **her zaman kapalı** başlar
+- Opsiyonel **0.96" SSD1306 OLED** (SDA=D5, SCL=D6): röle durumu (2× yazı), oda bağlantısı,
+  fail‑safe, su sıcaklığı, IP ve sinyal; ekran yoksa sessizce devre dışı kalır
 - Opsiyonel **DS18B20** ile kombi su sıcaklığını oda ünitesine bildirir
 - Kart üzerindeki LED ile bağlantı durumu göstergesi
 - Wi‑Fi koptuğunda 15 sn'de bir otomatik yeniden bağlanma
@@ -48,6 +50,7 @@ bağlantı koptuğunda röleyi **otomatik olarak kapatan** güvenli röle ünite
 | 1 | NodeMCU v3 / ESP8266 (Lolin) |
 | 1 | 1 kanal röle modülü (5 V, opto‑izolasyonlu, aktif‑low yaygın) |
 | 1 | Opsiyonel: waterproof DS18B20 + 4.7 kΩ |
+| 1 | Opsiyonel: 0.96" SSD1306 OLED (I²C, 128×64) |
 | 1 | 5 V USB adaptör + micro‑USB kablo |
 | — | Klemens, sigorta (önerilir), uygun kesitli kablo |
 
@@ -61,6 +64,8 @@ bağlantı koptuğunda röleyi **otomatik olarak kapatan** güvenli röle ünite
 | VIN (5 V) | — | Röle **VCC** | USB beslemesinden |
 | GND | — | Röle **GND** | Ortak GND |
 | D2 | GPIO4 | DS18B20 **DATA** (opsiyonel) | 4.7 kΩ pull‑up 3V3'e |
+| D5 | GPIO14 | OLED **SDA** (opsiyonel) | Oda ünitesiyle aynı pin |
+| D6 | GPIO12 | OLED **SCL** (opsiyonel) | Oda ünitesiyle aynı pin |
 | 3V3 | — | DS18B20 **VCC** | 3.3 V |
 | GND | — | DS18B20 **GND** | |
 | — | — | Kart üzeri mavi LED | Durum göstergesi |
@@ -105,6 +110,8 @@ bağlantı koptuğunda röleyi **otomatik olarak kapatan** güvenli röle ünite
 |-----------|-------|
 | OneWire | Paul Stoffregen |
 | DallasTemperature | Miles Burton |
+| Adafruit SSD1306 | Adafruit |
+| Adafruit GFX Library | Adafruit (SSD1306 bağımlılığı) |
 
 `ESP8266WiFi` kart paketiyle gelir.
 
@@ -124,6 +131,10 @@ bağlantı koptuğunda röleyi **otomatik olarak kapatan** güvenli röle ünite
 #define FLOW_SENSOR_ENABLED 1     // DS18B20 yoksa 0 yapın
 #define FLOW_PIN            D2
 
+#define OLED_ENABLED        1     // OLED yoksa 0 yapın
+#define PIN_OLED_SDA        D5    // oda ünitesiyle aynı
+#define PIN_OLED_SCL        D6
+
 #define TERMOSTAT_AP_SSID  "KombiPlus"
 #define TERMOSTAT_AP_PASS  "Kombi.1881"
 
@@ -135,6 +146,8 @@ bağlantı koptuğunda röleyi **otomatik olarak kapatan** güvenli röle ünite
 - Oda ünitesi AP modunda her zaman `192.168.4.1` adresindedir; `SERVER_HOST`
   genellikle değiştirilmez.
 - DS18B20 kullanmıyorsanız `FLOW_SENSOR_ENABLED 0` yapın.
+- OLED takmıyorsanız `OLED_ENABLED 0` yapabilirsiniz; kod ekran yoksa zaten sessizce devam eder.
+- OLED, oda ünitesiyle **aynı pinlerdedir**: SDA = D5 (GPIO14), SCL = D6 (GPIO12), adres `0x3C`.
 
 ---
 
@@ -151,7 +164,9 @@ bağlantı koptuğunda röleyi **otomatik olarak kapatan** güvenli röle ünite
    Oda unitesine baglandi.
    ```
 4. Oda ünitesinin web arayüzünde **Kombi bağlı** yazmalıdır.
-5. Röle testi: hedef sıcaklığı oda sıcaklığının üstüne çıkarın; röle klik sesi
+5. OLED takılıysa ekranda `KOMBI ROLESI`, `ROLE ACIK/KAPALI`, `Oda : BAGLI/YOK`,
+   `fs0/fs1`, su sıcaklığı ve IP/sinyal görünür.
+6. Röle testi: hedef sıcaklığı oda sıcaklığının üstüne çıkarın; röle klik sesi
    ve modül LED'i ile aktifleşir. Hedefi altına indirin, histerezis ve minimum
    süre sonrası kapanır.
 
@@ -197,6 +212,7 @@ Röle ünitesi yanıt  :  STATUS relay=1 flow=42.5 rssi=-58 up=123 fs=0 fw=1.1.0
 | Röle ters çalışıyor | `RELAY_ACTIVE_LOW` değerini tersine çevirin |
 | Röle hiç çekmiyor | VIN 5 V, GND ortak, IN D1; modül LED'i yanıyor mu? |
 | Su sıcaklığı `--` | DS18B20 kablosu/pull‑up; `FLOW_SENSOR_ENABLED 1` mi? |
+| OLED boş | Adres `0x3C` mi? SDA D5 / SCL D6, 3.3 V besleme; `OLED_ENABLED 1` mi? |
 | Sürekli açıp kapatıyor | Histerezisi artırın; minimum süreler zaten devrede |
 | Rastgele reset | Yetersiz adaptör; röle bobini akım darbesi; ayrı 5 V besleme deneyin |
 

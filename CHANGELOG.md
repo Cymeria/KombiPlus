@@ -4,6 +4,21 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [1.2.0] — 2026-11-27
+
+### Added
+
+- **OLED status screen on the relay unit** — an optional 0.96" SSD1306 on the same `D5` (SDA) /
+  `D6` (SCL) pins as the room unit shows the relay state in 2× text, the link to the room unit,
+  the fail-safe setting, the boiler flow temperature (when the DS18B20 is enabled), the IP
+  address, RSSI and `FW 1.2.0`. Nothing is drawn when no panel answers at `0x3C`, so a relay
+  unit without a display keeps working unchanged.
+
+### Changed
+
+- Both sketches report `FW 1.2.0`; the relay unit now also uses the Adafruit GFX and SSD1306
+  libraries (already required by the room unit).
+
 ## [1.1.1] — 2026-11-27
 
 ### Changed
