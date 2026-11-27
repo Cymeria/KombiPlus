@@ -4,6 +4,21 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [1.3.0] — 2026-11-27
+
+### Added
+
+- **Relay display wake button and 5-minute timeout** — a push button on `D7` (GPIO13) to GND
+  (`INPUT_PULLUP`) wakes the relay OLED for another 5 minutes. After 5 minutes without a press
+  the panel is switched off (`SSD1306_DISPLAYOFF`); the relay and the link keep running as usual.
+
+### Changed
+
+- **Relay OLED layout follows the two-colour panel** — the always-yellow top 16 px carries the
+  `KOMBI ROLESI` title on the left and `FW 1.3.0` on the right; the body starts at y=16 with the
+  relay state in 2× text and the link, fail-safe, flow and IP/RSSI lines below it.
+- Both sketches report `FW 1.3.0`.
+
 ## [1.2.0] — 2026-11-27
 
 ### Added

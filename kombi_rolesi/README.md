@@ -3,7 +3,7 @@
 Oda termostatından gelen ısı talebine göre kombinin kuru kontağını süren,
 bağlantı koptuğunda röleyi **otomatik olarak kapatan** güvenli röle ünitesi.
 
-> Sürüm **1.2.0** · Diğer diller ve proje genel bakışı: [`README.md`](../README.md)
+> Sürüm **1.3.0** · Diğer diller ve proje genel bakışı: [`README.md`](../README.md)
 > (English, Türkçe, Русский, Español, Português, 日本語, 한국어, 中文)
 
 > Bu klasördeki `kombi_rolesi.ino` tek dosyadır.
@@ -34,8 +34,11 @@ bağlantı koptuğunda röleyi **otomatik olarak kapatan** güvenli röle ünite
   (röle kapanır **veya** son talep korunur)
 - Fail‑safe tercihi oda ünitesinden (`fs=0/1`) gelir ve rölenin EEPROM'unda saklanır
 - Açılışta röle **her zaman kapalı** başlar
-- Opsiyonel **0.96" SSD1306 OLED** (SDA=D5, SCL=D6): röle durumu (2× yazı), oda bağlantısı,
-  fail‑safe, su sıcaklığı, IP ve sinyal; ekran yoksa sessizce devre dışı kalır
+- Opsiyonel **0.96" SSD1306 OLED** (SDA=D5, SCL=D6): sarı üst bantta başlık ve sürüm, gövdede
+  röle durumu (2× yazı), oda bağlantısı, fail‑safe, su sıcaklığı, IP ve sinyal; ekran yoksa
+  sessizce devre dışı kalır
+- **D7 butonu ve ekran zaman aşımı:** butona basınca ekran 5 dakika daha açık kalır; 5 dakika
+  boyunca basılmazsa panel kapanır, röle ve bağlantı çalışmaya devam eder
 - Opsiyonel **DS18B20** ile kombi su sıcaklığını oda ünitesine bildirir
 - Kart üzerindeki LED ile bağlantı durumu göstergesi
 - Wi‑Fi koptuğunda 15 sn'de bir otomatik yeniden bağlanma
@@ -51,6 +54,7 @@ bağlantı koptuğunda röleyi **otomatik olarak kapatan** güvenli röle ünite
 | 1 | 1 kanal röle modülü (5 V, opto‑izolasyonlu, aktif‑low yaygın) |
 | 1 | Opsiyonel: waterproof DS18B20 + 4.7 kΩ |
 | 1 | Opsiyonel: 0.96" SSD1306 OLED (I²C, 128×64) |
+| 1 | Buton (D7 → GND, ekran uyandırma) |
 | 1 | 5 V USB adaptör + micro‑USB kablo |
 | — | Klemens, sigorta (önerilir), uygun kesitli kablo |
 
@@ -66,6 +70,7 @@ bağlantı koptuğunda röleyi **otomatik olarak kapatan** güvenli röle ünite
 | D2 | GPIO4 | DS18B20 **DATA** (opsiyonel) | 4.7 kΩ pull‑up 3V3'e |
 | D5 | GPIO14 | OLED **SDA** (opsiyonel) | Oda ünitesiyle aynı pin |
 | D6 | GPIO12 | OLED **SCL** (opsiyonel) | Oda ünitesiyle aynı pin |
+| D7 | GPIO13 | Buton (diğer bacak GND) | Ekranı uyandırır, dahili pull‑up |
 | 3V3 | — | DS18B20 **VCC** | 3.3 V |
 | GND | — | DS18B20 **GND** | |
 | — | — | Kart üzeri mavi LED | Durum göstergesi |
@@ -134,6 +139,8 @@ bağlantı koptuğunda röleyi **otomatik olarak kapatan** güvenli röle ünite
 #define OLED_ENABLED        1     // OLED yoksa 0 yapın
 #define PIN_OLED_SDA        D5    // oda ünitesiyle aynı
 #define PIN_OLED_SCL        D6
+#define BUTTON_PIN          D7    // ekran uyandırma butonu (GND'ye)
+#define OLED_TIMEOUT_MS     300000UL  // 5 dk
 
 #define TERMOSTAT_AP_SSID  "KombiPlus"
 #define TERMOSTAT_AP_PASS  "Kombi.1881"
@@ -164,8 +171,9 @@ bağlantı koptuğunda röleyi **otomatik olarak kapatan** güvenli röle ünite
    Oda unitesine baglandi.
    ```
 4. Oda ünitesinin web arayüzünde **Kombi bağlı** yazmalıdır.
-5. OLED takılıysa ekranda `KOMBI ROLESI`, `ROLE ACIK/KAPALI`, `Oda : BAGLI/YOK`,
-   `fs0/fs1`, su sıcaklığı ve IP/sinyal görünür.
+5. OLED takılıysa sarı bantta `KOMBI ROLESI` ve `FW 1.3.0`, gövdede `ROLE ACIK/KAPALI`,
+   `Oda : BAGLI/YOK`, `fs0/fs1`, su sıcaklığı ve IP/sinyal görünür. 5 dakika butona
+   basılmazsa ekran kapanır; D7 butonuna basmak onu 5 dakika daha açar.
 6. Röle testi: hedef sıcaklığı oda sıcaklığının üstüne çıkarın; röle klik sesi
    ve modül LED'i ile aktifleşir. Hedefi altına indirin, histerezis ve minimum
    süre sonrası kapanır.
@@ -213,6 +221,7 @@ Röle ünitesi yanıt  :  STATUS relay=1 flow=42.5 rssi=-58 up=123 fs=0 fw=1.1.0
 | Röle hiç çekmiyor | VIN 5 V, GND ortak, IN D1; modül LED'i yanıyor mu? |
 | Su sıcaklığı `--` | DS18B20 kablosu/pull‑up; `FLOW_SENSOR_ENABLED 1` mi? |
 | OLED boş | Adres `0x3C` mi? SDA D5 / SCL D6, 3.3 V besleme; `OLED_ENABLED 1` mi? |
+| OLED 5 dk sonra kapanıyor | Normal davranış; D7 butonuna basınca 5 dk daha açılır |
 | Sürekli açıp kapatıyor | Histerezisi artırın; minimum süreler zaten devrede |
 | Rastgele reset | Yetersiz adaptör; röle bobini akım darbesi; ayrı 5 V besleme deneyin |
 

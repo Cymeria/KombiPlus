@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="docs/images/banner.svg" alt="KombiPlus v1.2.0 — two-node ESP8266 room thermostat" width="100%">
+  <img src="docs/images/banner.svg" alt="KombiPlus v1.3.0 — two-node ESP8266 room thermostat" width="100%">
 </div>
 
 <h1 align="center">KombiPlus</h1>
@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img alt="version" src="https://img.shields.io/badge/version-1.2.0-ff8a3d?style=flat-square">
+  <img alt="version" src="https://img.shields.io/badge/version-1.3.0-ff8a3d?style=flat-square">
   <img alt="platform" src="https://img.shields.io/badge/platform-NodeMCU%20v3%20(ESP8266)-2b3d61?style=flat-square">
   <img alt="core" src="https://img.shields.io/badge/Arduino%20core-3.1.2-00979D?style=flat-square&logo=arduino&logoColor=white">
   <img alt="ide" src="https://img.shields.io/badge/Arduino%20IDE-2.x-00979D?style=flat-square">
@@ -138,8 +138,11 @@ by double-clicking it. It runs a mock API inside the browser, so nothing is inst
 - **Fail-safe:** after 5 minutes without a command, close the relay (default) or hold the last demand
 - The fail-safe preference arrives from the room unit (`fs=0/1`) and survives reboots (EEPROM)
 - Relay **always starts closed/off** after power-up
-- Optional **0.96" SSD1306 OLED** on the same D5/D6 pins: relay state in 2× text, room-unit
-  link, fail-safe setting, flow temperature, IP and RSSI; skipped silently when no panel is found
+- Optional **0.96" SSD1306 OLED** on the same D5/D6 pins: the yellow top band carries the title
+  and firmware, the body shows relay state in 2× text plus room-unit link, fail-safe setting,
+  flow temperature, IP and RSSI; skipped silently when no panel is found
+- **Relay display wake button** — a push button on D7 wakes the OLED for another 5 minutes; the
+  panel switches itself off after 5 minutes without a press while the relay keeps working
 - Optional DS18B20 boiler flow temperature reporting
 - On-board LED link indicator, verbose 115200 serial log
 
@@ -156,6 +159,7 @@ by double-clicking it. It runs a mock API inside the browser, so nothing is inst
 | 1 | Opto-isolated 5 V relay module (1 channel) |
 | 1 | Optional waterproof DS18B20 (boiler flow) |
 | — | Optional 0.96" SSD1306 OLED (relay unit status) |
+| 1 | Push button (relay OLED wake, D7 → GND) |
 | 2 | 5 V USB adapters, jumpers, screw terminals |
 
 <table>
@@ -186,6 +190,7 @@ by double-clicking it. It runs a mock API inside the browser, so nothing is inst
 | D2 | GPIO4 | Optional DS18B20 DATA |
 | D5 | GPIO14 | Optional OLED SDA |
 | D6 | GPIO12 | Optional OLED SCL |
+| D7 | GPIO13 | Push button to GND | Relay OLED wake (internal pull-up) |
 
 Full pin tables, notes and troubleshooting live in
 [`oda_termostati/README.md`](oda_termostati/README.md) and [`kombi_rolesi/README.md`](kombi_rolesi/README.md).
@@ -323,7 +328,7 @@ The room unit listens on **TCP 8266**; the relay unit is the client. Line-based 
 | Direction | Line |
 |-----------|------|
 | Room → Relay | `SET heat=1 sp=21.0 hyst=0.3 mode=1 fs=0\n` |
-| Relay → Room | `STATUS relay=1 flow=42.50 rssi=-58 up=123 fs=0 fw=1.2.0\n` |
+| Relay → Room | `STATUS relay=1 flow=42.50 rssi=-58 up=123 fs=0 fw=1.3.0\n` |
 
 Both directions are visible in the serial logs at 115200 baud.
 
@@ -414,13 +419,10 @@ left/right buttons on `/test`) to switch the theme; the active screen redraws im
 
 ## Version
 
-- **v1.2.0** — the relay unit can show its state on an optional OLED display
-  (see [CHANGELOG.md](CHANGELOG.md))
+- **v1.3.0** — the relay OLED wakes with a D7 button and turns off after 5 minutes idle ([CHANGELOG.md](CHANGELOG.md))
 - **v1.2.0** — the relay unit can show its state on an optional OLED display ([CHANGELOG.md](CHANGELOG.md))
 - **v1.1.1** — the room temperature fills the whole main screen and humidity/boiler water moved
   to the status band (see [CHANGELOG.md](CHANGELOG.md))
-- **v1.1.0** — ten OLED themes, a room-temperature-first main screen and web-based first setup
-  (see [CHANGELOG.md](CHANGELOG.md))
 - **v1.0.0** — first stable release (see [CHANGELOG.md](CHANGELOG.md))
 - Tested platform: ESP8266 Arduino core 3.1.2, Arduino IDE 2.x
 - Room unit IRAM is ~95 % full (`TELEGRAM_ENABLED 0` frees room if needed)

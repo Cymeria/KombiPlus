@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="docs/images/banner.svg" alt="KombiPlus v1.2.0 — двухмодульный Wi-Fi комнатный термостат на ESP8266" width="100%">
+  <img src="docs/images/banner.svg" alt="KombiPlus v1.3.0 — двухмодульный Wi-Fi комнатный термостат на ESP8266" width="100%">
 </div>
 
 <h1 align="center">KombiPlus</h1>
@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img alt="версия" src="https://img.shields.io/badge/%D0%B2%D0%B5%D1%80%D1%81%D0%B8%D1%8F-1.2.0-ff8a3d?style=flat-square">
+  <img alt="версия" src="https://img.shields.io/badge/%D0%B2%D0%B5%D1%80%D1%81%D0%B8%D1%8F-1.3.0-ff8a3d?style=flat-square">
   <img alt="платформа" src="https://img.shields.io/badge/platform-NodeMCU%20v3%20(ESP8266)-2b3d61?style=flat-square">
   <img alt="ядро" src="https://img.shields.io/badge/Arduino%20core-3.1.2-00979D?style=flat-square&logo=arduino&logoColor=white">
   <img alt="облако" src="https://img.shields.io/badge/%D0%BE%D0%B1%D0%BB%D0%B0%D0%BA%D0%BE-%D0%BD%D0%B5%20%D1%82%D1%80%D0%B5%D0%B1%D1%83%D0%B5%D1%82%D1%81%D1%8F-2dd47c?style=flat-square">
@@ -298,7 +298,7 @@ kombi/
 | Направление | Строка |
 |-------------|--------|
 | Комната → Реле | `SET heat=1 sp=21.0 hyst=0.3 mode=1 fs=0\n` |
-| Реле → Комната | `STATUS relay=1 flow=42.50 rssi=-58 up=123 fs=0 fw=1.2.0\n` |
+| Реле → Комната | `STATUS relay=1 flow=42.50 rssi=-58 up=123 fs=0 fw=1.3.0\n` |
 
 Оба направления видны в логах 115200.
 
@@ -378,9 +378,9 @@ fsTotal, uptime, ip, apip, ssid, sta, rssi, heap, client`.
 
 ## Версия
 
-- **v1.2.0** — 0431043b043e043a 04400435043b0435 04420435043f04350440044c 043c043e043604350442 043f043e043a04300437044b043204300442044c 0441043e04410442043e044f043d04380435 043d0430 043e043f04460438043e043d0430043b044c043d043e043c OLED ([CHANGELOG.md](CHANGELOG.md))
+- **v1.3.0** — экран реле включается кнопкой на D7 и гаснет через 5 минут ([CHANGELOG.md](CHANGELOG.md))
+- **v1.2.0** — блок реле теперь может показывать состояние на опциональном OLED ([CHANGELOG.md](CHANGELOG.md))
 - **v1.1.1** — 04420435043c043f0435044004300442044304400430 04370430043d0438043c043004350442 043204350441044c 044d043a04400430043d; 0432043b04300436043d043e04410442044c 0438 0432043e04340430 043a043e0442043b0430 043f043504400435043504450430043b0438 0432 0432043504400445043d044e044e 043f043e043b043e04410443 ([CHANGELOG.md](CHANGELOG.md))
-- **v1.1.0** — десять тем OLED, главный экран с температурой room-first и первичная настройка из браузера ([CHANGELOG.md](CHANGELOG.md))
 - **v1.0.0** — первый стабильный выпуск ([CHANGELOG.md](CHANGELOG.md))
 - Проверено: ESP8266 Arduino core 3.1.2, Arduino IDE 2.x
 - IRAM комнатного блока заполнен на ~95 % (`TELEGRAM_ENABLED 0` освобождает место)

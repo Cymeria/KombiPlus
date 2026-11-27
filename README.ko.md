@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="docs/images/banner.svg" alt="KombiPlus v1.2.0 — ESP8266 2개 구성 Wi-Fi 실내 온도조절기" width="100%">
+  <img src="docs/images/banner.svg" alt="KombiPlus v1.3.0 — ESP8266 2개 구성 Wi-Fi 실내 온도조절기" width="100%">
 </div>
 
 <h1 align="center">KombiPlus</h1>
@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img alt="버전" src="https://img.shields.io/badge/%EB%B2%84%EC%A0%84-1.2.0-ff8a3d?style=flat-square">
+  <img alt="버전" src="https://img.shields.io/badge/%EB%B2%84%EC%A0%84-1.3.0-ff8a3d?style=flat-square">
   <img alt="플랫폼" src="https://img.shields.io/badge/platform-NodeMCU%20v3%20(ESP8266)-2b3d61?style=flat-square">
   <img alt="코어" src="https://img.shields.io/badge/Arduino%20core-3.1.2-00979D?style=flat-square&logo=arduino&logoColor=white">
   <img alt="클라우드" src="https://img.shields.io/badge/%ED%81%B4%EB%9D%BC%EC%9A%B0%EB%93%9C-%EB%B6%88%ED%95%84%EC%9A%94-2dd47c?style=flat-square">
@@ -291,7 +291,7 @@ kombi/
 | 방향 | 줄 |
 |------|-----|
 | 실내 → 릴레이 | `SET heat=1 sp=21.0 hyst=0.3 mode=1 fs=0\n` |
-| 릴레이 → 실내 | `STATUS relay=1 flow=42.50 rssi=-58 up=123 fs=0 fw=1.2.0\n` |
+| 릴레이 → 실내 | `STATUS relay=1 flow=42.50 rssi=-58 up=123 fs=0 fw=1.3.0\n` |
 
 양방향 모두 115200 시리얼 로그에서 확인할 수 있습니다.
 
@@ -370,9 +370,9 @@ fsTotal, uptime, ip, apip, ssid, sta, rssi, heap, client`.
 
 ## 버전
 
-- **v1.2.0** — B9b4B808C774 C720B2dbC774 C120D0ddD615 OLEDC5d0 C0c1D0dcB97c D45cC2dcD560 C218 C788C2b5B2c8B2e4 ([CHANGELOG.md](CHANGELOG.md))
+- **v1.3.0** — 릴레이 화면은 D7 버튼으로 켜지고 5분 후 꺼집니다 ([CHANGELOG.md](CHANGELOG.md))
+- **v1.2.0** — 릴레이 유닛이 선택형 OLED에 상태를 표시할 수 있습니다 ([CHANGELOG.md](CHANGELOG.md))
 - **v1.1.1** — C2e4B0b4 C628B3c4Ac00 Ba54C778 D654Ba74 C804Ccb4B97c C0acC6a9D558Ace0 C2b5B3c400b7Bcf4C77cB7ec C218C628C740 C0c1B2e8 Bc34B4dcB85c C774B3d9 ([CHANGELOG.md](CHANGELOG.md))
-- **v1.1.0** — OLED 테마 10종, 실내 온도 중심 메인 화면, 브라우저 초기 설정 ([CHANGELOG.md](CHANGELOG.md))
 - **v1.0.0** — 첫 안정 릴리스 ([CHANGELOG.md](CHANGELOG.md))
 - 검증 환경: ESP8266 Arduino core 3.1.2, Arduino IDE 2.x
 - 실내 유닛 IRAM은 약 95 % (`TELEGRAM_ENABLED 0`으로 여유 확보 가능)

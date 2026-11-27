@@ -26,7 +26,7 @@
 
 // ============================ KULLANICI AYARLARI ============================
 
-#define FW_VERSION "1.2.0"
+#define FW_VERSION "1.3.0"
 
 // Role modulu (aktif dusuk role kartlari yaygindir)
 #define RELAY_PIN          D1        // GPIO5
@@ -47,6 +47,11 @@
 #define OLED_ADDR           0x3C
 #define PIN_OLED_SDA        D5        // GPIO14
 #define PIN_OLED_SCL        D6        // GPIO12
+
+// Ekran uyandirma butonu (D7 -> GND, dahili pull-up) ve zaman asimi
+#define BUTTON_PIN          D7        // GPIO13
+#define BUTTON_ACTIVE_LOW   1
+#define OLED_TIMEOUT_MS     300000UL  // 5 dk dokunulmazsa ekran kapanir
 
 // Oda unitesi AP bilgileri (oda kodu ile AYNI olmali!)
 #define TERMOSTAT_AP_SSID  "KombiPlus"
@@ -77,6 +82,8 @@ String rxLine = "";
 #if OLED_ENABLED
 Adafruit_SSD1306 display(OLED_WIDTH, OLED_HEIGHT, &Wire, -1);
 bool oledOk = false;
+bool oledAwake = true;
+unsigned long oledWakeMs = 0;
 #endif
 
 // ---- EEPROM: fail-safe tercihi ----
@@ -315,8 +322,46 @@ void updateLed() {
 // ============================ OLED =========================================
 
 #if OLED_ENABLED
-void updateOled() {
+void oledWake() {
   if (!oledOk) return;
+  oledAwake = true;
+  oledWakeMs = millis();
+  display.ssd1306_command(SSD1306_DISPLAYON);
+}
+
+void oledSleep() {
+  if (!oledOk) return;
+  oledAwake = false;
+  display.clearDisplay();
+  display.display();
+  display.ssd1306_command(SSD1306_DISPLAYOFF);
+}
+
+// D7 butonu: her basista ekrani 5 dk daha acik tutar.
+void updateButton() {
+  static bool lastRaw = false;
+  static bool stable = false;
+  static unsigned long changedMs = 0;
+
+  bool raw = (digitalRead(BUTTON_PIN) == (BUTTON_ACTIVE_LOW ? LOW : HIGH));
+  if (raw != lastRaw) {
+    lastRaw = raw;
+    changedMs = millis();
+  }
+  if (raw != stable && (millis() - changedMs) > 40UL) {
+    stable = raw;
+    if (stable) oledWake();
+  }
+}
+
+void updateOled() {
+  if (!oledOk || !oledAwake) return;
+
+  if (millis() - oledWakeMs >= OLED_TIMEOUT_MS) {
+    oledSleep();
+    return;
+  }
+
   static unsigned long lastMs = 0;
   if (millis() - lastMs < 500UL) return;
   lastMs = millis();
@@ -329,26 +374,28 @@ void updateOled() {
   display.setTextColor(SSD1306_WHITE);
   display.setTextSize(1);
 
-  display.setCursor(0, 0);
+  // Sari bant (0..15): baslik solda, surum sagda.
+  display.setCursor(2, 4);
   display.print(F("KOMBI ROLESI"));
-  display.setCursor(128 - 7 * 6, 0);
+  display.setCursor(128 - 7 * 6 - 2, 4);
   display.print(F("FW" FW_VERSION));
-  display.drawFastHLine(0, 9, 128, SSD1306_WHITE);
+  display.drawFastHLine(0, 16, 128, SSD1306_WHITE);
 
-  display.setCursor(0, 15);
+  // Govde: buyuk role durumu.
+  display.setCursor(0, 22);
   display.print(F("ROLE"));
   display.setTextSize(2);
-  display.setCursor(34, 11);
+  display.setCursor(34, 19);
   display.print(relayOn ? F("ACIK") : F("KAPALI"));
   display.setTextSize(1);
 
-  display.setCursor(0, 34);
+  display.setCursor(0, 38);
   display.print(F("Oda : "));
   display.print(link ? F("BAGLI") : F("YOK"));
-  display.setCursor(96, 34);
+  display.setCursor(96, 38);
   display.print(failSafeOn ? F("fs1") : F("fs0"));
 
-  display.setCursor(0, 44);
+  display.setCursor(0, 47);
   display.print(F("Su  : "));
 #if FLOW_SENSOR_ENABLED
   if (flowTemp > -100.0f) {
@@ -361,7 +408,7 @@ void updateOled() {
   display.print(F("--"));
 #endif
 
-  display.setCursor(0, 54);
+  display.setCursor(0, 56);
   if (wifi) {
     display.print(WiFi.localIP());
     char rs[8];
@@ -393,6 +440,8 @@ void setup() {
   pinMode(STATUS_LED_PIN, OUTPUT);
   digitalWrite(STATUS_LED_PIN, LED_ACTIVE_LOW ? HIGH : LOW);
 
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
+
 #if OLED_ENABLED
   Wire.begin(PIN_OLED_SDA, PIN_OLED_SCL);
   if (!display.begin(SSD1306_SWITCHCAPVCC, OLED_ADDR)) {
@@ -407,7 +456,8 @@ void setup() {
     display.println(F("KOMBI ROLESI"));
     display.println(F("baslatiliyor..."));
     display.display();
-    Serial.println(F("OLED hazir."));
+    oledWakeMs = millis();
+    Serial.println(F("OLED hazir (5 dk sonra uyur, D7 butonu uyandirir)."));
   }
 #endif
 
@@ -438,6 +488,7 @@ void loop() {
 #endif
   updateLed();
 #if OLED_ENABLED
+  updateButton();
   updateOled();
 #endif
 
